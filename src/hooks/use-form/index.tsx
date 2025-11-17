@@ -78,9 +78,7 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
         ? `input[name^="${namePrefix}"], select[name^="${namePrefix}"], textarea[name^="${namePrefix}"]`
         : "input[name], select[name], textarea[name]";
 
-      const fields = form.querySelectorAll<
-        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-      >(selector);
+      const fields = form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(selector);
 
       fields.forEach((element) => {
         const name = element.name;
@@ -120,10 +118,7 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
         }
       });
       if (namePrefix && Object.keys(formData).length === 0) {
-        const singleField = form.querySelector<
-          HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-        >(`[name="${namePrefix}"]`);
-
+        const singleField = form.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`[name="${namePrefix}"]`);
         if (singleField) {
           if (singleField.type === "number")
             return singleField.value === ""
@@ -157,9 +152,7 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
       }
 
       // Só valida habilitados
-      const fieldsToValidate = form.querySelectorAll<
-        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-      >(`[name][data-validation="${validationKey}"]:not(:disabled)`);
+      const fieldsToValidate = form.querySelectorAll< HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`[name][data-validation="${validationKey}"]:not(:disabled)`);
 
       fieldsToValidate.forEach((field) => {
         const name = field.name;
@@ -332,8 +325,8 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
   }, [formId, handleInteraction]);
 
   // --- handleSubmit (v4.11 - Lógica de Submit Parcial) ---
-  const handleSubmit = React.useCallback((onValid: (data: FV) => void) => (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
+  const handleSubmit = React.useCallback((onValid: (data: FV) => void) => (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
       const form = formRef.current;
 
       if (!form) {
@@ -357,12 +350,16 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
         
         if (!isFormValid) {
           const activeFieldset = formRef.current.querySelector<HTMLElement>("fieldset:not(:disabled)") || formRef.current;
-          
           const firstInvalidField = activeFieldset.querySelector<HTMLElement>(":invalid");
-          const field = firstInvalidField?.closest(".relative")?.querySelector('input[type="text"].form-input');
-
-          if (!!field) {
-            (firstInvalidField.closest(".relative")!.querySelector('input[type="text"].form-input') as HTMLElement)?.focus();
+          if (
+            firstInvalidField
+              ?.closest(".relative")
+              ?.querySelector('input[type="text"].form-input')
+          ) {
+            (              firstInvalidField
+                .closest(".relative")!
+                .querySelector('input[type="text"].form-input') as HTMLElement
+            )?.focus();
           } else {
             firstInvalidField?.focus();
           }

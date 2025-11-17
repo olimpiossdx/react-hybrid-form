@@ -1,6 +1,6 @@
 import React from "react";
 // Importar createRoot de react-dom/client (necessário para o modal)
-import { createRoot, Root } from "react-dom/client";
+import type {  Root } from "react-dom/client";
 import useForm from "../hooks/use-form";
 
 // --- DEFINIÇÕES DE TIPO ---
@@ -29,34 +29,23 @@ export interface SuggestionOption
   label: string; // Usaremos 'label' para exibição e busca
 }
 
-// Assinatura da função de validação (com genéricos)
-type ValidateFn<FormValues> = (
-  value: any, // Mantido 'any' devido a limitações do TS em mapas
-  field: HTMLFieldElements | null,
-  formValues: FormValues
-) => ValidationResult;
-
-// Mapa de validadores (tipado)
-type ValidatorMap<FV> = Record<string, ValidateFn<FV>>;
-
-// Tipo para armazenar referências aos listeners anexados
-type ListenerRef = { blur: EventListener; change: EventListener };
-type FieldListenerMap = Map<HTMLElement, ListenerRef>;
-
 // --- HOOK useList (Minimalista - Inalterado) ---
 function useList<T = any>(initialState: T[] = []) {
-  /* ... (código inalterado) ... */
   const generateId = () => `field-id-${crypto.randomUUID()}`;
+  
   const [fields, setFields] = React.useState(() =>
     initialState.map((value) => ({ id: generateId(), value }))
   );
+  
   const append = React.useCallback((value: T) => {
     const newId = generateId();
     setFields((p) => [...p, { id: newId, value }]);
   }, []);
+  
   const remove = React.useCallback((index: number) => {
     setFields((p) => p.filter((_, i) => i !== index));
   }, []);
+
   return { fields, append, remove };
 }
 
@@ -274,7 +263,6 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
             return (
               <option
                 key={suggestion.value}
-                value={suggestion.value}
                 {...sProps}
               >
                 {sLabel || sChild}
@@ -645,19 +633,14 @@ const RegistrationForm = ({
     senha?: string;
     confirmarSenha?: string;
   }
-  const { handleSubmit, setValidators, formId } =
-    useForm<RegFormValues>("reg-form");
-  const validarSenha = React.useCallback(
-    (
-      value: any,
-      field: HTMLFieldElements,
-      formValues: RegFormValues
-    ): ValidationResult =>
+  const { handleSubmit, setValidators, formId } = useForm<RegFormValues>("reg-form");
+  const validarSenha = React.useCallback((value: any, _: HTMLFieldElements | null, formValues: RegFormValues): ValidationResult =>
       value !== formValues.senha
         ? { message: "As senhas não correspondem", type: "error" }
         : true,
     []
   );
+
   React.useEffect(
     () => setValidators({ validarSenha }),
     [setValidators, validarSenha]
@@ -719,42 +702,30 @@ const HybridFormSimple = ({
     comentario: string;
     corFavorita: string;
   }
-  const { handleSubmit, setValidators, formId, getValue, resetSection } =
-    useForm<MyHybridForm>("hybrid-form-simple");
+  const { handleSubmit, setValidators, formId, getValue, resetSection } = useForm<MyHybridForm>("hybrid-form-simple");
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const isEditingAny = editingId !== null;
   const originalEditDataRef = React.useRef<any>(null);
-  const validarComentario = React.useCallback(
-    (
-      value: any,
-      field: HTMLFieldElements,
-      formValues: MyHybridForm
-    ): ValidationResult => {
+
+  const validarComentario = React.useCallback((value: any, _field: HTMLFieldElements | null, formValues: MyHybridForm): ValidationResult => {
       const r = Number(formValues.rating);
+
       if (r > 0 && r <= 3 && !value)
         return { message: "O comentário é obrigatório...", type: "error" };
       if (value && value.length > 0 && value.length < 5)
         return { message: "Comentário curto.", type: "warning" };
       return true;
-    },
-    []
-  );
-  const validarCor = React.useCallback(
-    (
-      value: any,
-      field: HTMLFieldElements,
-      formValues: MyHybridForm
-    ): ValidationResult => {
-      if (value === "verde")
-        return { message: "Verde é uma ótima cor!", type: "success" };
-      return true;
-    },
-    []
-  );
-  React.useEffect(
-    () => setValidators({ validarComentario, validarCor }),
-    [setValidators, validarComentario, validarCor]
-  );
+  },[]);
+
+  const validarCor = React.useCallback((value: any, _field: HTMLFieldElements | null, __: MyHybridForm): ValidationResult => {
+   if (value === "verde"){
+     return { message: "Verde é uma ótima cor!", type: "success" };
+   }
+   
+   return true;
+  },[]);
+
+  React.useEffect(() => setValidators({ validarComentario, validarCor }),[setValidators, validarComentario, validarCor]);
 
   const onSubmit = (data: MyHybridForm) => {
     showModal("Form Híbrido Salvo!", "Dados: " + JSON.stringify(data));
@@ -775,7 +746,7 @@ const HybridFormSimple = ({
     originalEditDataRef.current = getValue(prefix);
     setEditingId(id);
   };
-  const handleCancel = (id: string, prefix: string) => {
+  const handleCancel = (_: string, prefix: string) => {
     resetSection(prefix, originalEditDataRef.current);
     originalEditDataRef.current = null;
     setEditingId(null);
@@ -874,26 +845,14 @@ const NestedListForm = ({
   interface MyNestedListForm {
     contatos?: Contato[];
   }
-  const { handleSubmit, setValidators, formId, getValue, resetSection } =
-    useForm<MyNestedListForm>("nested-list-form");
-  const {
-    fields: contactFields,
-    append: appendContact,
-    remove: removeContact,
-  } = useList<Contato>([
-    { numero: "", tipo: "celular", enderecos: [{ rua: "", cidade: "" }] },
-  ]);
+  const { handleSubmit, setValidators, formId, getValue, resetSection } = useForm<MyNestedListForm>("nested-list-form");
+  const { fields: contactFields, append: appendContact, remove: removeContact} = useList<Contato>([]);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const isEditingAny = editingId !== null;
   const originalEditDataRef = React.useRef<any>(null);
 
-  const validarCidade = React.useCallback(
-    (
-      value: any,
-      field: HTMLFieldElements,
-      formValues: MyNestedListForm
-    ): ValidationResult => {
-      const m = field.name.match(/contatos\.(\d+)\.enderecos\.(\d+)\.cidade/);
+  const validarCidade = React.useCallback((value: any, field: HTMLFieldElements | null, formValues: MyNestedListForm): ValidationResult => {
+      const m = field?.name.match(/contatos\.(\d+)\.enderecos\.(\d+)\.cidade/);
       if (m) {
         const cI = parseInt(m[1], 10);
         const aI = parseInt(m[2], 10);
@@ -905,29 +864,14 @@ const NestedListForm = ({
           };
       }
       return true;
-    },
-    []
-  );
+    },[]);
+
   React.useEffect(() => {
     setValidators({ validarCidade });
   }, [setValidators, validarCidade]);
 
   const onSubmit = (data: MyNestedListForm) => {
-    const cleanData = {
-      contatos:
-        data.contatos
-          ?.map((c) => ({
-            ...c,
-            enderecos:
-              c.enderecos?.filter((e) => e && (e.rua || e.cidade)) || [],
-          }))
-          .filter(
-            (c) =>
-              c &&
-              (c.numero || c.tipo || (c.enderecos && c.enderecos.length > 0))
-          ) || [],
-    };
-    showModal("Item Salvo!", "Dados: " + JSON.stringify(cleanData, null, 2));
+    showModal("Item Salvo!", "Dados: " + JSON.stringify(data, null, 2));
     setEditingId(null);
     originalEditDataRef.current = null;
   };
@@ -936,7 +880,7 @@ const NestedListForm = ({
     originalEditDataRef.current = getValue(prefix);
     setEditingId(id);
   };
-  const handleCancel = (id: string, prefix: string) => {
+  const handleCancel = (_: string, prefix: string) => {
     resetSection(prefix, originalEditDataRef.current);
     originalEditDataRef.current = null;
     setEditingId(null);
@@ -950,7 +894,6 @@ const NestedListForm = ({
       <p className="text-gray-400 mb-4">Validação por item (Submit Parcial).</p>
       <form id={formId} onSubmit={handleSubmit(onSubmit)} noValidate>
         <h4 className="text-lg font-semibold mt-6 mb-2 text-cyan-500 flex justify-between items-center">
-          {" "}
           Contatos
           <button
             type="button"
@@ -964,8 +907,7 @@ const NestedListForm = ({
             className="text-sm bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded"
             disabled={isEditingAny}
           >
-            {" "}
-            Adicionar Contato{" "}
+            Adicionar Contato
           </button>
         </h4>
         {contactFields.map((contactField, contactIndex) => {
@@ -1134,7 +1076,7 @@ const CurriculumForm = ({
     tamanhoCalcado: "0",
   });
 
-  const { handleSubmit, setValidators, formId, getValue, resetSection } =
+  const { handleSubmit, formId, getValue, resetSection } =
     useForm<CurriculumFormValues>("curriculum-form");
 
   const [editingId, setEditingId] = React.useState<string | null>(null);
@@ -1160,7 +1102,7 @@ const CurriculumForm = ({
     originalEditDataRef.current = getValue(prefix);
     setEditingId(id);
   };
-  const handleCancel = (id: string, prefix: string) => {
+  const handleCancel = (_: string, prefix: string) => {
     resetSection(prefix, originalEditDataRef.current);
     originalEditDataRef.current = null;
     setEditingId(null);
@@ -1184,8 +1126,6 @@ const CurriculumForm = ({
     isOtherEditing: boolean;
     isEditingThis: boolean;
   }> = ({
-    sectionId,
-    prefix,
     onCancel,
     onEdit,
     isOtherEditing,
@@ -1397,7 +1337,7 @@ const CurriculumForm = ({
               isOtherEditing={isEditingAny && editingId !== "escolaridades"}
               onEdit={() => handleEdit("escolaridades", "escolaridades.")}
               onCancel={() => handleCancel("escolaridades", "escolaridades.")}
-              onSave={() => {}} // O submit faz o save
+              //onSave={() => {}} // O submit faz o save
             />
           </legend>
           <div className="p-4 space-y-4">
@@ -1498,7 +1438,7 @@ const CurriculumForm = ({
               isOtherEditing={isEditingAny && editingId !== "experiencias"}
               onEdit={() => handleEdit("experiencias", "experiencias.")}
               onCancel={() => handleCancel("experiencias", "experiencias.")}
-              onSave={() => {}} // O submit faz o save
+              //onSave={() => {}} // O submit faz o save
             />
           </legend>
           <div className="p-4 space-y-4">
@@ -1641,7 +1581,7 @@ const CurriculumForm = ({
               isOtherEditing={isEditingAny && editingId !== "conhecimentos"}
               onEdit={() => handleEdit("conhecimentos", "conhecimentos.")}
               onCancel={() => handleCancel("conhecimentos", "conhecimentos.")}
-              onSave={() => {}} // O submit faz o save
+              //onSave={() => {}} // O submit faz o save
             />
           </legend>
           <div className="p-4 space-y-4">
