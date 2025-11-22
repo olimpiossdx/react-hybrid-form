@@ -4,7 +4,7 @@ import { getFormFields, parseFieldValue, getRelativePath, setNestedValue, getNes
 
 const useForm = <FV extends Record<string, any>>(providedId?: string) => {
   const formId = providedId || React.useId();
-  const formRef = React.useRef<HTMLFormElement | null>(null);
+  const formRef = React.useRef<HTMLFormElement>(null);
   const fieldListeners = React.useRef<FieldListenerMap>(new Map());
   const validators = React.useRef<ValidatorMap<FV>>({});
 
@@ -55,14 +55,18 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
    */
   const revalidateAllCustomRules = React.useCallback(() => {
     const form = formRef.current;
-    if (!form) return;
+    if (!form){ 
+      return;
+    };
 
     const formValues = getValue() as FV;
     const validatorFunctions = validators.current;
 
     Object.keys(validatorFunctions).forEach(validationKey => {
       const validate = validatorFunctions[validationKey];
-      if (!validate) return;
+      if (!validate){ 
+        return;
+      };
 
       // Valida apenas campos habilitados
       const fieldsToValidate = form.querySelectorAll<FormField>(`[name][data-validation="${validationKey}"]:not(:disabled)`);
@@ -76,7 +80,7 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
           field.setCustomValidity(result);
         } else if (result?.type === 'error') {
           field.setCustomValidity(result.message);
-        }
+        };
       });
     });
 
@@ -147,7 +151,7 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
       field.checked = field.value === String(value);
     } else {
       field.value = String(value ?? '');
-    }
+    };
   };
 
   /**
@@ -158,7 +162,7 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
       field.checked = field.defaultChecked;
     } else {
       field.value = (field as any).defaultValue;
-    }
+    };
   };
 
   // ============ GERENCIAMENTO DE EVENTOS ============
@@ -175,10 +179,7 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
       return;
     };
 
-    const listeners = {
-      blur: handleFieldInteraction,
-      change: handleFieldInteraction
-    };
+    const listeners = { blur: handleFieldInteraction, change: handleFieldInteraction };
 
     field.addEventListener('blur', listeners.blur);
     field.addEventListener('change', listeners.change);
@@ -196,14 +197,14 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
   const removeFieldInteractionListeners = (field: HTMLElement): void => {
     if (!isValidFormField(field)) {
       return;
-    }
+    };
 
     const listeners = fieldListeners.current.get(field);
     if (listeners) {
       field.removeEventListener('blur', listeners.blur);
       field.removeEventListener('change', listeners.change);
       fieldListeners.current.delete(field);
-    }
+    };
   };
 
   /**
@@ -217,20 +218,26 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
     // Configura observer para campos dinâmicos
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.type !== 'childList') return;
+        if (mutation.type !== 'childList'){ 
+          return;
+        };
 
         mutation.addedNodes.forEach(node => {
-          if (node instanceof HTMLElement) {
+          if (!(node instanceof HTMLElement)) {
+              return;
+            };
+
             addFieldInteractionListeners(node);
             getFormFields(form).forEach(addFieldInteractionListeners);
-          }
         });
 
         mutation.removedNodes.forEach(node => {
-          if (node instanceof HTMLElement) {
-            removeFieldInteractionListeners(node);
-            getFormFields(form).forEach(removeFieldInteractionListeners);
-          }
+          if (!(node instanceof HTMLElement)) {
+            return;
+          };
+          
+          removeFieldInteractionListeners(node);
+          getFormFields(form).forEach(removeFieldInteractionListeners);
         });
       });
     });
@@ -269,7 +276,9 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
 
       // Processa resultado após validação
       setTimeout(() => {
-        if (!formRef.current) return;
+        if (!formRef.current) {
+          return;
+        }
 
         const isValid = formRef.current.checkValidity();
         
@@ -278,11 +287,9 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
           form.reportValidity();
         } else {
           onValid(getValue() as FV);
-        }
+        };
       }, 0);
-    },
-    [getValue, revalidateAllCustomRules]
-  );
+    }, [getValue, revalidateAllCustomRules]);
 
   /**
    * Foca no primeiro campo inválido
@@ -307,7 +314,7 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
     if (!form) {
       console.warn(`[useForm] Formulário com ID '${formId}' não encontrado`);
       return;
-    }
+    };
 
     formRef.current = form;
     const cleanup = setupDOMMutationObserver(form);

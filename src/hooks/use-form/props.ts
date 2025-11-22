@@ -17,7 +17,7 @@ export type ValidationResult = string | IValidationResult | undefined;
    * Assinatura da função de validação (com genéricos), onde T por padrão é 'any'
    */
 export type ValidateFn<FormValues> = <T = any>(
-  value: T, // Mantido 'any' devido a limitações do TS em mapas
+  value: T,
   field: FormField | null,
   formValues: FormValues
 ) => ValidationResult;

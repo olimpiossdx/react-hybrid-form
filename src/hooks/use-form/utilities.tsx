@@ -1,11 +1,14 @@
 // ============ FUNÇÕES UTILITÁRIAS ============
 import type { FormField } from "./props";
 
+export interface IAnyObject {
+  [key: string]: any;
+};
 /**
  * Define um valor em um objeto/array usando caminho (path)
  * Ex: 'user.address.street' → obj.user.address.street = value
  */
-export const setNestedValue = (obj: any, path: string, value: any): void => {
+export const setNestedValue = (obj: IAnyObject, path: string, value: any): void => {
   const keys = path.split('.');
   let current = obj;
   
@@ -16,7 +19,7 @@ export const setNestedValue = (obj: any, path: string, value: any): void => {
     if (isLastKey) {
       current[key] = value;
       return;
-    }
+    };
     
     // Prepara próxima chave
     const nextKey = keys[i + 1];
@@ -25,21 +28,21 @@ export const setNestedValue = (obj: any, path: string, value: any): void => {
     if (nextIsNumber) {
       if (!current[key] || !Array.isArray(current[key])) {
         current[key] = [];
-      }
+      };
     } else {
       if (!current[key] || typeof current[key] !== 'object' || Array.isArray(current[key])) {
         current[key] = {};
-      }
-    }
+      };
+    };
     
     current = current[key];
-  }
+  };
 };
 
 /**
  * Obtém valor de objeto aninhado usando caminho
  */
-export const getNestedValue = (obj: any, path: string): any => {
+export const getNestedValue = (obj: IAnyObject, path: string): any => {
   return path.split('.').reduce((current, key) => {
     if (current === undefined || current === null) {
       return undefined;
