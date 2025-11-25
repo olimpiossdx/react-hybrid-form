@@ -6,6 +6,7 @@ import useList from "../hooks/list";
 import type { FormField, ValidationResult } from "../hooks/use-form/props";
 import Autocomplete, { type IOption } from "./autocomplete";
 import StarRating from "./start-rating";
+import TabButton from "./tab-button";
 
 // --- Componente AddressItem ---
 interface Address {
@@ -360,12 +361,14 @@ const HybridFormSimple = ({
   );
 
   const onSubmit = (data: MyHybridForm) => {
+    const body =JSON.stringify(data);
     showModal({
       title: "Form Híbrido Salvo!",
-      content: () => <div>Dados: {JSON.stringify(data)}</div>,
+      content: () => <div>Dados: {body}</div>,
       closeOnBackdropClick: false, // Obriga interação
       onClose: () => console.log("Fechou!"), // Callback
     });
+    console.log('data', data);
     setEditingId(null);
     originalEditDataRef.current = null;
   };
@@ -392,7 +395,6 @@ const HybridFormSimple = ({
   const isEditingThis = editingId === "hybridSimple";
   const isEditingOther = isEditingAny && !isEditingThis;
   const prefix = "";
-  console.log('getValue("corFavorita") ', getValue("corFavorita") )
 
   return (
     <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
@@ -1310,106 +1312,58 @@ const Teste: React.FC = () => {
     registration: <RegistrationForm showModal={showModal} />,
     hybrid: <HybridFormSimple showModal={showModal} />,
     nestedList: <NestedListForm showModal={showModal} />,
-    curriculum: <CurriculumForm showModal={showModal} />, // Nova tab Currículo
+    curriculum: <CurriculumForm showModal={showModal} />,
   };
 
-  const TabButton: React.FC<{ tabId: string; label: string }> = ({
-    tabId,
-    label,
-  }) => (
-    <button
-      onClick={() => setActiveTab(tabId)}
-      className={`px-3 py-2 sm:px-4 text-sm font-medium rounded-md transition-colors ${
-        activeTab === tabId
-          ? "bg-cyan-600 text-white"
-          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-      }`}
-    >
-      {label}
-    </button>
-  );
-
   return (
-    <>
-      <style>{`
-        /* Estilos gerais */
-        .form-input { width: 100%; background-color: #374151; border: 1px solid #4B5563; border-radius: 0.375rem; padding: 0.5rem 0.75rem; color: white; transition: background-color .2s, border-color .2s, color .2s; position: relative; z-index: 1; }
-        .form-input:focus { outline: none; border-color: #06b6d4; box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.5); z-index: 2; background-color: #4B5563; /* Escurece um pouco no foco para edição */ }
-        .form-input.is-touched:valid { border-color: #10B981; }
-        .form-input.is-touched:invalid { border-color: #EF4444; }
-        select.form-input { appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem; }
-        
-        /* --- ESTILOS PARA readOnly/disabled (MODO VISUALIZAÇÃO) --- */
-        .form-input[readOnly],
-        textarea.form-input[readOnly] {
-            background-color: transparent !important; border-color: transparent !important;
-            padding-left: 0.1rem !important; padding-right: 0.1rem !important; /* Menor padding */
-            color: #D1D5DB !important; cursor: default; box-shadow: none !important; resize: none;
-             min-height: 24px; height: auto; line-height: 1.5;
-        }
-        /* Estilo para select desabilitado (agora o fieldset pai o desabilita) */
-        select.form-input:disabled {
-             background-color: transparent !important; border-color: transparent !important;
-             padding-left: 0.1rem !important; padding-right: 0.1rem !important;
-             color: #D1D5DB !important; cursor: default; box-shadow: none !important;
-             background-image: none !important; opacity: 1 !important;
-             -webkit-appearance: none; -moz-appearance: none; appearance: none;
-             min-height: 24px; height: auto; line-height: 1.5;
-        }
-         input[type="checkbox"]:disabled, input[type="radio"]:disabled {
-             opacity: 1; /* Opacidade controlada pelo fieldset */
-         }
-         label:has(input[type="checkbox"]:disabled), label:has(input[type="radio"]:disabled) {
-             cursor: default;
-         }
-         input[type="month"][readOnly], input[type="date"][readOnly] {
-             color: #D1D5DB !important; background-color: transparent !Mimportant;
-             border-color: transparent !important; padding-left: 0.1rem !important; box-shadow: none !important;
-             min-height: 24px; height: auto; line-height: 1.5;
-         }
-         input[type="month"][readOnly]::-webkit-calendar-picker-indicator,
-         input[type="date"][readOnly]::-webkit-calendar-picker-indicator { display: none; }
+    <div className="bg-gray-800 text-white min-h-screen p-4 sm:p-8 font-sans">
+      <div className="max-w-2xl mx-auto">
+        <header className="text-center mb-8">
+          <h1 className="text-xl sm:text-4xl font-extrabold text-cyan-400">
+            `useForm` - v4.12
+          </h1>
+          <p className="text-gray-400 mt-2">Edição Contextual por Seção</p>
+        </header>
 
-        
-        /* StarRating */
-        input[name^="rating"]:invalid.is-touched ~ .star-display { outline: 2px solid #EF4444; border-radius: 0.375rem; }
-        .star-display:focus, .star-display:focus-within { outline: 2px solid #06b6d4; border-radius: 0.375rem; }
-        /* Autocomplete */
-        .autocomplete-suggestions { position: absolute; z-index: 10; width: 100%; background-color: #374151; border: 1px solid #4B5563; border-top: none; border-radius: 0 0 0.375rem 0.375rem; margin-top: -1px; max-height: 10rem; overflow-y: auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
-        .autocomplete-suggestion-item { padding: 0.5rem 1rem; color: #D1D5DB; cursor: pointer; }
-        .autocomplete-suggestion-item:hover { background-color: #4B5563; }
-        .autocomplete-suggestion-item[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; background-color: transparent !important; }
-        
-        /* Estilos para estado desabilitado (edição contextual) */
-        fieldset:disabled { 
-            opacity: 0.6; /* Controla toda a opacidade da seção */
-            pointer-events: none; /* Desabilita cliques em tudo dentro */
-        }
-        /* Re-habilita ponteiros em botões para mostrar 'not-allowed' */
-        fieldset:disabled button { 
-            pointer-events: auto; 
-        }
-
-      `}</style>
-      <div className="bg-gray-800 text-white min-h-screen p-4 sm:p-8 font-sans">
-        <div className="max-w-2xl mx-auto">
-          <header className="text-center mb-8">
-            <h1 className="text-xl sm:text-4xl font-extrabold text-cyan-400">
-              `useForm` - v4.12
-            </h1>
-            <p className="text-gray-400 mt-2">Edição Contextual por Seção</p>
-          </header>
-          <div className="flex justify-center flex-wrap gap-2 mb-6">
-            <TabButton tabId="login" label="Nativo" />
-            <TabButton tabId="registration" label="Nativo (Custom)" />
-            <TabButton tabId="hybrid" label="Híbrido Simples" />
-            <TabButton tabId="nestedList" label="Lista Aninhada" />
-            <TabButton tabId="curriculum" label="Currículo (Edição)" />
-          </div>
-          <main>{scenarios[activeTab as keyof typeof scenarios]}</main>
+        <div className="flex justify-center flex-wrap gap-2 mb-6">
+          {/* Implementação dos Botões */}
+          <TabButton 
+            tabId="login" 
+            label="Nativo" 
+            isActive={activeTab === "login"} 
+            onClick={() => setActiveTab("login")} 
+          />
+          <TabButton 
+            tabId="registration" 
+            label="Nativo (Custom)" 
+            isActive={activeTab === "registration"} 
+            onClick={() => setActiveTab("registration")} 
+          />
+          <TabButton 
+            tabId="hybrid" 
+            label="Híbrido Simples" 
+            isActive={activeTab === "hybrid"} 
+            onClick={() => setActiveTab("hybrid")} 
+          />
+          <TabButton 
+            tabId="nestedList" 
+            label="Lista Aninhada" 
+            isActive={activeTab === "nestedList"} 
+            onClick={() => setActiveTab("nestedList")} 
+          />
+          <TabButton 
+            tabId="curriculum" 
+            label="Currículo (Edição)" 
+            isActive={activeTab === "curriculum"} 
+            onClick={() => setActiveTab("curriculum")} 
+          />
         </div>
+
+        <main className="transition-opacity duration-300 ease-in-out">
+            {scenarios[activeTab as keyof typeof scenarios]}
+        </main>
       </div>
-    </>
+    </div>
   );
 };
 
