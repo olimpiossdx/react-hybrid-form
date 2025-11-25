@@ -19,7 +19,7 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
   /**
    * Lê valores do formulário diretamente do DOM
    */
-const getValue = React.useCallback((namePrefix?: string): Partial<FV> | FV | any => {
+  const getValue = React.useCallback((namePrefix?: string): Partial<FV> | FV | any => {
     const form = formRef.current;
     if (!form) {
       return namePrefix ? undefined : ({} as FV);
@@ -28,7 +28,7 @@ const getValue = React.useCallback((namePrefix?: string): Partial<FV> | FV | any
     // 1. Busca todos os campos que coincidem ou começam com o prefixo
     // Nota: Como getFormFields agora retorna Array, podemos usar métodos de array
     const fields = getFormFields(form, namePrefix);
-    
+
     // Se um prefixo foi passado, verifica-se primeiro se existe um campo com ESSE NOME EXATO.
     // Se existir, queremos o valor dele (ex: "meu-valor"), e não um objeto {}.
     if (namePrefix) {
@@ -42,10 +42,10 @@ const getValue = React.useCallback((namePrefix?: string): Partial<FV> | FV | any
     const formData = {};
 
     if (fields.length === 0 && namePrefix) {
-       // Tenta fallback para busca exata caso getFormFields tenha falhado no seletor de prefixo
-       // (Raro com a lógica atual, mas bom por segurança)
-       const singleField = form.querySelector<FormField>(`[name="${namePrefix}"]`);
-       if (singleField){ 
+      // Tenta fallback para busca exata caso getFormFields tenha falhado no seletor de prefixo
+      // (Raro com a lógica atual, mas bom por segurança)
+      const singleField = form.querySelector<FormField>(`[name="${namePrefix}"]`);
+      if (singleField) {
         return parseFieldValue(singleField);
       };
     };
@@ -54,7 +54,7 @@ const getValue = React.useCallback((namePrefix?: string): Partial<FV> | FV | any
       const relativePath = getRelativePath(field.name, namePrefix);
       // Se relativePath for null, é porque é o próprio campo raiz (já tratado acima)
       // ou não pertence ao grupo.
-      if (!relativePath){ 
+      if (!relativePath) {
         return;
       };
 
@@ -72,7 +72,7 @@ const getValue = React.useCallback((namePrefix?: string): Partial<FV> | FV | any
    */
   const revalidateAllCustomRules = React.useCallback(() => {
     const form = formRef.current;
-    if (!form){ 
+    if (!form) {
       return;
     };
 
@@ -81,7 +81,7 @@ const getValue = React.useCallback((namePrefix?: string): Partial<FV> | FV | any
 
     Object.keys(validatorFunctions).forEach(validationKey => {
       const validate = validatorFunctions[validationKey];
-      if (!validate){ 
+      if (!validate) {
         return;
       };
 
@@ -116,7 +116,7 @@ const getValue = React.useCallback((namePrefix?: string): Partial<FV> | FV | any
   // ============ INTERAÇÃO DO USUÁRIO ============
 
   const handleFieldInteraction = React.useCallback((event: Event) => {
-    if(!(event.currentTarget instanceof HTMLElement)){
+    if (!(event.currentTarget instanceof HTMLElement)) {
       return;
     };
 
@@ -161,21 +161,21 @@ const getValue = React.useCallback((namePrefix?: string): Partial<FV> | FV | any
   /**
    * Aplica valor específico ao campo
    */
-   const applyValueToField = (field: FormField, value: any): void => {
-     if (field.type === 'checkbox' && field instanceof HTMLInputElement) {
-       field.checked = Boolean(value);
-     } else if (field.type === 'radio' && field instanceof HTMLInputElement) {
-       // Radios comparam string com string
-       field.checked = field.value === String(value);
-     } else {
-       // --- AJUSTE: Garante que 0 não vire string vazia se for number ---
-       if (value === null || value === undefined) {
-          field.value = '';
-       } else {
-          field.value = String(value);
-       }
-     }
-   };
+  const applyValueToField = (field: FormField, value: any): void => {
+    if (field.type === 'checkbox' && field instanceof HTMLInputElement) {
+      field.checked = Boolean(value);
+    } else if (field.type === 'radio' && field instanceof HTMLInputElement) {
+      // Radios comparam string com string
+      field.checked = field.value === String(value);
+    } else {
+      // --- AJUSTE: Garante que 0 não vire string vazia se for number ---
+      if (value === null || value === undefined) {
+        field.value = '';
+      } else {
+        field.value = String(value);
+      }
+    }
+  };
 
   /**
    * Reseta campo para seu valor padrão HTML
@@ -210,8 +210,8 @@ const getValue = React.useCallback((namePrefix?: string): Partial<FV> | FV | any
   };
 
   const isValidFormField = (element: HTMLElement): element is FormField => {
-   const allowedTypes = [HTMLInputElement, HTMLSelectElement, HTMLTextAreaElement];
-   return allowedTypes.some(type => element instanceof type);
+    const allowedTypes = [HTMLInputElement, HTMLSelectElement, HTMLTextAreaElement];
+    return allowedTypes.some(type => element instanceof type);
   };
 
   /**
@@ -242,22 +242,22 @@ const getValue = React.useCallback((namePrefix?: string): Partial<FV> | FV | any
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.type !== 'childList') return;
-    
+
         // --- CORREÇÃO: Otimização de Performance ---
         mutation.addedNodes.forEach(node => {
           if (!(node instanceof HTMLElement)) return;
-    
+
           // 1. Verifica se o próprio nó adicionado é um campo
           addFieldInteractionListeners(node);
-    
+
           // 2. Busca campos APENAS dentro do novo nó (ex: um fieldset inserido dinamicamente)
           // Nota: getFormFields precisa aceitar HTMLElement, veja o ponto 4 abaixo
           getFormFields(node as any).forEach(addFieldInteractionListeners);
         });
-    
+
         mutation.removedNodes.forEach(node => {
           if (!(node instanceof HTMLElement)) return;
-          
+
           removeFieldInteractionListeners(node);
           getFormFields(node as any).forEach(removeFieldInteractionListeners);
         });
@@ -280,7 +280,7 @@ const getValue = React.useCallback((namePrefix?: string): Partial<FV> | FV | any
 
   // ============ SUBMIT DO FORMULÁRIO ============
 
-  const handleSubmit = React.useCallback((onValid: (data: FV) => void) => 
+  const handleSubmit = React.useCallback((onValid: (data: FV) => void) =>
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       const form = formRef.current;
@@ -302,7 +302,7 @@ const getValue = React.useCallback((namePrefix?: string): Partial<FV> | FV | any
         }
 
         const isValid = formRef.current.checkValidity();
-        
+
         if (!isValid) {
           focusFirstInvalidField(form);
           form.reportValidity();
@@ -315,25 +315,25 @@ const getValue = React.useCallback((namePrefix?: string): Partial<FV> | FV | any
   /**
    * Foca no primeiro campo inválido
    */
-   const focusFirstInvalidField = (form: HTMLFormElement): void => {
-     const activeSection = form.querySelector('fieldset:not(:disabled)') || form;
-     const firstInvalid = activeSection.querySelector<HTMLElement>(':invalid');
-     
-     if (!firstInvalid) return;
-   
-     // --- CORREÇÃO: Suporte para StarRating e componentes customizados ---
-     // Tenta achar um elemento focável visualmente próximo ao input inválido (geralmente irmão ou pai)
-     // Procura: inputs visíveis, selects, textareas ou elementos com tabindex (StarRating)
-     const focusableSibling = firstInvalid.parentElement?.querySelector<HTMLElement>(
-       'input:not([type="hidden"]), select, textarea, [tabindex="0"]'
-     );
-   
-     if (focusableSibling) {
-       focusableSibling.focus();
-     } else {
-       firstInvalid.focus();
-     }
-   };
+  const focusFirstInvalidField = (form: HTMLFormElement): void => {
+    const activeSection = form.querySelector('fieldset:not(:disabled)') || form;
+    const firstInvalid = activeSection.querySelector<HTMLElement>(':invalid');
+
+    if (!firstInvalid) return;
+
+    // --- CORREÇÃO: Suporte para StarRating e componentes customizados ---
+    // Tenta achar um elemento focável visualmente próximo ao input inválido (geralmente irmão ou pai)
+    // Procura: inputs visíveis, selects, textareas ou elementos com tabindex (StarRating)
+    const focusableSibling = firstInvalid.parentElement?.querySelector<HTMLElement>(
+      'input:not([type="hidden"]), select, textarea, [tabindex="0"]'
+    );
+
+    if (focusableSibling) {
+      focusableSibling.focus();
+    } else {
+      firstInvalid.focus();
+    }
+  };
 
   // ============ EFFECT PRINCIPAL ============
 
