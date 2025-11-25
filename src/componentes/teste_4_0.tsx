@@ -4,7 +4,7 @@ import RegistrationForm from "../paginas/teste/tab-registration-form";
 import LoginForm from "../paginas/teste/tab-login";
 import HybridFormSimple from "../paginas/teste/tab-hibryd-form-simple";
 import NestedListForm from "../paginas/teste/tab-nested-list-form";
-import CurriculumForm from "../paginas/teste/tab-curriculum-form";
+import CurriculumForm from "../paginas/teste/tab-curriculum";
 
 // Foca no nova tab/formulário-ativo
 const Teste: React.FC = () => {
