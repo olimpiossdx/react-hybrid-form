@@ -25,7 +25,7 @@ const HybridFormSimple = ({ }) => {
     if (valueRatingForm > 0 && valueRatingForm <= 3 && !value)
       return { message: "O comentário é obrigatório...", type: "error" };
     if (value && value.length > 0 && value.length < 5)
-      return { message: "Comentário curto.", type: "warning" };
+      return { message: "Comentário curto.", type: "error" };
 
     return undefined;
   }, []);
@@ -38,9 +38,7 @@ const HybridFormSimple = ({ }) => {
     return undefined;
   }, []);
 
-  React.useEffect(() => setValidators({ validarComentario, validarCor }),
-    [setValidators, validarComentario, validarCor]
-  );
+  React.useEffect(() => setValidators({ validarComentario, validarCor }), [setValidators, validarComentario, validarCor]);
 
   const onSubmit = (data: IMyHybridForm) => {
     const body = JSON.stringify(data);

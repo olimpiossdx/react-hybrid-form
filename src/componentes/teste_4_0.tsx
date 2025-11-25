@@ -19,8 +19,8 @@ const Teste: React.FC = () => {
     curriculum: <CurriculumForm />,
   };
 
-  return (<div className="bg-gray-800 text-white min-h-screen p-4 sm:p-8 font-sans">
-    <div className="max-w-2xl mx-auto">
+  return (<div className="bg-gray-800 text-white min-h-screen p-2 sm:p-4 font-sans">
+    <div className="max-w-4xl mx-auto">
       <header className="text-center mb-8">
         <h1 className="text-xl sm:text-4xl font-extrabold text-cyan-400">
           `useForm` - v4.12

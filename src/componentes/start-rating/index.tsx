@@ -1,6 +1,7 @@
 import React from "react";
 
 interface StarRatingProps {
+  lengthStart?: number;
   name: string;
   label: string;
   required?: boolean;
@@ -9,11 +10,7 @@ interface StarRatingProps {
 }
 
 const StarRating: React.FC<StarRatingProps> = ({
-  name,
-  label,
-  required,
-  readOnly,
-  disabled,
+  name, label, required, readOnly, disabled
 }) => {
   const [currentValue, setCurrentValue] = React.useState<number | string>("");
   const [hoverValue, setHoverValue] = React.useState(0);
