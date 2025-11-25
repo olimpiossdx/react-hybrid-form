@@ -70,7 +70,7 @@ const StarRating: React.FC<StarRatingProps> = ({
             onClick={() => handleClick(value)}
             onMouseOver={() => setHoverValue(effectiveDisabled ? 0 : value)}
             onMouseOut={() => setHoverValue(0)}
-            className={`w-8 h-8 ${effectiveDisabled ? "" : "cursor-pointer"} 
+            className={`w-8 h-8 relative z-10 ${effectiveDisabled ? "" : "cursor-pointer"}
             transition-colors ${(hoverValue || displayValue) >= value ? "text-yellow-400" : "text-gray-600"}`}
             fill="currentColor"
             viewBox="0 0 20 20"
