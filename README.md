@@ -1,7 +1,3 @@
-Com certeza. Este README consolida toda a arquitetura, as decisões técnicas e as soluções de problemas que implementamos até agora (como a validação do Autocomplete, a recursão do StarRating e a performance do MutationObserver).
-
------
-
 # 🚀 React Hybrid Forms (v4.12)
 
 Uma arquitetura de formulários para React focada em **performance**, **acessibilidade** e uso nativo da **API de Validação do DOM**.
