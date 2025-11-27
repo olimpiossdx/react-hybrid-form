@@ -6,6 +6,7 @@ import HybridFormSimple from "../paginas/teste/tab-hibryd-form-simple";
 import NestedListForm from "../paginas/teste/tab-nested-list-form";
 import CurriculumForm from "../paginas/teste/tab-curriculum";
 import CheckboxGroupForm from "../paginas/teste/tab-checkbox-group-form";
+import TabModal from "../paginas/teste/tab-modal";
 
 // Foca no nova tab/formulário-ativo
 const Teste: React.FC = () => {
@@ -18,7 +19,8 @@ const Teste: React.FC = () => {
     hybrid: <HybridFormSimple />,
     nestedList: <NestedListForm />,
     curriculum: <CurriculumForm />,
-    checkboxGroup: <CheckboxGroupForm />
+    checkboxGroup: <CheckboxGroupForm />,
+    tabModal: <TabModal />,
   };
 
   return (<div className="bg-gray-800 text-white min-h-screen p-2 sm:p-4 font-sans">
@@ -66,6 +68,12 @@ const Teste: React.FC = () => {
           tabId="checkboxGroup"
           label="Checkboxes"
           isActive={activeTab === "checkboxGroup"}
+          onClick={setActiveTab}
+        />
+        <TabButton
+          tabId="tabModal"
+          label="Modal"
+          isActive={activeTab === "tabModal"}
           onClick={setActiveTab}
         />
       </div>
