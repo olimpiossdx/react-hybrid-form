@@ -1,5 +1,5 @@
 import React from "react";
-import { syncCheckboxGroup, initializeCheckboxMasters } from "../../utils/utilities";
+import { syncCheckboxGroup, initializeCheckboxMasters, setNativeValue } from "../../utils/utilities";
 import type { FieldListenerMap, ValidatorMap, FormField } from "./props";
 import { getFormFields, parseFieldValue, getRelativePath, setNestedValue, getNestedValue } from "./utilities";
 
@@ -159,9 +159,8 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
   }, [revalidateAllCustomRules]);
 
   // =========================================================================
-  // 4. ESCRITA DE DADOS (Reset / Load Data)
+  // 4. ESCRITA DE DADOS (Reset / Load Data) (VERSÃO REACT-AWARE)
   // =========================================================================
-
   const resetSection = React.useCallback((namePrefix: string, originalValues: any) => {
     const form = formRef.current;
     if (!form) return;
@@ -173,47 +172,41 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
 
       let valueToApply = undefined;
 
-      // Estratégia de Lookup: Tenta achar o valor no objeto original
       if (originalValues) {
         valueToApply = relativePath ? getNestedValue(originalValues, relativePath) : undefined;
-        // Fallback para estruturas planas
         if (valueToApply === undefined && !relativePath) {
           valueToApply = getNestedValue(originalValues, field.name);
         }
       }
 
-      // APLICAÇÃO DE VALOR NO DOM
+      // Define qual será o novo valor/estado
+      let newValue: any = '';
+
       if (field instanceof HTMLInputElement && (field.type === 'checkbox' || field.type === 'radio')) {
-        // Reset Inteligente de Checkbox/Radio
         if (valueToApply !== undefined) {
           if (field.type === 'checkbox' && Array.isArray(valueToApply)) {
-            // Grupo: Marca se valor existe no array
-            field.checked = valueToApply.includes(field.value);
+            newValue = valueToApply.includes(field.value);
           } else if (field.type === 'checkbox' && typeof valueToApply === 'boolean') {
-            // Flag: Marca booleano
-            field.checked = valueToApply;
+            newValue = valueToApply;
           } else {
-            // Radio/Valor Específico: Marca se coincidir
-            field.checked = field.value === String(valueToApply);
+            newValue = field.value === String(valueToApply);
           }
         } else {
-          // Limpeza: Volta ao padrão do HTML
-          field.checked = field.defaultChecked;
+          newValue = field.defaultChecked;
         }
       } else {
-        // Reset Padrão (Texto)
-        field.value = String(valueToApply ?? (field as any).defaultValue ?? '');
+        newValue = String(valueToApply ?? (field as any).defaultValue ?? '');
       }
 
-      // PROPAGAÇÃO DE EVENTOS
-      // Disparamos 'change' para que listeners (como validação e Ilhas de Reatividade) saibam da mudança.
-      field.dispatchEvent(new Event('input', { bubbles: true }));
-      field.dispatchEvent(new Event('change', { bubbles: true }));
+      // APLICAÇÃO VIA BYPASS
+      // Isso vai disparar o onChange do React automaticamente!
+      if (field instanceof HTMLElement) {
+        setNativeValue(field, newValue);
+      }
 
       field.classList.remove('is-touched');
     });
 
-    // Sincronia Visual Pós-Carga (Garante que os Mestres fiquem com traço/check corretos)
     initializeCheckboxMasters(form);
   }, []);
 

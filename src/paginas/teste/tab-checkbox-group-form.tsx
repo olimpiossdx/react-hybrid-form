@@ -42,7 +42,7 @@ const CheckboxGroupForm = () => {
       return { message: "Selecione ao menos uma área.", type: "error" as const };
     }
     if (Array.isArray(values) && values.length > 3) {
-      return { message: "Escolha no máximo 3 focos.", type: "warning" as const };
+      return { message: "Escolha no máximo 3 focos.", type: "error" as const };
     }
   }, []);
 
@@ -62,40 +62,45 @@ const CheckboxGroupForm = () => {
 
   // --- HANDLERS DE CICLO DE VIDA (CORRIGIDOS) ---
 
+  // --- O TESTE DE FOGO (CORRIGIDO COM SETTIMEOUT) ---
+  // Solução para Race Condition:
+  // 1. Mandamos o React mostrar o campo (setIsCancelando).
+  // 2. Usamos setTimeout para esperar o React terminar de desenhar.
+  // 3. Preenchemos o valor no DOM (resetSection).
+
   const handleLoadData = () => {
-    console.log("1. Carregando dados do servidor...");
+    console.log("Simulando carga...");
     setMode('editando');
 
-    // Passo A: Injeta os dados no DOM (Inputs)
-    // Isso vai marcar o checkbox visualmente
-    resetSection("", DADOS_API);
-
-    // Passo B: Sincroniza a UI Reativa (React State)
-    // Verificamos explicitamente: "Nos dados, existe cancelamento?"
-    // Isso garante que o input de texto apareça, independente de eventos.
+    // 1. Atualiza a UI Reativa PRIMEIRO (Faz o input aparecer)
     const deveMostrarCancelamento = DADOS_API.interesses.includes('cancelamento');
     setIsCancelando(deveMostrarCancelamento);
+
+    // 2. Aguarda o Render e Sincroniza o DOM
+    setTimeout(() => {
+      resetSection("", DADOS_API);
+    }, 0);
   };
 
   const handleCancel = () => {
-    console.log("Cancelando alterações...");
-
     if (mode === 'novo') {
-      // Limpa tudo
       resetSection("", null);
-      setIsCancelando(false);
+      setIsCancelando(false); // Reseta UI
     } else {
-      // Volta para o estado da API
-      resetSection("", DADOS_API);
-
-      // Restaura UI para o estado original
+      // 1. Restaura UI para o estado original
       const estavaCancelando = DADOS_API.interesses.includes('cancelamento');
       setIsCancelando(estavaCancelando);
+
+      // 2. Aguarda o Render e Restaura valores
+      setTimeout(() => {
+        resetSection("", DADOS_API);
+      }, 0);
     }
   };
 
-  // Handler Híbrido: Atualiza React UI quando o usuário clica manualmente
+  // Este handler continua existindo para interações manuais do usuário (cliques reais)
   const handleCancelamentoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("Interação manual ou sincronizada:", e.target.checked);
     setIsCancelando(e.target.checked);
   };
 
@@ -110,6 +115,11 @@ const CheckboxGroupForm = () => {
     });
   };
 
+  const handleClickSairEdicao = () => {
+    setMode('novo');
+    resetSection("", null);
+    setIsCancelando(false);
+  };
   return (
     <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700 max-w-5xl mx-auto">
 
@@ -136,6 +146,17 @@ const CheckboxGroupForm = () => {
           >
             ↺ {mode === 'novo' ? 'Limpar Tudo' : 'Desfazer Alterações'}
           </button>
+
+          {/* NOVO: Botão para Sair do Modo Edição */}
+          {mode === 'editando' && (
+            <button
+              type="button"
+              onClick={handleClickSairEdicao}
+              className="px-3 py-1.5 text-sm bg-red-900/50 text-red-200 rounded hover:bg-red-900 transition-colors border border-red-800"
+            >
+              ✕ Cancelar
+            </button>
+          )}
         </div>
       </div>
 

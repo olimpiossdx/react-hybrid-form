@@ -2,6 +2,38 @@ import type { IAnyObject, FormField } from "../hooks/use-form/props";
 
 const splitPath = (path: string) => path.replace(/\]/g, '').split(/[.\[]/);
 
+// ============ REATIVIDADE FORÇADA (REACT BYPASS) ============
+
+/**
+ * Força uma atualização de valor que o React consegue detectar e disparar onChange.
+ * Útil para resetar formulários em arquiteturas híbridas.
+ */
+export const setNativeValue = (element: HTMLElement, value: any) => {
+  // 1. Identifica se é Checkbox/Radio (usa 'checked') ou Texto (usa 'value')
+  const isCheckbox = element instanceof HTMLInputElement && (element.type === 'checkbox' || element.type === 'radio');
+  const propName = isCheckbox ? 'checked' : 'value';
+
+  // 2. Busca o setter original do protótipo do navegador
+  // (Ignorando o setter sobrescrito pelo React)
+  const descriptor = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, propName);
+  
+  if (descriptor && descriptor.set) {
+      // 3. Chama o setter original
+      descriptor.set.call(element, value);
+  } else {
+      // Fallback
+      (element as any)[propName] = value;
+  }
+
+  // 4. Dispara o evento que o React escuta
+  // React 16+ ouve 'click' para checkboxes para inversão de estado
+  // Para texto, ouve 'input'
+  const eventName = isCheckbox ? 'click' : 'input';
+  
+  const event = new Event(eventName, { bubbles: true });
+  element.dispatchEvent(event);
+};
+
 /**
  * Define um valor em um objeto aninhado usando string path.
  * Suporta notação de array (ex: 'users[0].name') e cria arrays/objetos automaticamente.

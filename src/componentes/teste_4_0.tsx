@@ -29,7 +29,7 @@ const Teste: React.FC = () => {
     <div className="max-w-4xl mx-auto">
       <header className="text-center mb-8">
         <h1 className="text-xl sm:text-4xl font-extrabold text-cyan-400">
-          `useForm` - v0.4.13.1
+          `useForm` - v0.4.13.2
         </h1>
         <p className="text-gray-400 mt-2">Edição Contextual por Seção</p>
       </header>
@@ -78,7 +78,7 @@ const Teste: React.FC = () => {
           isActive={activeTab === "tabModal"}
           onClick={setActiveTab}
         />
-         <TabButton
+        <TabButton
           tabId="nestedLevelForm"
           label="Form com N níveis"
           isActive={activeTab === "nestedLevelForm"}
