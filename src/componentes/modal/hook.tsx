@@ -20,7 +20,7 @@ const showModal = (options: IModalOptions): IModalHandle => {
     if (document.body.contains(modalContainer)) {
       root.unmount(); // Desmonta os componentes React
       document.body.removeChild(modalContainer); // Remove a DIV do HTML
-      
+
       // Aciona o callback de fechamento do usuário, se houver
       if (options.onClose) {
         options.onClose();
@@ -29,10 +29,10 @@ const showModal = (options: IModalOptions): IModalHandle => {
   };
 
   // 4. Renderiza o Modal
-  root.render(<Modal 
-      {...options} 
-      closeModalInternal={cleanup} 
-    />);
+  root.render(<Modal
+    {...options}
+    closeModalInternal={cleanup}
+  />);
 
   // 5. Retorna o objeto de controle (para fechar externamente se necessário)
   return {

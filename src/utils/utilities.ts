@@ -2,10 +2,13 @@ import type { IAnyObject, FormField } from "../hooks/use-form/props";
 
 const splitPath = (path: string) => path.replace(/\]/g, '').split(/[.\[]/);
 
-
 /**
- * Define valor em objeto aninhado (Mutável)
- * Ex: obj={}, path="a.b", value=1 -> obj={a:{b:1}}
+ * Define um valor em um objeto/array usando um caminho de string (dot notation).
+ * Cria automaticamente objetos ou arrays aninhados conforme necessário.
+ * * @example
+ * const obj = {};
+ * setNestedValue(obj, 'users[0].name', 'Alice');
+ * // obj torna-se { users: [{ name: 'Alice' }] }
  */
 export const setNestedValue = (obj: IAnyObject, path: string, value: any): void => {
   if (value === undefined) return;
@@ -31,7 +34,10 @@ export const setNestedValue = (obj: IAnyObject, path: string, value: any): void 
 };
 
 /**
- * Lê valor de objeto aninhado
+ * Obtém um valor de um objeto aninhado usando um caminho de string.
+ * Retorna undefined se o caminho não existir.
+ * * @example
+ * getNestedValue({ a: { b: 1 } }, 'a.b') // retorna 1
  */
 export const getNestedValue = (obj: IAnyObject, path: string): any => {
   if (!path || !obj) return undefined;
@@ -42,8 +48,10 @@ export const getNestedValue = (obj: IAnyObject, path: string): any => {
 };
 
 /**
- * Busca campos válidos dentro de um container.
- * Filtra botões e inputs de controle que não guardam dados de negócio.
+ * Busca todos os campos de formulário válidos (Input, Select, Textarea) dentro de um elemento raiz.
+ * Filtra botões, resets e inputs de imagem.
+ * * @param root O elemento container (form, fieldset, div, etc.)
+ * @param namePrefix (Opcional) Filtra campos que começam com este prefixo no atributo 'name'.
  */
 export const getFormFields = (root: HTMLElement, namePrefix?: string): FormField[] => {
   const selector = namePrefix
@@ -60,8 +68,8 @@ export const getFormFields = (root: HTMLElement, namePrefix?: string): FormField
 };
 
 /**
- * Extrai caminho relativo do nome do campo.
- * Ex: name="user.address.city", prefix="user" -> "address.city"
+ * Calcula o caminho relativo de um campo, removendo o prefixo do nome.
+ * Útil para mapear campos aninhados (ex: 'address.city') para o objeto de dados local ({ city: ... }).
  */
 export const getRelativePath = (fieldName: string, namePrefix?: string): string | null => {
   if (!namePrefix) return fieldName;
@@ -75,7 +83,10 @@ export const getRelativePath = (fieldName: string, namePrefix?: string): string 
 };
 
 /**
- * Normaliza o valor do campo DOM para tipos JS primitivos.
+ * Converte o valor bruto do DOM para um tipo primitivo JavaScript apropriado.
+ * - 'number' -> number
+ * - 'checkbox' -> boolean
+ * - 'radio' -> valor se checked, undefined se não
  */
 export const parseFieldValue = (field: FormField): any => {
   if (field instanceof HTMLInputElement) {
@@ -89,20 +100,17 @@ export const parseFieldValue = (field: FormField): any => {
 // ============ REATIVIDADE FORÇADA (REACT BYPASS) ============
 
 /**
- * Altera o valor de um input furando o bloqueio do React (Synthetic Events).
- * * MOTIVAÇÃO: O React sobrescreve os setters de 'value' e 'checked'. Alterações via JS 
- * não disparam 'onChange' automaticamente. Esta função acessa o protótipo nativo 
- * para injetar o valor e disparar o evento manualmente.
- * * CORREÇÃO BUG: Usamos protótipos explícitos (HTMLInputElement.prototype) em vez de 
- * dinâmicos (Object.getPrototypeOf) para evitar "TypeError: Illegal invocation".
+ * Força a definição do valor de um input (Text, Select, Textarea) ignorando o wrapper de eventos do React.
+ * Usa o protótipo nativo para garantir que a mudança seja detectada como uma interação real.
+ * Dispara eventos 'input' e 'change' para notificar listeners.
  */
 export const setNativeValue = (element: HTMLElement, value: any) => {
-  // 1. Guarda de Proteção: Não força edição em campos bloqueados
+  // Proteção: Não altera campos desabilitados/somente leitura
   if ((element as any).disabled || (element as any).readOnly) return;
 
-  // 2. Busca o descritor no protótipo CORRETO para evitar Illegal Invocation
   let descriptor: PropertyDescriptor | undefined;
 
+  // Obtém o setter correto baseado no tipo do elemento para evitar 'Illegal invocation'
   if (element instanceof HTMLInputElement) {
       descriptor = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
   } else if (element instanceof HTMLSelectElement) {
@@ -111,40 +119,44 @@ export const setNativeValue = (element: HTMLElement, value: any) => {
       descriptor = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
   }
 
-  // 3. Aplica o valor usando o setter nativo (se existir) ou direto
+  // Chama o setter original do navegador
   if (descriptor && descriptor.set) {
       descriptor.set.call(element, value);
   } else {
       (element as any).value = value;
   }
 
-  // 4. Dispara eventos para acordar o React e Validadores
+  // Acorda o React e validadores
   element.dispatchEvent(new Event('input', { bubbles: true }));
-  
-  // Selects geralmente precisam de 'change' para o React perceber a opção
   if (element instanceof HTMLSelectElement) {
       element.dispatchEvent(new Event('change', { bubbles: true }));
   }
 };
 
 /**
- * Especialização para Checkboxes: Usa clique nativo para máxima compatibilidade.
+ * Define o estado 'checked' de um checkbox de forma absoluta e segura.
+ * Diferente de .click(), esta função não inverte o estado (toggle), ela define exatamente o que foi pedido.
+ * Usa o protótipo nativo para bypassar o React e dispara 'change' para notificar a aplicação.
  */
 export const setNativeChecked = (element: HTMLInputElement, checked: boolean) => {
-  // Se já estiver no estado desejado ou for disabled, ignora
-  if (element.checked === checked) return;
   if (element.disabled || element.readOnly) return;
 
-  // O clique nativo inverte o estado e dispara todos os eventos corretos (change, input, click)
-  // que o React escuta nativamente sem precisar de hacks de protótipo complexos.
-  element.click();
+  const descriptor = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "checked");
+  if (descriptor && descriptor.set) {
+      descriptor.set.call(element, checked);
+  } else {
+      element.checked = checked;
+  }
+
+  // Dispara apenas change. Não usa click() para evitar toggle acidental durante cargas de dados.
+  element.dispatchEvent(new Event('change', { bubbles: true }));
 };
 
-// ============ LÓGICA DE CHECKBOX GROUP ============
+// ============ LÓGICA DE CHECKBOX GROUP (MESTRE/DETALHE) ============
 
 /**
- * Helper interno: Recalcula o estado visual (Checked/Indeterminate) de um Mestre
- * baseado nos seus filhos. O estado 'indeterminate' é puramente visual.
+ * Helper interno: Analisa os filhos de um grupo e atualiza o estado visual do Mestre.
+ * Determina se o Mestre deve estar Checked (todos marcados), Unchecked (nenhum) ou Indeterminate (misto).
  */
 const updateMasterState = (master: HTMLInputElement, form: HTMLElement) => {
   const groupName = master.dataset.checkboxMaster;
@@ -162,14 +174,15 @@ const updateMasterState = (master: HTMLInputElement, form: HTMLElement) => {
     master.checked = true;
     master.indeterminate = false;
   } else {
+    // Indeterminado: Quando nem todos estão marcados (ex: seleção parcial ou item disabled desmarcado)
     master.checked = false;
-    master.indeterminate = true; // Visualmente vira um traço (-)
+    master.indeterminate = true;
   }
 };
 
 /**
- * Inicializa o estado visual de todos os Mestres dentro de um container.
- * Deve ser chamado ao montar o form ou após resetar dados.
+ * Inicializa o estado visual de todos os checkboxes Mestres dentro de um container.
+ * Deve ser chamado ao montar o formulário ou após resetar/carregar dados.
  */
 export const initializeCheckboxMasters = (root: HTMLElement) => {
   const masters = root.querySelectorAll<HTMLInputElement>('input[type="checkbox"][data-checkbox-master]');
@@ -180,29 +193,37 @@ export const initializeCheckboxMasters = (root: HTMLElement) => {
 };
 
 /**
- * Sincroniza interação (Clique Mestre -> Filhos OU Clique Filho -> Mestre).
- * Chamado automaticamente pelo useForm no evento 'change'.
+ * Gerencia a interação em grupos de Checkbox (Selecionar Todos).
+ * Pode ser acionado pelo clique no Mestre ou nos Filhos.
  */
 export const syncCheckboxGroup = (target: HTMLInputElement, form: HTMLElement) => {
-  // CASO A: Mestre Clicado (Controle Downstream)
+  // CASO A: Usuário clicou no Mestre (Select All)
   if (target.dataset.checkboxMaster) {
     const groupName = target.dataset.checkboxMaster;
-    const children = form.querySelectorAll<HTMLInputElement>(`input[type="checkbox"][name="${groupName}"]`);
+    const children = Array.from(form.querySelectorAll<HTMLInputElement>(`input[type="checkbox"][name="${groupName}"]`));
     
-    // O target.checked já reflete o estado desejado pós-clique
-    const desiredState = target.checked;
+    // Filtra apenas os habilitados para decisão lógica
+    const enabledChildren = children.filter(child => !child.disabled && !child.readOnly);
     
-    children.forEach(child => {
-      // Usa setNativeChecked para garantir disparo de eventos e respeito ao disabled
-      setNativeChecked(child, desiredState);
+    // Regra de "Toggle Inteligente":
+    // Se existir ALGUM filho habilitado que está desmarcado -> A intenção é MARCAR TODOS.
+    // Se TODOS os habilitados já estão marcados -> A intenção é DESMARCAR TODOS.
+    const shouldCheckAll = enabledChildren.some(child => !child.checked);
+    
+    enabledChildren.forEach(child => {
+      // Aplica o estado desejado apenas se necessário, usando setter seguro
+      if (child.checked !== shouldCheckAll) {
+        setNativeChecked(child, shouldCheckAll);
+      }
     });
     
-    // Recalcula o mestre no final (para lidar com casos onde filhos disabled impediram seleção total)
+    // Recalcula o mestre no final para refletir a realidade (considerando itens disabled que não mudaram)
     updateMasterState(target, form);
     return;
   }
 
-  // CASO B: Filho Clicado (Controle Upstream)
+  // CASO B: Usuário clicou num Filho
+  // Atualiza o Mestre correspondente para refletir o novo estado do grupo
   if (target.name) {
     const master = form.querySelector<HTMLInputElement>(`input[type="checkbox"][data-checkbox-master="${target.name}"]`);
     if (master) {

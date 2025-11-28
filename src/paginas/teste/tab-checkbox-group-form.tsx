@@ -203,6 +203,11 @@ const CheckboxGroupForm = () => {
                   className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-cyan-500 focus:ring-offset-gray-900" />
                 Backend
               </label>
+              <label className="flex items-center gap-2 text-gray-300 hover:text-white cursor-pointer">
+                <input type="checkbox" name="interesses" value="fullstack" disabled
+                  className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-cyan-500 focus:ring-offset-gray-900" />
+                full stack
+              </label>
 
               {/* GATILHO REATIVO */}
               <label className={`flex items-center gap-2 font-medium p-1 rounded -ml-1 transition-colors cursor-pointer ${isCancelando ? 'bg-yellow-900/20 text-yellow-200' : 'text-gray-400 hover:text-yellow-200'}`}>
