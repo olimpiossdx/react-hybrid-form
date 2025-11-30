@@ -317,7 +317,7 @@ const AsyncAutocompleteExample = () => {
       {/* --- MODAL DE TESTE DE PORTAL --- */}
       {showTestModal && (
         <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-100 p-4 backdrop-blur-sm"
           onClick={() => setShowTestModal(false)}
         >
           <div

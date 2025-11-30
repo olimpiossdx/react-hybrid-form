@@ -291,7 +291,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
     }
   };
 
-  const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
+  const handleBlur = (_: React.FocusEvent<HTMLDivElement>) => {
     // Timeout para verificar se o clique foi dentro do Portal
     setTimeout(() => {
       if (document.activeElement !== visibleInputRef.current) {
@@ -346,7 +346,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
       <ul
         ref={listRef}
         onScroll={handleScrollList}
-        className="bg-gray-800 border border-gray-600 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-2xl z-[9999]"
+        className="bg-gray-800 border border-gray-600 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-2xl z-9999"
         style={{
           position: "absolute",
           top: dropdownCoords.top,
