@@ -1,25 +1,71 @@
-import React from "react";
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 
-export interface IOption
-  extends React.DetailedHTMLProps<
-    React.OptionHTMLAttributes<HTMLOptionElement>,
-    HTMLOptionElement
-  > {
+// --- INTERFACES ---
+
+export interface IOption extends React.DetailedHTMLProps<React.OptionHTMLAttributes<HTMLOptionElement>, HTMLOptionElement> {
+  /** O valor real que será enviado no formulário (ID) */
   value: string;
+  /** O texto que será exibido para o usuário na lista */
   label: string;
 }
 
 export interface AutocompleteProps {
+  // --- DADOS BÁSICOS ---
+  /** O atributo 'name' do input oculto. Usado pelo useForm para extrair dados. */
   name: string;
+  /** O rótulo visual do campo. */
   label: string;
+  /** Array de opções para seleção. Em modo Async, este array é atualizado externamente. */
   options: IOption[];
+  /** Valor inicial (ID) para pré-preenchimento (Edição). */
+  initialValue?: string;
+  /** Texto placeholder do input de busca. */
+  placeholder?: string;
+
+  // --- BUSCA ASSÍNCRONA ---
+  /** * Função de busca remota. 
+   * Se fornecida, o filtro local é desativado e o controle da lista passa para o componente pai.
+   */
+  onSearch?: (query: string) => void;
+  /** Indica se a busca principal (no input) está em andamento. */
+  isLoading?: boolean;
+  /** Tempo de espera (ms) antes de disparar o onSearch ao digitar. Default: 300ms. */
+  debounceTime?: number;
+
+  // --- PAGINAÇÃO (INFINITE SCROLL) ---
+  /** Callback disparado quando o usuário rola até o final da lista. */
+  onLoadMore?: () => void;
+  /** Indica se a próxima página está sendo carregada (spinner no rodapé). */
+  isLoadingMore?: boolean;
+  /** Indica se existem mais páginas disponíveis para busca. */
+  hasMore?: boolean;
+
+  // --- FEEDBACK & COMPORTAMENTO ---
+  /** Mensagem de erro customizada para exibir no rodapé da lista (ex: "Erro de Rede"). */
+  errorMessage?: string;
+  /** Exibe um botão "X" para limpar a seleção atual. */
+  clearable?: boolean;
+  
+  // --- ESTADO & VALIDAÇÃO ---
   readOnly?: boolean;
   disabled?: boolean;
   required?: boolean;
+  /** Chave para vincular a uma função de validação customizada no useForm. */
   validationKey?: string;
-  initialValue?: string;
+  
+  // --- ESTILIZAÇÃO ---
+  className?: string;
 }
 
+/**
+ * Componente Autocomplete Híbrido (v2.3).
+ * * Arquitetura:
+ * 1. **Visual:** Um input de texto para busca e uma lista suspensa (ul/li) customizada.
+ * 2. **Dados (Shadow Select):** Um `<select>` oculto mantém o valor real selecionado. 
+ * Isso garante que o `useForm` consiga extrair o valor nativamente via DOM.
+ * 3. **Sincronia:** Ouve eventos de mudança no select oculto para atualizar o texto visível 
+ * automaticamente quando o formulário é resetado externamente (ex: modo Edição).
+ */
 const Autocomplete: React.FC<AutocompleteProps> = ({
   name,
   label,
@@ -29,341 +75,332 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
   initialValue = "",
   disabled,
   readOnly,
+  onSearch,
+  onLoadMore,
+  isLoading = false,
+  isLoadingMore = false,
+  hasMore = false,
+  errorMessage,
+  clearable = false,
+  debounceTime = 300,
+  className = "",
+  placeholder
 }) => {
-  // --- HELPERS ---
-  const useGetOptionLabel = React.useCallback((option: IOption) => option.label || (typeof option.children === "string" ? option.children : ""), []);
+  const getOptionLabel = (opt: IOption) => opt.label || (typeof opt.children === 'string' ? opt.children : "");
 
-  const useFindInitialLabel = React.useCallback((): string => {
-    if (!initialValue) return "";
-    const found = options.find((s) => s.value === initialValue);
-    return found ? useGetOptionLabel(found) : "";
-  }, [initialValue, options, useGetOptionLabel]);
+  const findLabelByValue = (val: string) => {
+    const found = options.find(s => s.value === val);
+    return found ? getOptionLabel(found) : "";
+  };
 
-  // --- ESTADOS ---
-  const [inputValue, setInputValue] = React.useState<string>(useFindInitialLabel());
-  const [showSuggestions, setShowSuggestions] = React.useState(false);
-  const [selectedValue, setSelectedValue] = React.useState<string>(initialValue);
-  const [activeIndex, setActiveIndex] = React.useState<number>(-1);
-
-  // --- REFS ---
-  const selectRef = React.useRef<HTMLSelectElement>(null);
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const visibleInputRef = React.useRef<HTMLInputElement>(null);
-  const listRef = React.useRef<HTMLUListElement>(null);
-
-  // NOVA REF: Controla se o blur deve ser ignorado
-  const ignoreBlurRef = React.useRef(false);
-
-  // --- SINCRONIA INICIAL ---
-  React.useEffect(() => {
-    setSelectedValue(initialValue);
-    setInputValue(useFindInitialLabel());
-  }, [initialValue, useFindInitialLabel]);
-
-  // Limpeza de erro baseada em estado
-  React.useEffect(() => {
-    if (visibleInputRef.current && selectedValue) {
-      visibleInputRef.current.setCustomValidity("");
-    }
-  }, [selectedValue]);
-
-    React.useEffect(() => {
-      const select = selectRef.current;
-      if (!select) return;
-
-      const handleExternalChange = () => {
-          // O DOM mudou (resetSection). Precisamos atualizar o visual.
-          const newValue = select.value;
-          
-          // Encontra o label correspondente ao novo valor (ID)
-          const found = options.find(opt => opt.value === newValue);
-          const newLabel = found ? (found.label || String(found.children)) : "";
-          
-          // Atualiza estados visuais
-          setSelectedValue(newValue);
-          setInputValue(newLabel);
-      };
-
-      select.addEventListener('change', handleExternalChange);
-      
-      return () => {
-          select.removeEventListener('change', handleExternalChange);
-      };
-  }, [options]);
+  // Estados Visuais
+  const [inputValue, setInputValue] = useState<string>(""); 
+  const [selectedValue, setSelectedValue] = useState<string>(initialValue);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeIndex, setActiveIndex] = useState<number>(-1);
+  const [isTyping, setIsTyping] = useState(false);
   
-  // --- ATUALIZAÇÃO DO SELECT OCULTO ---
+  // Refs de Infraestrutura
+  const selectRef = useRef<HTMLSelectElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const visibleInputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // --- 1. SCROLL AUTOMÁTICO (Acessibilidade) ---
+  // Mantém o item selecionado via teclado sempre visível na janela de scroll
+  useEffect(() => {
+    if (showSuggestions && activeIndex >= 0 && listRef.current) {
+        const activeItem = listRef.current.children[activeIndex] as HTMLElement;
+        if (activeItem) {
+            activeItem.scrollIntoView({ block: 'nearest' });
+        }
+    }
+  }, [activeIndex, showSuggestions]);
+
+  // --- 2. SINCRONIA DOM BLINDADA (Edição/Reset) ---
+  // Atualiza o input visual se o valor do select oculto mudar "por fora" (useForm)
+  useEffect(() => {
+    const select = selectRef.current;
+    if (!select) return;
+
+    const handleExternalChange = () => {
+      // Se o usuário está digitando, não interrompemos o fluxo visual
+      if (document.activeElement === visibleInputRef.current) return;
+
+      const newValue = select.value;
+      const newLabel = findLabelByValue(newValue);
+      
+      setSelectedValue(newValue);
+      
+      // Atualiza o texto se encontrou o label ou se o valor foi limpo
+      if (newLabel || newValue === "") {
+          setInputValue(newLabel);
+      }
+    };
+
+    // Inicialização
+    if (!inputValue) handleExternalChange();
+
+    select.addEventListener('change', handleExternalChange);
+    return () => select.removeEventListener('change', handleExternalChange);
+  }, [options, initialValue]); 
+
+  // --- 3. ATUALIZAÇÃO DO VALOR REAL ---
   const updateHiddenSelect = (newSelectedValue: string) => {
     setSelectedValue(newSelectedValue);
-
     if (selectRef.current) {
       const nativeSelect = selectRef.current;
       nativeSelect.value = newSelectedValue;
-      nativeSelect.dispatchEvent(new Event("change", { bubbles: true }));
-
-      if (
-        visibleInputRef.current &&
-        nativeSelect.classList.contains("is-touched")
-      ) {
-        visibleInputRef.current.classList.add("is-touched");
+      // Dispara evento para notificar o useForm
+      nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      
+      // Limpa erro visual nativo se preenchido
+      if (visibleInputRef.current && newSelectedValue) {
+          visibleInputRef.current.setCustomValidity("");
       }
     }
   };
 
-  // --- FILTRO ---
-  const useFilteredSuggestions = React.useMemo(() => {
-    if (!inputValue && !showSuggestions) {
-      return options;
-    };
-
-    return options.filter((suggestion) =>
-      useGetOptionLabel(suggestion)
-        .toLowerCase()
-        .includes(inputValue.toLowerCase())
+  // --- 4. FILTRO DE OPÇÕES ---
+  const filteredSuggestions = useMemo(() => {
+    // Se for busca remota, confiamos no Pai
+    if (onSearch) return options;
+    
+    // Se for local, filtramos aqui
+    if (!inputValue && !showSuggestions) return options;
+    if (!inputValue) return options;
+    return options.filter(suggestion =>
+      getOptionLabel(suggestion).toLowerCase().includes(inputValue.toLowerCase())
     );
-  }, [options, inputValue, showSuggestions, useGetOptionLabel]);
+  }, [options, inputValue, showSuggestions, onSearch]);
 
-  // --- HANDLER DE INPUT ---
+  // --- 5. INFINITE SCROLL ---
+  const handleScroll = (e: React.UIEvent<HTMLUListElement>) => {
+      if (!onLoadMore || isLoadingMore || !hasMore) return;
+      const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+      // Tolerância de 10px para disparar antes do fim absoluto
+      if (scrollHeight - scrollTop <= clientHeight + 10) {
+          onLoadMore();
+      }
+  };
+
+  // --- HANDLERS DE EVENTOS ---
+
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = event.target;
-    setInputValue(value);
+    const text = event.target.value;
+    setInputValue(text);
     setShowSuggestions(true);
     setActiveIndex(-1);
 
-    if (visibleInputRef.current) {
-      visibleInputRef.current.setCustomValidity("");
-    }
-    if (selectedValue !== "") {
-      updateHiddenSelect("");
+    // Se digitou algo novo, o ID selecionado anteriormente não é mais válido
+    if (selectedValue) updateHiddenSelect("");
+
+    if (onSearch) {
+        setIsTyping(true); // Feedback visual imediato
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        
+        debounceRef.current = setTimeout(() => {
+            onSearch(text);
+            setIsTyping(false); // Pai assume o loading
+        }, debounceTime);
+    } else {
+        // Modo Local: Tenta achar match exato enquanto digita
+        const exactMatch = options.find(s => getOptionLabel(s).toLowerCase() === text.toLowerCase());
+        if (exactMatch) updateHiddenSelect(exactMatch.value);
     }
   };
 
-  // --- SELEÇÃO (Ajustado com ignoreBlurRef) ---
   const handleSelectOption = (suggestion: IOption) => {
-    if (suggestion.disabled) {
-      return;
-    };
-
-    const displayLabel = useGetOptionLabel(suggestion);
-
-    // Atualiza estados
+    if (suggestion.disabled) return;
+    const displayLabel = getOptionLabel(suggestion);
     setInputValue(displayLabel);
+    updateHiddenSelect(suggestion.value);
     setShowSuggestions(false);
     setActiveIndex(-1);
-
-    updateHiddenSelect(suggestion.value);
-
-    if (visibleInputRef.current) {
-      // Atualiza visualmente agora (para garantir que o usuário veja o texto)
-      visibleInputRef.current.value = displayLabel;
-      visibleInputRef.current.setCustomValidity("");
-
-      // TRUQUE DO BLUR:
-      // 1. Levantamos a bandeira para o handleBlur não rodar a limpeza
-      ignoreBlurRef.current = true;
-
-      // 2. Disparamos o blur (remove o balão de erro) e voltamos o foco
-      visibleInputRef.current.blur();
-      visibleInputRef.current.focus();
-
-      // 3. Baixamos a bandeira logo depois que o ciclo de eventos passar
-      setTimeout(() => {
-        ignoreBlurRef.current = false;
-      }, 50);
-    }
+    visibleInputRef.current?.focus();
   };
 
-  // --- INTERCEPTADOR DE ERRO ---
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setInputValue("");
+    updateHiddenSelect("");
+    visibleInputRef.current?.focus();
+    if (onSearch) onSearch(""); // Reseta a busca remota
+  };
+
+  // Intercepta validação nativa para mostrar balão no input visível
   const handleInvalid = (e: React.FormEvent<HTMLSelectElement>) => {
-    e.preventDefault(); // 1. Impede o balão no select oculto (que o navegador bloquearia anyway)
-
+    e.preventDefault(); 
     if (visibleInputRef.current) {
-      // 2. Copia a mensagem de erro nativa do select para o input visível
       visibleInputRef.current.setCustomValidity(e.currentTarget.validationMessage);
-
-      // 3. Força o navegador a mostrar o balão no INPUT VISÍVEL
       visibleInputRef.current.reportValidity();
     }
   };
 
-  // --- BLUR (Ajustado com ignoreBlurRef) ---
   const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
-    // 1. SE A BANDEIRA ESTIVER LEVANTADA, NÃO FAZ NADA.
-    // Isso impede que o nosso truque de limpar o balão apague os dados.
-    if (ignoreBlurRef.current) {
-      return;
-    }
-
-    if (
-      containerRef.current &&
-      containerRef.current.contains(event.relatedTarget as Node)
-    ) {
-      return;
-    }
-
-    if (selectRef.current)
-      selectRef.current.dispatchEvent(new Event("blur", { bubbles: true }));
-    setShowSuggestions(false);
-
-    // Validação Strict Mode
-    // Nota: Usamos visibleInputRef.current.value aqui para pegar o valor mais atual do DOM
-    // caso o React State ainda esteja pendente.
-    const currentText = visibleInputRef.current
-      ? visibleInputRef.current.value
-      : inputValue;
-    const optionMatch = options.find(
-      (s) => useGetOptionLabel(s).toLowerCase() === currentText.toLowerCase()
-    );
-
-    if (optionMatch) {
-      if (currentText !== useGetOptionLabel(optionMatch)) {
-        setInputValue(useGetOptionLabel(optionMatch));
-      }
-      if (selectedValue !== optionMatch.value) {
-        updateHiddenSelect(optionMatch.value);
-        if (visibleInputRef.current) {
-          visibleInputRef.current.setCustomValidity("");
+    if (containerRef.current?.contains(event.relatedTarget as Node)) return;
+    
+    selectRef.current?.dispatchEvent(new Event('blur', { bubbles: true }));
+    setTimeout(() => setShowSuggestions(false), 150);
+    
+    // Strict Mode (Apenas Local): Limpa se o texto não bater com nenhuma opção
+    if (!onSearch && selectedValue) {
+        const isValid = options.some(s => getOptionLabel(s) === inputValue);
+        if (!isValid) {
+             setInputValue("");
+             updateHiddenSelect("");
         }
-      }
-    } else {
-      setInputValue("");
-      updateHiddenSelect("");
     }
   };
 
-  // --- KEYDOWN ---
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showSuggestions && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
-      e.preventDefault();
-      setShowSuggestions(true);
-      return;
-    }
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActiveIndex((prev) =>
-        prev < useFilteredSuggestions.length - 1 ? prev + 1 : prev
-      );
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActiveIndex((prev) => (prev > 0 ? prev - 1 : -1));
-    } else if (e.key === "Enter") {
-      if (showSuggestions && useFilteredSuggestions.length > 0) {
-        e.preventDefault();
-        if (activeIndex >= 0) {
-          handleSelectOption(useFilteredSuggestions[activeIndex]);
-        } else if (useFilteredSuggestions.length === 1) {
-          handleSelectOption(useFilteredSuggestions[0]);
-        }
+      if (!showSuggestions && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+          setShowSuggestions(true); return;
       }
-    } else if (e.key === "Escape") {
-      setShowSuggestions(false);
-    } else if (e.key === "Tab") {
-      setShowSuggestions(false);
-    }
+      
+      const maxIndex = filteredSuggestions.length - 1;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setActiveIndex(prev => (prev < maxIndex ? prev + 1 : prev));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActiveIndex(prev => (prev > 0 ? prev - 1 : -1));
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeIndex >= 0 && filteredSuggestions[activeIndex]) {
+          handleSelectOption(filteredSuggestions[activeIndex]);
+        }
+      } else if (e.key === 'Escape') {
+        setShowSuggestions(false);
+      }
   };
 
-  // Scroll
-  React.useEffect(() => {
-    if (showSuggestions && activeIndex >= 0 && listRef.current) {
-      const activeItem = listRef.current.children[activeIndex] as HTMLElement;
-      if (activeItem) {
-        activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      }
-    }
-  }, [activeIndex, showSuggestions]);
+  const isBusy = isLoading || isTyping;
+  const finalPlaceholder = isBusy ? "Buscando..." : (placeholder || "Selecione...");
 
   return (
-    <div className="relative mb-4" ref={containerRef} onBlur={handleBlur}>
-      <label
-        className="block mb-1 text-gray-300 font-medium"
-        htmlFor={`autocomplete-${name}`}
-      >
+    <div className={`relative mb-4 ${className}`} ref={containerRef} onBlur={handleBlur}>
+      <label className="block mb-1 text-gray-300" htmlFor={`autocomplete-${name}`}>
         {label} {required && <span className="text-red-400">*</span>}
       </label>
 
-      <input
-        ref={visibleInputRef}
-        id={`autocomplete-${name}`}
-        type="text"
-        value={inputValue}
-        onChange={handleInputChange}
-        onFocus={() => !readOnly && !disabled && setShowSuggestions(true)}
-        onKeyDown={handleKeyDown}
-        disabled={disabled}
-        readOnly={readOnly}
-        role="combobox"
-        aria-autocomplete="list"
-        aria-expanded={showSuggestions}
-        autoComplete="off"
-        placeholder="Selecione..."
-        className={`
-            form-input w-full p-2.5 bg-gray-800 text-white border border-gray-600 rounded-lg 
-            focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all
-            placeholder-gray-500
-            ${disabled || readOnly ? "opacity-50 cursor-not-allowed bg-gray-900" : ""}
-        `}
-      />
+      {/* INPUT VISÍVEL */}
+      <div className="relative">
+          <input
+            ref={visibleInputRef}
+            id={`autocomplete-${name}`}
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            onFocus={() => !readOnly && !disabled && setShowSuggestions(true)}
+            onKeyDown={handleKeyDown}
+            disabled={disabled}
+            readOnly={readOnly}
+            role="combobox"
+            aria-expanded={showSuggestions}
+            autoComplete="off"
+            placeholder={finalPlaceholder}
+            className={`
+                form-input w-full p-2.5 bg-gray-800 text-white border border-gray-600 rounded-lg 
+                focus:ring-2 focus:ring-blue-500 outline-none pr-8 transition-colors
+                ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+                ${errorMessage ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}
+            `}
+          />
+          
+          <div className="absolute right-2 top-3 text-gray-400 flex items-center">
+              {isBusy && (
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-cyan-500 border-t-transparent"></div>
+              )}
+              {!isBusy && clearable && inputValue && !disabled && (
+                  <button type="button" onClick={handleClear} className="hover:text-white focus:outline-none" title="Limpar">
+                      ✕
+                  </button>
+              )}
+          </div>
+      </div>
 
+      {/* SELECT OCULTO (Fonte de Verdade) */}
       <select
         ref={selectRef}
         id={name}
         name={name}
-        // MUDANÇA 1: Usamos defaultValue, não value. O React larga o controle após o mount.
         defaultValue={initialValue}
-        onChange={() => { }}
         onInvalid={handleInvalid}
         required={required}
         disabled={disabled}
         data-validation={validationKey}
-        className='absolute w-0.5 h-0.5 -m-0.5 p-0 overflow-hidden clip-[rect(0,0,0,0)] border-0 pointer-events-none'
+        className='absolute w-px h-px overflow-hidden clip-[rect(0,0,0,0)] bottom-0 left-0'
         tabIndex={-1}
         aria-hidden="true"
       >
         <option value="">Selecione...</option>
-        {options.map(suggestion => {
-          const { label: l, children: c, ...rest } = suggestion;
-          // MUDANÇA 2: Garantimos que a prop 'selected' não interfira
-          return <option key={suggestion.value} {...rest}>{l || c}</option>;
-        })}
+        {options.map(opt => (
+          <option key={opt.value} value={opt.value}>{getOptionLabel(opt)}</option>
+        ))}
       </select>
 
-      {showSuggestions && useFilteredSuggestions.length > 0 && (
+      {/* DROPDOWN FLUTUANTE */}
+      {(showSuggestions || isBusy || errorMessage) && !disabled && (
         <ul
           ref={listRef}
-          role="listbox"
-          className="absolute z-50 w-full bg-gray-700 border border-gray-600 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-2xl ring-1 ring-black ring-opacity-5"
+          onScroll={handleScroll}
+          className="absolute z-50 w-full bg-gray-700 border border-gray-600 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl"
         >
-          {useFilteredSuggestions.map((suggestion, index) => {
-            const displayLabel = useGetOptionLabel(suggestion);
-            const isActive = index === activeIndex;
-            const isSelected = selectedValue === suggestion.value;
+          {isBusy && filteredSuggestions.length === 0 && (
+             <li className="px-4 py-3 text-sm text-cyan-400 text-center flex items-center justify-center gap-2">
+                 <div className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                 Buscando...
+             </li>
+          )}
 
-            return (
-              <li
-                key={suggestion.value}
-                role="option"
-                aria-selected={isSelected}
-                className={`
-                  px-4 py-2.5 text-sm text-gray-200 cursor-pointer transition-colors
-                  ${isActive ? "bg-blue-600 text-white" : "hover:bg-gray-600"}
-                  ${isSelected ? "font-semibold bg-gray-600 text-blue-200" : ""}
-                  ${suggestion.disabled ? "opacity-50 cursor-not-allowed" : ""}
-                `}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleSelectOption(suggestion);
-                }}
-              >
-                {displayLabel}
+          {filteredSuggestions.length > 0 ? (
+              filteredSuggestions.map((suggestion, index) => {
+                const displayLabel = getOptionLabel(suggestion);
+                const isActive = index === activeIndex;
+                const isSelected = selectedValue === suggestion.value;
+                return (
+                  <li
+                    key={suggestion.value}
+                    role="option"
+                    aria-selected={isSelected}
+                    className={`
+                      px-4 py-2.5 text-sm cursor-pointer transition-colors
+                      ${isActive ? 'bg-blue-600 text-white' : 'text-gray-200 hover:bg-gray-600'}
+                      ${isSelected ? 'font-semibold bg-gray-600' : ''}
+                    `}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleSelectOption(suggestion);
+                    }}
+                  >
+                    {displayLabel}
+                  </li>
+                );
+              })
+          ) : (
+              !isBusy && !errorMessage && (
+                  <li className="px-4 py-3 text-sm text-gray-400 text-center">
+                      {onSearch && !inputValue ? "Digite para pesquisar..." : "Nenhum resultado encontrado."}
+                  </li>
+              )
+          )}
+
+          {isLoadingMore && (
+              <li className="px-4 py-2 text-xs text-center text-blue-300 border-t border-gray-600/50 flex justify-center items-center gap-2">
+                  <div className="w-3 h-3 border-2 border-blue-300 border-t-transparent rounded-full animate-spin"></div>
+                  Carregando mais...
               </li>
-            );
-          })}
-        </ul>
-      )}
+          )}
 
-      {showSuggestions && useFilteredSuggestions.length === 0 && inputValue && (
-        <div className="absolute z-50 w-full bg-gray-700 border border-gray-600 rounded-lg mt-1 p-3 text-gray-400 text-sm shadow-lg text-center">
-          Nenhuma opção encontrada.
-        </div>
+          {errorMessage && (
+              <li className="px-4 py-2 text-xs text-center text-red-300 bg-red-900/20 border-t border-red-900/30 flex justify-center items-center gap-2">
+                  <span>⚠️ {errorMessage}</span>
+              </li>
+          )}
+        </ul>
       )}
     </div>
   );

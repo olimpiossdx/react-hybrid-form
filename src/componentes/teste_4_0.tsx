@@ -9,6 +9,7 @@ import CheckboxGroupForm from "../paginas/teste/tab-checkbox-group-form";
 import TabModal from "../paginas/teste/tab-modal";
 import NestedLevelForm from "./nested-level-form";
 import TabStarRatingExample from "../paginas/teste/tab-rating";
+import TabAsyncAutocompleteExample from "../paginas/teste/tab-autocomplete";
 
 // Foca no nova tab/formulário-ativo
 const Teste: React.FC = () => {
@@ -25,6 +26,7 @@ const Teste: React.FC = () => {
     tabModal: <TabModal />,
     nestedLevelForm: <NestedLevelForm />,
     starRatingExample: <TabStarRatingExample />,
+    asyncAutocompleteExample: <TabAsyncAutocompleteExample />,
   };
 
   return (<div className="bg-gray-800 text-white min-h-screen p-2 sm:p-4 font-sans">
@@ -88,8 +90,14 @@ const Teste: React.FC = () => {
         />
         <TabButton
           tabId="starRatingExample"
-          label="Exemplo Star Rating"
+          label="Star Rating"
           isActive={activeTab === "starRatingExample"}
+          onClick={setActiveTab}
+        />
+        <TabButton
+          tabId="asyncAutocompleteExample"
+          label="Autocomplete"
+          isActive={activeTab === "asyncAutocompleteExample"}
           onClick={setActiveTab}
         />
       </div>
