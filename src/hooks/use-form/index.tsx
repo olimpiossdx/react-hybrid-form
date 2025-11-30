@@ -1,6 +1,6 @@
 import React from "react";
 import { syncCheckboxGroup, initializeCheckboxMasters, setNativeValue, setNativeChecked } from "../../utils/utilities";
-import type { FieldListenerMap, ValidatorMap, FormField } from "./props";
+import type { FieldListenerMap, ValidatorMap, FormField, Path, PathValue } from "./props";
 import { getFormFields, parseFieldValue, getRelativePath, setNestedValue, getNestedValue } from "./utilities";
 
 /**
@@ -47,55 +47,55 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
    * Suporta aninhamento (dot notation) e arrays.
    * * @param namePrefix Prefixo opcional para extrair apenas uma seção dos dados.
    */
-  const getValue = React.useCallback((namePrefix?: string): Partial<FV> | FV | any => {
+ const getValue = React.useCallback((namePrefix?: string): any => {
     const form = formRef.current;
     if (!form) return namePrefix ? undefined : ({} as FV);
 
     const fields = getFormFields(form, namePrefix);
 
-    // Otimização: Se o prefixo for o nome exato de um campo, retorna o valor direto.
+    // Caso Especial: Se o prefixo for o nome exato de um campo único
     if (namePrefix) {
       const exactMatch = fields.find(f => f.name === namePrefix);
       if (exactMatch) {
-        if (exactMatch instanceof HTMLInputElement && exactMatch.type === 'checkbox') {
-          // Lógica de Checkbox Único quando acessado diretamente
-          if (countFieldsByName(form, exactMatch.name) === 1) {
-            const hasValue = exactMatch.hasAttribute('value') && exactMatch.value !== 'on';
-            // Retorna o valor do atributo 'value' se existir, ou true/false
-            return exactMatch.checked ? (hasValue ? exactMatch.value : true) : false;
-          }
-        }
-        return parseFieldValue(exactMatch);
+         if (exactMatch instanceof HTMLInputElement && exactMatch.type === 'checkbox') {
+             // Se for único, retorna valor direto (Bool ou String)
+             if (countFieldsByName(form, exactMatch.name) === 1) {
+                 const hasValue = exactMatch.hasAttribute('value') && exactMatch.value !== 'on';
+                 return exactMatch.checked ? (hasValue ? exactMatch.value : true) : false;
+             }
+         }
+         return parseFieldValue(exactMatch);
       }
     }
 
     const formData = {};
-    const processedNames = new Set<string>();
+    const processedNames = new Set<string>(); // Evita processar o mesmo grupo múltiplas vezes
 
+    // Loop Principal de Extração
     fields.forEach(field => {
       const relativePath = getRelativePath(field.name, namePrefix);
-
-      // Ignora campos fora do escopo ou já processados (para grupos)
+      
+      // Ignora campos fora do escopo ou já processados (grupos)
       if (!relativePath || processedNames.has(field.name)) return;
 
-      // --- LÓGICA INTELIGENTE DE CHECKBOX ---
+      // Lógica Específica para Checkboxes
       if (field instanceof HTMLInputElement && field.type === 'checkbox') {
         const count = countFieldsByName(form, field.name);
 
         if (count > 1) {
-          // MODO GRUPO (Array): Coleta todos os inputs marcados com esse nome
+          // MODO GRUPO: Coleta todos os marcados como Array de Strings
           const allChecked = form.querySelectorAll<HTMLInputElement>(`input[type="checkbox"][name="${field.name}"]:checked`);
           const values = Array.from(allChecked).map(cb => cb.value);
-
+          
           setNestedValue(formData, relativePath, values);
-          processedNames.add(field.name); // Marca para não processar os irmãos novamente
+          processedNames.add(field.name); // Marca para pular os irmãos
         } else {
-          // MODO ÚNICO (Single): Retorna Valor ou Booleano
+          // MODO ÚNICO: Retorna Valor ou Booleano
           if (field.checked) {
-            const hasExplicitValue = field.hasAttribute('value') && field.value !== 'on';
-            setNestedValue(formData, relativePath, hasExplicitValue ? field.value : true);
+             const hasExplicitValue = field.hasAttribute('value') && field.value !== 'on';
+             setNestedValue(formData, relativePath, hasExplicitValue ? field.value : true);
           } else {
-            setNestedValue(formData, relativePath, false);
+             setNestedValue(formData, relativePath, false);
           }
         }
         return;
@@ -107,7 +107,14 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
     });
 
     return formData;
-  }, []);
+  }, []) as {
+    // Sobrecarga 1: Sem argumentos -> Retorna o objeto completo tipado
+    (): FV;
+    // Sobrecarga 2: Com caminho válido -> Infere o tipo exato
+    <P extends Path<FV>>(namePrefix: P): PathValue<FV, P>;
+    // Sobrecarga 3: Com string genérica -> Retorna any
+    (namePrefix: string): any;
+  };
 
   // =========================================================================
   // 2. VALIDAÇÃO (Regras Customizadas JS)

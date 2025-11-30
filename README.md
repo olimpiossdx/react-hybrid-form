@@ -1,6 +1,6 @@
-Entendido. O Canvas às vezes remove a formatação ao copiar.
+Sem problemas. Ajustei o `README.md` removendo as referências ao componente **Switch** (já que ele ainda não foi implementado), mas mantendo toda a documentação atualizada do **Autocomplete v2.4** (Async/Portal), **StarRating v2.0** e a lógica de **Checkboxes**.
 
-Aqui está o conteúdo **bruto** do `README.md` para você copiar. Basta clicar no ícone de copiar no canto superior direito do bloco abaixo:
+Copie o bloco abaixo:
 
 ````markdown
 # 🚀 React Hybrid Form `v0.4.14`
@@ -19,8 +19,8 @@ Uma arquitetura de formulários para React focada em **alta performance**, **ace
 ## ✨ Destaques da Versão
 
 - **🏎️ Performance Extrema:** Componentes não controlados (*Uncontrolled*) por padrão. Digitar em um input não causa re-renderização do formulário.
-- **🔄 Autocomplete Enterprise:** Suporte completo a **Busca Assíncrona**, **Infinite Scroll** e tratamento de erros, mantendo a validação nativa.
-- **⭐ StarRating 2.0:** Totalmente acessível via teclado, customizável e reativo a resets externos.
+- **🔄 Autocomplete Enterprise:** Suporte completo a **Busca Assíncrona**, **Paginação (Infinite Scroll)**, **Portals** e tratamento de erros.
+- **⭐ StarRating 2.0:** Totalmente acessível via teclado, suporte a gestos de toque (Mobile Swipe) e reativo a resets externos.
 - **🛡️ Validação Híbrida:** Integração perfeita entre validação customizada JS e balões de erro nativos (`reportValidity`).
 - **✅ Checkbox Intelligence:** Gestão automática de grupos e estado "Indeterminado" via atributos HTML (`data-checkbox-master`).
 - **🔌 Native Bypass:** Arquitetura interna robusta que permite alterar valores do DOM via código e "acordar" o React automaticamente.
@@ -34,8 +34,8 @@ src/
 ├── hooks/
 │   └── useForm.ts        # O Core. Gerencia validação, submit, leitura do DOM e Observer.
 ├── components/
-│   ├── Autocomplete.tsx  # Input Async com filtro, paginação e Select Oculto.
-│   ├── StarRating.tsx    # Avaliação acessível com SVG + Input Âncora.
+│   ├── Autocomplete.tsx  # Input Async com Portal, filtro e Select Oculto.
+│   ├── StarRating.tsx    # Avaliação acessível com Touch + Input Âncora.
 │   └── TabButton.tsx     # Componente UI Stateless.
 ├── utils/
 │   ├── props.ts          # Definições de Tipos.
@@ -84,12 +84,16 @@ Possui **Shadow Select Pattern**: Mantém um `<select>` oculto para garantir a i
 <Autocomplete
   name="usuario_id"
   label="Buscar Usuário"
+  // Modo Async
   options={options} 
   onSearch={handleSearch}      // (query) => void
   onLoadMore={handleLoadMore}  // () => void
-  isLoading={isLoading}
-  hasMore={hasMore}
-  errorMessage={errorMsg}
+  isLoading={isLoading}        // Spinner no input
+  isLoadingMore={isLoadingMore}// Spinner no rodapé da lista
+  hasMore={hasMore}            // Controla se chama loadMore
+  errorMessage={errorMsg}      // Exibe erro na lista
+  // Config
+  debounceTime={300}
   clearable
   required
 />
@@ -114,7 +118,7 @@ Possui **Anchor Input Pattern**: Usa um input invisível para receber o foco do 
 
 ## 🌳 Checkbox Groups Inteligentes
 
-Crie grupos hierárquicos (Selecionar Todos) usando apenas atributos HTML.
+Crie grupos hierárquicos (Selecionar Todos) usando apenas atributos HTML. A biblioteca gerencia a lógica.
 
 ```tsx
 {/* O Mestre: Controla inputs com name="permissoes" */}
@@ -141,8 +145,12 @@ Para carregar dados de uma API (Edição) ou cancelar alterações, use o `reset
 
 ```tsx
 const handleLoadData = () => {
-    // Preenche o formulário e notifica componentes visuais
+    // 1. Atualiza o DOM (Inputs)
     resetSection("", DADOS_API); 
+    
+    // 2. Atualiza o React (UI) explicitamente
+    const temCancelamento = DADOS_API.interesses.includes('cancelamento');
+    setIsCancelando(temCancelamento);
 };
 ```
 
@@ -181,6 +189,3 @@ Funções puras exportadas para uso geral:
 ### Licença
 
 MIT
-
-```
-```
