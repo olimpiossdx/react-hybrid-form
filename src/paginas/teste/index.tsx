@@ -1,18 +1,19 @@
 import React from "react";
-import TabButton from "./tab-button";
-import RegistrationForm from "../paginas/teste/tab-registration-form";
-import LoginForm from "../paginas/teste/tab-login";
-import HybridFormSimple from "../paginas/teste/tab-hibryd-form-simple";
-import NestedListForm from "../paginas/teste/tab-nested-list-form";
-import CurriculumForm from "../paginas/teste/tab-curriculum";
-import CheckboxGroupForm from "../paginas/teste/tab-checkbox-group-form";
-import TabModal from "../paginas/teste/tab-modal";
-import NestedLevelForm from "./nested-level-form";
-import TabStarRatingExample from "../paginas/teste/tab-rating";
-import TabAsyncAutocompleteExample from "../paginas/teste/tab-autocomplete";
+import TabButton from "../../componentes/tab-button";
+import RegistrationForm from "./tab-registration-form";
+import LoginForm from "./tab-login";
+import HybridFormSimple from "./tab-hibryd-form-simple";
+import NestedListForm from "./tab-nested-list-form";
+import CurriculumForm from "./tab-curriculum";
+import CheckboxGroupForm from "./tab-checkbox-group-form";
+import TabModal from "./tab-modal";
+import NestedLevelForm from "../../componentes/nested-level-form";
+import TabStarRatingExample from "./tab-rating";
+import TabAsyncAutocompleteExample from "./tab-autocomplete";
+import ValidationFeedbackExample from "./tab-validacao";
 
 // Foca no nova tab/formulário-ativo
-const Teste: React.FC = () => {
+const Homologacao: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState("curriculum");
 
   //cenários de teste do hook useForm com componentes customizados e nativos
@@ -27,6 +28,7 @@ const Teste: React.FC = () => {
     nestedLevelForm: <NestedLevelForm />,
     starRatingExample: <TabStarRatingExample />,
     asyncAutocompleteExample: <TabAsyncAutocompleteExample />,
+    validationFeedbackExample: <ValidationFeedbackExample />,
   };
 
   return (<div className="bg-gray-800 text-white min-h-screen p-2 sm:p-4 font-sans">
@@ -100,6 +102,12 @@ const Teste: React.FC = () => {
           isActive={activeTab === "asyncAutocompleteExample"}
           onClick={setActiveTab}
         />
+        <TabButton
+          tabId="validationFeedbackExample"
+          label="Validação"
+          isActive={activeTab === "validationFeedbackExample"}
+          onClick={setActiveTab}
+        />
       </div>
 
       <main className="transition-opacity duration-300 ease-in-out">
@@ -109,4 +117,4 @@ const Teste: React.FC = () => {
   </div>);
 };
 
-export default Teste;
+export default Homologacao;

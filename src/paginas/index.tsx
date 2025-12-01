@@ -1,10 +1,9 @@
 import React from 'react'
-import Teste2 from '../componentes/teste_4_0';
+import Homolocao from './teste';
 
 const Paginas: React.FC = () => {
-  
   return (<>
-    <Teste2/>
+    <Homolocao/>
   </>);
 };
 
