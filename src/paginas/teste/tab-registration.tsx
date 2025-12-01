@@ -43,20 +43,32 @@ const RegistrationComplexExample = () => {
   React.useEffect(() => {
     setValidators({
       validarNome: (val: string) => {
-        if (!val) return { message: "Nome é obrigatório.", type: "error" };
-        if (val.split(' ').length < 2) return { message: "Digite sobrenome.", type: "error" };
+        if (!val) {
+          return { message: "Nome é obrigatório.", type: "error" };
+        }
+        if (val.split(' ').length < 2) {
+          return { message: "Digite sobrenome.", type: "error" };
+        }
       },
       validarGenero: (val: string) => {
-        if (!val) return { message: "Selecione uma opção.", type: "error" };
+        if (!val) {
+          return { message: "Selecione uma opção.", type: "error" };
+        }
       },
       validarSkills: (val: string[]) => {
-        if (!val || val.length < 2) return { message: "Selecione pelo menos 2 skills.", type: "error" };
+        if (!val || val.length < 2) {
+          return { message: "Selecione pelo menos 2 skills.", type: "error" };
+        }
       },
       validarCargo: (val: string) => {
-        if (!val) return { message: "Cargo é obrigatório.", type: "error" };
+        if (!val) {
+          return { message: "Cargo é obrigatório.", type: "error" };
+        }
       },
       validarTermos: (val: boolean) => {
-        if (!val) return { message: "Você deve aceitar os termos.", type: "error" };
+        if (!val) {
+          return { message: "Você deve aceitar os termos.", type: "error" };
+        }
       }
     });
   }, [setValidators]);

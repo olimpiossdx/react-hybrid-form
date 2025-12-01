@@ -111,7 +111,7 @@ const AsyncAutocompleteExample = () => {
         const existingIds = new Set(prev.map((o) => o.value));
         return [
           ...prev,
-          ...newOptions.filter((o) => !existingIds.has(o.value)),
+          ...newOptions.filter((o: any) => !existingIds.has(o.value)),
         ];
       });
 
@@ -189,11 +189,10 @@ const AsyncAutocompleteExample = () => {
           <button
             type="button"
             onClick={() => setShouldFail(!shouldFail)}
-            className={`px-3 py-1 text-xs rounded border transition-colors ${
-              shouldFail
-                ? "bg-red-900 text-red-200 border-red-700 font-bold"
-                : "bg-gray-800 text-gray-400 border-gray-600 hover:bg-gray-700"
-            }`}
+            className={`px-3 py-1 text-xs rounded border transition-colors ${shouldFail
+              ? "bg-red-900 text-red-200 border-red-700 font-bold"
+              : "bg-gray-800 text-gray-400 border-gray-600 hover:bg-gray-700"
+              }`}
           >
             {shouldFail ? "🔥 Erro Ativado" : "Simular Erro API"}
           </button>
