@@ -46,11 +46,11 @@ const AsyncAutocompleteExample = () => {
   // --- VALIDAÇÃO ---
   React.useEffect(() => {
     setValidators({
-      validarNome: (val: any) =>
+      validarNome: (val: string | undefined) =>
         !val || val.length < 3
           ? { message: "Nome muito curto", type: "error" }
           : undefined,
-      validarLider: (val: any) =>
+      validarLider: (val: string | undefined) =>
         !val
           ? { message: "Selecione um líder responsável", type: "error" }
           : undefined,
