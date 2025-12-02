@@ -34,9 +34,12 @@ const CurriculumForm = ({ }) => {
 
     showModal({
       title: 'Seção Salva!',
-      content: () => (
-        <div>{`Dados do Formulário Inteiro: ${JSON.stringify(cleanData, null, 2)}`}</div>
-      ),
+      content: () => (<>
+        <div className="text-green-400">Dados do Formulário Inteiro:</div>
+        <pre className="text-xs bg-black p-4 rounded text-green-400 overflow-auto">
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      </>),
       // Callback - adicionando função de execução ao final do modal
       onClose: () => console.log('Fechou!'),
     });

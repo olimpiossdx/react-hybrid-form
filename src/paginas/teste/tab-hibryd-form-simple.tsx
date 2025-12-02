@@ -44,7 +44,11 @@ const HybridFormSimple = ({ }) => {
     const body = JSON.stringify(data);
     showModal({
       title: 'Form Híbrido Salvo!',
-      content: () => <div>Dados: {body}</div>,
+      content: () => (
+        <pre className="text-xs bg-black p-4 rounded text-green-400 overflow-auto">
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      ),
       closeOnBackdropClick: false, // Obriga interação
       onClose: () => console.log('Fechou!'), // Callback
     });

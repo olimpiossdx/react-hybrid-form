@@ -13,7 +13,11 @@ const LoginForm: React.FC = ({ }) => {
     // showModal("Login bem-sucedido!", "Dados: " + JSON.stringify(data));
     showModal({
       title: "Login bem-sucedido!",
-      content: () => <div>Dados: {JSON.stringify(data)}</div>,
+      content: () => (
+        <pre className="text-xs bg-black p-4 rounded text-green-400 overflow-auto">
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      ),
       closeOnBackdropClick: false, // Obriga interação
       onClose: () => console.log("Fechou!"), // Callback
     });

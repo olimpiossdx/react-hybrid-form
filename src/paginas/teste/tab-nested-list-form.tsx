@@ -46,7 +46,11 @@ const NestedListForm = ({ }) => {
   const onSubmit = (data: IMyNestedListForm) => {
     showModal({
       title: "Item Salvo",
-      content: () => <div>Dados: {JSON.stringify(data, null, 2)}</div>,
+      content: () => (
+        <pre className="text-xs bg-black p-4 rounded text-green-400 overflow-auto">
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      ),
       closeOnBackdropClick: false, // Obriga interação
       onClose: () => console.log("Fechou!"), // Callback
     });

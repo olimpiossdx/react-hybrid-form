@@ -53,7 +53,9 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
 
   const getValueImpl = React.useCallback((namePrefix?: string): any => {
     const form = formRef.current;
-    if (!form) return namePrefix ? undefined : ({} as FV);
+    if (!form) {
+      return namePrefix ? undefined : ({} as FV);
+    };
 
     const fields = getFormFields(form, namePrefix);
 

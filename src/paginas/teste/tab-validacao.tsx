@@ -7,7 +7,6 @@ const STYLES = `
   /* Estado de Erro no Input */
   .form-input[aria-invalid="true"] {
     border-color: #ef4444 !important;
-    background-color: #fef2f2;
     animation: shake 0.3s ease-in-out;
   }
   
@@ -37,11 +36,6 @@ const STYLES = `
   }
 `;
 
-interface IModalOptions {
-  title: string;
-  content: () => React.ReactNode;
-}
-
 const ValidationFeedbackExample = () => {
   const { handleSubmit, setValidators, formId } = useForm("smart-validation-form");
 
@@ -67,9 +61,12 @@ const ValidationFeedbackExample = () => {
   const onSubmit = (data: any) => {
     showModal({
       title: "Sucesso!",
-      content: () => (
+      content: () => (<>
         <div className="text-green-400">Login validado com sucesso.</div>
-      ),
+        <pre className="text-xs bg-black p-4 rounded text-green-400 overflow-auto">
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      </>),
     });
   };
 
