@@ -13,13 +13,13 @@ import { getFormFields, parseFieldValue, getRelativePath, setNestedValue, getNes
 const useForm = <FV extends Record<string, any>>(providedId?: string) => {
   const formId = providedId || React.useId();
   const formRef = React.useRef<HTMLFormElement>(null);
-  
+
   const fieldListeners = React.useRef<FieldListenerMap>(new Map());
   const validators = React.useRef<ValidatorMap<FV>>({});
-  
+
   // Mapa de Timers para a estratégia "Smart Debounce" de validação
   const debounceMap = React.useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  
+
   // SEMÁFORO: Bloqueia validação durante reset programático
   const isResetting = React.useRef(false);
 
@@ -39,27 +39,24 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
     validators.current = newValidators;
   }, []);
 
-  // =========================================================================
-  // 1. LEITURA DE DADOS
-  // =========================================================================
-
+  // ============ LEITURA (IMPLEMENTAÇÃO) ============
+  // Mantemos a implementação como 'any' internamente para flexibilidade do DOM
   const getValueImpl = React.useCallback((namePrefix?: string): any => {
     const form = formRef.current;
     if (!form) return namePrefix ? undefined : ({} as FV);
 
     const fields = getFormFields(form, namePrefix);
 
-    // Otimização: Busca exata se um prefixo específico foi passado
     if (namePrefix) {
       const exactMatch = fields.find(f => f.name === namePrefix);
       if (exactMatch) {
-         if (exactMatch instanceof HTMLInputElement && exactMatch.type === 'checkbox') {
-             if (countFieldsByName(form, exactMatch.name) === 1) {
-                 const hasValue = exactMatch.hasAttribute('value') && exactMatch.value !== 'on';
-                 return exactMatch.checked ? (hasValue ? exactMatch.value : true) : false;
-             }
-         }
-         return parseFieldValue(exactMatch);
+        if (exactMatch instanceof HTMLInputElement && exactMatch.type === 'checkbox') {
+          if (countFieldsByName(form, exactMatch.name) === 1) {
+            const hasValue = exactMatch.hasAttribute('value') && exactMatch.value !== 'on';
+            return exactMatch.checked ? (hasValue ? exactMatch.value : true) : false;
+          }
+        }
+        return parseFieldValue(exactMatch);
       }
     }
 
@@ -70,10 +67,8 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
       const relativePath = getRelativePath(field.name, namePrefix);
       if (!relativePath || processedNames.has(field.name)) return;
 
-      // Lógica para Checkbox Groups (Arrays) vs Checkbox Único
       if (field instanceof HTMLInputElement && field.type === 'checkbox') {
         const count = countFieldsByName(form, field.name);
-
         if (count > 1) {
           const allChecked = form.querySelectorAll<HTMLInputElement>(`input[type="checkbox"][name="${field.name}"]:checked`);
           const values = Array.from(allChecked).map(cb => cb.value);
@@ -81,50 +76,63 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
           processedNames.add(field.name);
         } else {
           if (field.checked) {
-             const hasExplicitValue = field.hasAttribute('value') && field.value !== 'on';
-             setNestedValue(formData, relativePath, hasExplicitValue ? field.value : true);
+            const hasExplicitValue = field.hasAttribute('value') && field.value !== 'on';
+            setNestedValue(formData, relativePath, hasExplicitValue ? field.value : true);
           } else {
-             setNestedValue(formData, relativePath, false);
+            setNestedValue(formData, relativePath, false);
           }
         }
         return;
       }
-
-      const value = parseFieldValue(field);
-      setNestedValue(formData, relativePath, value);
+      setNestedValue(formData, relativePath, parseFieldValue(field));
     });
 
     return formData;
   }, []);
 
+  // ============ EXPOSIÇÃO TIPADA (SOBRECARGAS) ============
   /**
-   * Lê os valores atuais dos inputs do formulário diretamente do DOM.
+   * Lê os valores do formulário.
+   * O TypeScript inferirá automaticamente o tipo de retorno com base no caminho passado.
    */
   const getValue = getValueImpl as {
+    /**
+     * Retorna o objeto completo do formulário tipado.
+     */
     (): FV;
+
+    /**
+     * Retorna o valor de um campo específico.
+     * O TypeScript valida se o caminho existe e retorna o tipo exato (string, number, boolean...).
+     * Suporta arrays (ex: 'items.0.name').
+     */
     <P extends Path<FV>>(namePrefix: P): PathValue<FV, P>;
+
+    /**
+     * Fallback para strings dinâmicas não conhecidas em tempo de compilação.
+     */
     (namePrefix: string): any;
   };
 
   // ============ UI UPDATE ============
-  
-  const updateErrorUI = (field: FormField, message: string) => {
-     const errorId = `error-${field.name}`;
-     const errorSlot = document.getElementById(errorId);
-     
-     if (message) {
-         field.setAttribute('aria-invalid', 'true');
-         if (errorSlot) field.setAttribute('aria-describedby', errorId);
-     } else {
-         field.removeAttribute('aria-invalid');
-         field.removeAttribute('aria-describedby');
-     }
 
-     if (errorSlot) {
-         errorSlot.textContent = message;
-         errorSlot.setAttribute('data-visible', message ? 'true' : 'false');
-         errorSlot.style.display = message ? 'block' : 'none';
-     }
+  const updateErrorUI = (field: FormField, message: string) => {
+    const errorId = `error-${field.name}`;
+    const errorSlot = document.getElementById(errorId);
+
+    if (message) {
+      field.setAttribute('aria-invalid', 'true');
+      if (errorSlot) field.setAttribute('aria-describedby', errorId);
+    } else {
+      field.removeAttribute('aria-invalid');
+      field.removeAttribute('aria-describedby');
+    }
+
+    if (errorSlot) {
+      errorSlot.textContent = message;
+      errorSlot.setAttribute('data-visible', message ? 'true' : 'false');
+      errorSlot.style.display = message ? 'block' : 'none';
+    }
   };
 
   // ============ HELPER DE VALIDAÇÃO (NATIVE FIRST) ============
@@ -134,42 +142,42 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
    * Ordem: 1. Limpeza -> 2. Nativa (HTML5) -> 3. Customizada (JS).
    */
   const validateFieldInternal = (field: FormField, formValues: FV): string => {
-      const validateFn = validators.current[field.dataset.validation || ''];
-      
-      // PASSO 1: LIMPEZA (Reset)
-      // Removemos qualquer erro customizado anterior (setCustomValidity(''))
-      // Isso faz o campo voltar a ser "Válido" aos olhos do navegador, 
-      // permitindo que o checkValidity() abaixo teste apenas as regras HTML puras.
-      field.setCustomValidity('');
-      
-      // PASSO 2: VALIDAÇÃO NATIVA (HTML5 Constraint Validation)
-      // Verifica: required, type=email, min, max, pattern, step.
-      // MDN: Se o campo for opcional e estiver vazio, checkValidity() retorna true.
-      if (!field.checkValidity()) {
-          // Se o HTML falhar, paramos aqui. O erro estrutural tem prioridade.
-          // Retornamos a mensagem traduzida do próprio navegador.
-          return field.validationMessage;
-      }
+    const validateFn = validators.current[field.dataset.validation || ''];
 
-      // PASSO 3: VALIDAÇÃO CUSTOMIZADA (Regra de Negócio)
-      // Só chegamos aqui se o dado está estruturalmente correto (ou vazio opcional).
-      if (validateFn) {
-          const fieldValue = getNestedValue(formValues, field.name);
-          
-          // Executa a regra do desenvolvedor
-          const result = validateFn(fieldValue, field, formValues);
-          
-          if (result) {
-              const message = typeof result === 'string' ? result : result.message;
-              
-              // Injeta o erro de negócio. 
-              // Isso faz o campo ficar :invalid novamente e prepara o balão.
-              field.setCustomValidity(message);
-              return message;
-          }
-      }
+    // PASSO 1: LIMPEZA (Reset)
+    // Removemos qualquer erro customizado anterior (setCustomValidity(''))
+    // Isso faz o campo voltar a ser "Válido" aos olhos do navegador, 
+    // permitindo que o checkValidity() abaixo teste apenas as regras HTML puras.
+    field.setCustomValidity('');
 
-      return ''; // Sucesso Total
+    // PASSO 2: VALIDAÇÃO NATIVA (HTML5 Constraint Validation)
+    // Verifica: required, type=email, min, max, pattern, step.
+    // MDN: Se o campo for opcional e estiver vazio, checkValidity() retorna true.
+    if (!field.checkValidity()) {
+      // Se o HTML falhar, paramos aqui. O erro estrutural tem prioridade.
+      // Retornamos a mensagem traduzida do próprio navegador.
+      return field.validationMessage;
+    }
+
+    // PASSO 3: VALIDAÇÃO CUSTOMIZADA (Regra de Negócio)
+    // Só chegamos aqui se o dado está estruturalmente correto (ou vazio opcional).
+    if (validateFn) {
+      const fieldValue = getNestedValue(formValues, field.name);
+
+      // Executa a regra do desenvolvedor
+      const result = validateFn(fieldValue, field, formValues);
+
+      if (result) {
+        const message = typeof result === 'string' ? result : result.message;
+
+        // Injeta o erro de negócio. 
+        // Isso faz o campo ficar :invalid novamente e prepara o balão.
+        field.setCustomValidity(message);
+        return message;
+      }
+    }
+
+    return ''; // Sucesso Total
   };
 
   // ============ VALIDAÇÃO EM MASSA ============
@@ -181,9 +189,9 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
 
     const allFields = getFormFields(form);
     allFields.forEach(field => {
-        if (field.disabled) return;
-        const msg = validateFieldInternal(field, formValues);
-        updateErrorUI(field, msg);
+      if (field.disabled) return;
+      const msg = validateFieldInternal(field, formValues);
+      updateErrorUI(field, msg);
     });
   }, [getValue]);
 
@@ -194,11 +202,11 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
     if (isResetting.current) return;
 
     const target = event.currentTarget;
-    if(!(target instanceof HTMLElement)) return;
+    if (!(target instanceof HTMLElement)) return;
 
     // Checkbox Sync (Imediato)
     if (event.type === 'change' && target instanceof HTMLInputElement && target.type === 'checkbox') {
-        if (formRef.current) syncCheckboxGroup(target, formRef.current);
+      if (formRef.current) syncCheckboxGroup(target, formRef.current);
     }
 
     const field = target as FormField;
@@ -208,36 +216,36 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
     const formValues = getValue() as FV;
 
     if (debounceMap.current.has(field.name)) {
-        clearTimeout(debounceMap.current.get(field.name));
-        debounceMap.current.delete(field.name);
+      clearTimeout(debounceMap.current.get(field.name));
+      debounceMap.current.delete(field.name);
     }
 
     // Blur: Valida imediatamente (Punish Late)
     if (event.type === 'blur') {
-        const msg = validateFieldInternal(field, formValues);
-        updateErrorUI(field, msg);
-        return;
+      const msg = validateFieldInternal(field, formValues);
+      updateErrorUI(field, msg);
+      return;
     }
 
     // Input/Change: Validação com Debounce (Reward Early)
     if (event.type === 'input' || event.type === 'change') {
-        const wasInvalid = field.hasAttribute('aria-invalid') || !field.validity.valid;
-        if (!wasInvalid) return;
+      const wasInvalid = field.hasAttribute('aria-invalid') || !field.validity.valid;
+      if (!wasInvalid) return;
 
-        const msg = validateFieldInternal(field, formValues);
+      const msg = validateFieldInternal(field, formValues);
 
-        if (!msg) {
-            updateErrorUI(field, ''); // Limpa erro imediatamente ao corrigir
-        } else {
-            const timer = setTimeout(() => {
-                updateErrorUI(field, msg);
-                // Só mostra balão se o usuário ainda estiver focado (ajuda contextual)
-                if (document.activeElement === field) {
-                    field.reportValidity();
-                }
-            }, 600); 
-            debounceMap.current.set(field.name, timer);
-        }
+      if (!msg) {
+        updateErrorUI(field, ''); // Limpa erro imediatamente ao corrigir
+      } else {
+        const timer = setTimeout(() => {
+          updateErrorUI(field, msg);
+          // Só mostra balão se o usuário ainda estiver focado (ajuda contextual)
+          if (document.activeElement === field) {
+            field.reportValidity();
+          }
+        }, 600);
+        debounceMap.current.set(field.name, timer);
+      }
     }
   }, [getValue]);
 
@@ -247,60 +255,60 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
    * Preenche ou limpa campos do formulário programaticamente.
    */
   const resetSection = React.useCallback((namePrefix: string, originalValues: any) => {
-      const form = formRef.current;
-      if (!form) return;
-      
-      isResetting.current = true;
+    const form = formRef.current;
+    if (!form) return;
 
-      try {
-        const fields = getFormFields(form, namePrefix);
-        
-        fields.forEach(field => {
-            if (debounceMap.current.has(field.name)) {
-                clearTimeout(debounceMap.current.get(field.name));
-                debounceMap.current.delete(field.name);
-            }
-            updateErrorUI(field, '');
+    isResetting.current = true;
 
-            const relativePath = getRelativePath(field.name, namePrefix);
-            let valueToApply = undefined;
-            
-            if (originalValues) {
-              valueToApply = relativePath ? getNestedValue(originalValues, relativePath) : undefined;
-              if (valueToApply === undefined && !relativePath) {
-                 valueToApply = getNestedValue(originalValues, field.name);
-              }
-            }
+    try {
+      const fields = getFormFields(form, namePrefix);
 
-            // Aplicação de Valor com Bypass
-            if (field instanceof HTMLInputElement && (field.type === 'checkbox' || field.type === 'radio')) {
-                let shouldCheck = false;
-                if (valueToApply !== undefined) {
-                    if (field.type === 'checkbox' && Array.isArray(valueToApply)) {
-                        shouldCheck = valueToApply.includes(field.value);
-                    } else if (field.type === 'checkbox' && typeof valueToApply === 'boolean') {
-                        shouldCheck = valueToApply;
-                    } else {
-                        shouldCheck = field.value === String(valueToApply);
-                    }
-                } else {
-                    shouldCheck = field.defaultChecked;
-                }
-                setNativeChecked(field, shouldCheck);
+      fields.forEach(field => {
+        if (debounceMap.current.has(field.name)) {
+          clearTimeout(debounceMap.current.get(field.name));
+          debounceMap.current.delete(field.name);
+        }
+        updateErrorUI(field, '');
+
+        const relativePath = getRelativePath(field.name, namePrefix);
+        let valueToApply = undefined;
+
+        if (originalValues) {
+          valueToApply = relativePath ? getNestedValue(originalValues, relativePath) : undefined;
+          if (valueToApply === undefined && !relativePath) {
+            valueToApply = getNestedValue(originalValues, field.name);
+          }
+        }
+
+        // Aplicação de Valor com Bypass
+        if (field instanceof HTMLInputElement && (field.type === 'checkbox' || field.type === 'radio')) {
+          let shouldCheck = false;
+          if (valueToApply !== undefined) {
+            if (field.type === 'checkbox' && Array.isArray(valueToApply)) {
+              shouldCheck = valueToApply.includes(field.value);
+            } else if (field.type === 'checkbox' && typeof valueToApply === 'boolean') {
+              shouldCheck = valueToApply;
             } else {
-                const newVal = String(valueToApply ?? (field as any).defaultValue ?? '');
-                setNativeValue(field, newVal);
+              shouldCheck = field.value === String(valueToApply);
             }
-            
-            field.classList.remove('is-touched');
-            field.setCustomValidity(''); 
-        });
-        
-        setTimeout(() => initializeCheckboxMasters(form), 0);
+          } else {
+            shouldCheck = field.defaultChecked;
+          }
+          setNativeChecked(field, shouldCheck);
+        } else {
+          const newVal = String(valueToApply ?? (field as any).defaultValue ?? '');
+          setNativeValue(field, newVal);
+        }
 
-      } finally {
-        setTimeout(() => { isResetting.current = false; }, 0);
-      }
+        field.classList.remove('is-touched');
+        field.setCustomValidity('');
+      });
+
+      setTimeout(() => initializeCheckboxMasters(form), 0);
+
+    } finally {
+      setTimeout(() => { isResetting.current = false; }, 0);
+    }
   }, []);
 
   // ============ INFRAESTRUTURA ============
@@ -309,36 +317,36 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
     const isMaster = field.hasAttribute('data-checkbox-master');
     const allowedTypes = [HTMLInputElement, HTMLSelectElement, HTMLTextAreaElement];
     if (!allowedTypes.some(type => field instanceof type)) return;
-    
+
     if (((field as any).name || isMaster) && !fieldListeners.current.has(field)) {
-        const listeners = { blur: handleFieldInteraction, change: handleFieldInteraction };
-        field.addEventListener('blur', listeners.blur);
-        
-        const inputEvent = (field instanceof HTMLInputElement && (field.type === 'text' || field.type === 'email' || field.type === 'password' || field.type === 'search')) ? 'input' : 'change';
-        
-        if (inputEvent === 'input') field.addEventListener('input', listeners.change);
-        field.addEventListener('change', listeners.change);
-        
-        fieldListeners.current.set(field, listeners);
+      const listeners = { blur: handleFieldInteraction, change: handleFieldInteraction };
+      field.addEventListener('blur', listeners.blur);
+
+      const inputEvent = (field instanceof HTMLInputElement && (field.type === 'text' || field.type === 'email' || field.type === 'password' || field.type === 'search')) ? 'input' : 'change';
+
+      if (inputEvent === 'input') field.addEventListener('input', listeners.change);
+      field.addEventListener('change', listeners.change);
+
+      fieldListeners.current.set(field, listeners);
     }
   };
 
   const removeFieldInteractionListeners = (field: HTMLElement): void => {
     const listeners = fieldListeners.current.get(field);
     if (listeners) {
-        field.removeEventListener('blur', listeners.blur);
-        field.removeEventListener('input', listeners.change);
-        field.removeEventListener('change', listeners.change);
-        fieldListeners.current.delete(field);
+      field.removeEventListener('blur', listeners.blur);
+      field.removeEventListener('input', listeners.change);
+      field.removeEventListener('change', listeners.change);
+      fieldListeners.current.delete(field);
     }
   };
 
   const setupDOMMutationObserver = (form: HTMLFormElement): () => void => {
     const initialFields = getFormFields(form);
     initialFields.forEach(addFieldInteractionListeners);
-    
+
     form.querySelectorAll('input[type="checkbox"][data-checkbox-master]').forEach(cb => {
-        if (cb instanceof HTMLElement) addFieldInteractionListeners(cb);
+      if (cb instanceof HTMLElement) addFieldInteractionListeners(cb);
     });
     initializeCheckboxMasters(form);
 
@@ -351,7 +359,7 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
           addFieldInteractionListeners(node);
           getFormFields(node as any).forEach(addFieldInteractionListeners);
           if (node.querySelector('input[type="checkbox"]') || (node instanceof HTMLInputElement && node.type === 'checkbox')) {
-              needsReinitMasters = true;
+            needsReinitMasters = true;
           }
         });
         mutation.removedNodes.forEach(node => {
@@ -366,17 +374,17 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
     observer.observe(form, { childList: true, subtree: true });
     return () => {
       observer.disconnect();
-      fieldListeners.current.forEach((l, f) => { 
-          f.removeEventListener('blur', l.blur); 
-          f.removeEventListener('input', l.change); 
-          f.removeEventListener('change', l.change);
+      fieldListeners.current.forEach((l, f) => {
+        f.removeEventListener('blur', l.blur);
+        f.removeEventListener('input', l.change);
+        f.removeEventListener('change', l.change);
       });
       fieldListeners.current.clear();
     };
   };
 
   // ============ SUBMIT ============
-  const handleSubmit = React.useCallback((onValid: (data: FV) => void) => 
+  const handleSubmit = React.useCallback((onValid: (data: FV) => void) =>
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       const form = formRef.current;
@@ -390,7 +398,7 @@ const useForm = <FV extends Record<string, any>>(providedId?: string) => {
       setTimeout(() => {
         if (!formRef.current) return;
         const isValid = formRef.current.checkValidity();
-        
+
         if (!isValid) {
           focusFirstInvalidField(form);
           form.reportValidity();
