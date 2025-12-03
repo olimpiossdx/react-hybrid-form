@@ -41,7 +41,6 @@ const HybridFormSimple = ({ }) => {
   React.useEffect(() => setValidators({ validarComentario, validarCor }), [setValidators, validarComentario, validarCor]);
 
   const onSubmit = (data: IMyHybridForm) => {
-    const body = JSON.stringify(data);
     showModal({
       title: 'Form Híbrido Salvo!',
       content: () => (

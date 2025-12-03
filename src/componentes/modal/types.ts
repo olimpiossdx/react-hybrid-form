@@ -1,32 +1,41 @@
 import React from 'react';
 
-// Configuração fina de estilos (opcional)
-export interface IModalStyleConfig {
-  padding?: string;     // ex: 'p-0' para full bleed, 'p-8' para espaçado
-  width?: string;       // ex: 'max-w-4xl'
-  className?: string;   // classes extras arbitrárias para o container
-}
+// Tipo auxiliar para componentes que aceitam props
+export type ModalComponentType<P = any> = React.ComponentType<P>;
 
-// Opções passadas ao chamar a função showModal
-export interface IModalOptions {
-  // --- Conteúdo ---
-  title?: React.ComponentType<any> | React.ReactNode | string;
-  // Aceita: Texto ('Olá'), JSX (<div/>) ou Componente (MyComponent)
-  content: React.ComponentType<any> | React.ReactNode | string;
-  footer?: React.ComponentType<any> | React.ReactNode;
+/**
+ * Interface Genérica para Configuração do Modal.
+ * * @template H - Tipo das props do Header/Title
+ * @template C - Tipo das props do Content/Body
+ * @template A - Tipo das props das Actions/Footer
+ */
+export interface IModalOptions<H = any, C = any, A = any> {
+  // SLOTS: Aceitam um Componente (Função) OU um Node (JSX pronto)
   
-  // Props para passar para o componente de conteúdo (caso seja uma função)
-  contentProps?: Record<string, any>;
-
-  // --- Visual e Comportamento ---
-  size?: 'standard' | 'full' | 'custom';
-  styleConfig?: IModalStyleConfig;
-  closeOnBackdropClick?: boolean; // Se false, obriga a clicar no X ou botão
+  /** Componente para o título ou JSX direto */
+  title?: ModalComponentType<H> | React.ReactNode;
   
-  // --- Eventos ---
-  onClose?: () => void; // Executado sempre que o modal fecha (cleanup)
-}
+  /** Componente principal do conteúdo ou JSX direto */
+  content: ModalComponentType<C> | React.ReactNode;
+  
+  /** Componente de rodapé/ações ou JSX direto */
+  actions?: ModalComponentType<A> | React.ReactNode;
 
+  // PROPS: Objeto tipado que alimenta os componentes acima.
+  // O TypeScript forçará que as chaves aqui combinem com as props dos componentes passados.
+  props?: {
+    title?: H;
+    content?: C;
+    actions?: A;
+  };
+
+  // CONFIGURAÇÃO GERAL
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  closeOnBackdropClick?: boolean;
+  
+  // CALLBACKS
+  onClose?: () => void;
+}
 // O que a função retorna para controle externo
 export interface IModalHandle {
   close: () => void;

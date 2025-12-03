@@ -1,43 +1,55 @@
-import { type Root, createRoot } from "react-dom/client";
-import type { IModalOptions, IModalHandle } from "./types";
-import Modal from ".";
+import { useState, useCallback } from 'react';
+import type { IModalOptions } from './types';
 
 /**
- * Exibe um modal imperativo no topo da aplicação.
- * Suporta múltiplos modais (stacking).
+ * Interface de retorno do showModal para permitir controle imperativo (ex: fechar após fetch).
  */
-const showModal = (options: IModalOptions): IModalHandle => {
-  // 1. Cria um container HTML novo para este modal específico
-  const modalContainer = document.createElement("div");
-  document.body.appendChild(modalContainer);
+export interface IModalHandle {
+  close: () => void;
+}
 
-  // 2. Inicializa a raiz do React neste container
-  const root: Root = createRoot(modalContainer);
+export const useModal = () => {
+  // Estado interno do modal
+  const [isOpen, setIsOpen] = useState(false);
 
-  // 3. Define a função de limpeza (Close)
-  const cleanup = () => {
-    // Verifica se ainda existe para evitar erros de remoção duplicada
-    if (document.body.contains(modalContainer)) {
-      root.unmount(); // Desmonta os componentes React
-      document.body.removeChild(modalContainer); // Remove a DIV do HTML
+  // O estado do config precisa ser genérico (any) pois ele muda a cada chamada
+  const [config, setConfig] = useState<IModalOptions<any, any, any> | null>(null);
 
-      // Aciona o callback de fechamento do usuário, se houver
-      if (options.onClose) {
-        options.onClose();
-      }
-    }
-  };
+  /**
+   * Fecha o modal e limpa a configuração após um delay (animação).
+   */
+  const closeModal = useCallback(() => {
+    setIsOpen(false);
+    // Limpa o config após a animação de saída (300ms) para evitar glitches visuais
+    setTimeout(() => {
+      setConfig(null);
+    }, 300);
+  }, []);
 
-  // 4. Renderiza o Modal
-  root.render(<Modal
-    {...options}
-    closeModalInternal={cleanup}
-  />);
+  /**
+   * Abre o modal com tipagem forte (Generics).
+   * O TypeScript inferirá H, C, A baseados nos componentes passados.
+   */
+  const showModal = useCallback(<H, C, A>(options: IModalOptions<H, C, A>): IModalHandle => {
+    setConfig(options);
+    setIsOpen(true);
 
-  // 5. Retorna o objeto de controle (para fechar externamente se necessário)
+    return { close: closeModal };
+  }, [closeModal]);
+
   return {
-    close: cleanup
+    // Funções de Controle
+    showModal,
+    closeModal,
+
+    // Props prontas para passar para o componente <Modal />
+    // Uso: <Modal {...modalProps} />
+    modalProps: {
+      isOpen,
+      config,
+      onClose: closeModal
+    }
   };
 };
 
-export default showModal;
+export default useModal;
