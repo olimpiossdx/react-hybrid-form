@@ -23,8 +23,7 @@ const DADOS_EDICAO = {
 };
 
 const AsyncAutocompleteExample = () => {
-  const { handleSubmit, formId, resetSection, setValidators } =
-    useForm<any>("team-form");
+  const { handleSubmit, formId, resetSection, setValidators } = useForm<any>("team-form");
 
   // --- ESTADOS ---
   const [liderOptions, setLiderOptions] = React.useState<IOption[]>([]);
@@ -58,14 +57,10 @@ const AsyncAutocompleteExample = () => {
   }, [setValidators]);
 
   // --- FETCH API ---
-  const fetchLideres = async (
-    query: string,
-    pageNum: number,
-    isNewSearch: boolean
-  ) => {
+  const fetchLideres = async (query: string,pageNum: number,isNewSearch: boolean) => {
     if (isNewSearch && abortControllerRef.current) {
       abortControllerRef.current.abort();
-    }
+    };
 
     const controller = new AbortController();
     abortControllerRef.current = controller;

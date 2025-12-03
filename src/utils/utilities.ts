@@ -1,15 +1,17 @@
 import type { IAnyObject, FormField } from "../hooks/use-form/props";
 
 /**
- * Helper interno para dividir caminhos de string em chaves.
+ * Helper interno para dividir caminhos de string em chaves de acesso.
  * Transforma "user.address[0].city" em ["user", "address", "0", "city"].
+ * Suporta notação de ponto e colchetes.
  */
 const splitPath = (path: string) => path.replace(/\]/g, '').split(/[.\[]/);
 
 /**
- * Define um valor em um objeto ou array aninhado usando um caminho de string.
+ * Define um valor em um objeto ou array aninhado usando um caminho de string (dot notation).
  * Cria automaticamente a estrutura intermediária (objetos ou arrays) se ela não existir.
- * * @param obj - O objeto alvo (será mutado).
+ *
+ * @param obj - O objeto alvo (será mutado).
  * @param path - O caminho (ex: "users[0].name").
  * @param value - O valor a ser definido.
  */
@@ -31,7 +33,7 @@ export const setNestedValue = (obj: IAnyObject, path: string, value: any): void 
     const nextKey = keys[i + 1];
     const nextIsNumber = !isNaN(Number(nextKey));
     
-    // Se não existir, cria Array (se chave for número) ou Objeto
+    // Se não existir, cria Array (se a próxima chave for número) ou Objeto
     if (!current[key]) {
       current[key] = nextIsNumber ? [] : {};
     }
@@ -41,9 +43,11 @@ export const setNestedValue = (obj: IAnyObject, path: string, value: any): void 
 
 /**
  * Recupera um valor de um objeto aninhado de forma segura.
- * Retorna undefined se qualquer parte do caminho não existir.
- * * @param obj - O objeto fonte.
+ * Retorna undefined se qualquer parte do caminho não existir, evitando erros de runtime.
+ *
+ * @param obj - O objeto fonte.
  * @param path - O caminho para buscar (ex: "config.theme.color").
+ * @returns O valor encontrado ou undefined.
  */
 export const getNestedValue = (obj: IAnyObject, path: string): any => {
   if (!path || !obj) return undefined;
@@ -55,8 +59,10 @@ export const getNestedValue = (obj: IAnyObject, path: string): any => {
 
 /**
  * Busca e filtra campos de formulário válidos dentro de um elemento container.
+ * Utilizado pelo hook useForm e pelo MutationObserver.
  * Ignora botões e inputs irrelevantes para dados (submit, reset, image).
- * * @param root - O elemento HTML onde buscar (form, fieldset, div, etc).
+ *
+ * @param root - O elemento HTML onde buscar (form, fieldset, div, etc).
  * @param namePrefix - (Opcional) Filtra campos cujo 'name' começa com este prefixo.
  */
 export const getFormFields = (root: HTMLElement, namePrefix?: string): FormField[] => {
@@ -65,7 +71,6 @@ export const getFormFields = (root: HTMLElement, namePrefix?: string): FormField
     : "input[name], select[name], textarea[name]";
   
   const nodeList = root.querySelectorAll(selector);
-  
   return Array.from(nodeList).filter((el): el is FormField => {
     return (
       (el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) &&
@@ -76,7 +81,10 @@ export const getFormFields = (root: HTMLElement, namePrefix?: string): FormField
 
 /**
  * Calcula o caminho relativo de um campo removendo o prefixo do nome.
- * Útil para mapear campos aninhados (ex: 'address.city') para o objeto de dados local ({ city: ... }).
+ * Útil para mapear campos aninhados (ex: 'address.city') para o objeto de dados local ({ city: ... }) durante um resetSection.
+ *
+ * @param fieldName - O nome completo do campo no DOM.
+ * @param namePrefix - O prefixo do grupo sendo processado.
  */
 export const getRelativePath = (fieldName: string, namePrefix?: string): string | null => {
   if (!namePrefix) return fieldName;
@@ -92,9 +100,9 @@ export const getRelativePath = (fieldName: string, namePrefix?: string): string 
 
 /**
  * Normaliza o valor bruto do DOM para tipos JavaScript primitivos.
- * - Checkbox -> boolean
- * - Radio -> valor (apenas se checked)
- * - Number -> number (ou string vazia se inválido)
+ * Garante que checkboxes retornem booleano e números retornem number (ou string vazia se inválido).
+ *
+ * @param field - O elemento do formulário.
  */
 export const parseFieldValue = (field: FormField): any => {
   if (field instanceof HTMLInputElement) {
@@ -102,7 +110,6 @@ export const parseFieldValue = (field: FormField): any => {
     if (field.type === 'checkbox') return field.checked;
     if (field.type === 'radio') return field.checked ? field.value : undefined;
   }
-  
   // Para Selects e outros inputs, retorna o valor string padrão
   return field.value;
 };
@@ -111,33 +118,38 @@ export const parseFieldValue = (field: FormField): any => {
 
 /**
  * Define o valor de um input (Texto/Select) furando o bloqueio de eventos sintéticos do React.
- * * O React sobrescreve a propriedade `.value` do DOM. Se definirmos `input.value = 'x'`,
- * o React não dispara o evento `onChange`. Esta função acessa o protótipo nativo 
- * para injetar o valor e disparar o evento manualmente.
+ *
+ * **O Problema:** O React sobrescreve a propriedade `.value` do DOM. Se definirmos `input.value = 'x'` via JS,
+ * o React internalmente ignora a mudança e não dispara o evento `onChange`.
+ *
+ * **A Solução:** Acessamos o setter original do protótipo `window.HTMLInputElement` e chamamos `.call()`.
+ * Isso "engana" o React, fazendo-o acreditar que foi uma interação nativa do usuário.
+ *
+ * @param element - O elemento input, select ou textarea.
+ * @param value - O valor a ser definido.
  */
 export const setNativeValue = (element: HTMLElement, value: any) => {
-  // Guarda de Proteção: Não força edição em campos bloqueados
+  // Guarda de Proteção: Não força edição em campos bloqueados pela regra de negócio
   if ((element as any).disabled || (element as any).readOnly) return;
 
   let finalValue = value;
 
-  // LÓGICA HÍBRIDA: Se recebeu objeto (ex: Autocomplete), separa em Value e Label
+  // LÓGICA HÍBRIDA (Objeto -> DOM):
+  // Se receber um objeto (ex: Autocomplete), separa em Value (ID) e Label (Texto).
   // Isso permite que o resetSection preencha o texto visual (label) sem sujar o value (ID).
   if (typeof value === 'object' && value !== null && 'value' in value && 'label' in value) {
       finalValue = value.value;
-      element.dataset.label = value.label; // Guarda o contexto no DOM para componentes ricos
+      element.dataset.label = value.label; // Guarda o contexto no DOM para componentes ricos lerem
   } else {
-      if (value !== undefined) {
-         delete element.dataset.label;
-      }
+      // Se não for objeto, limpa o dataset para evitar lixo antigo
+      if (value !== undefined) delete element.dataset.label;
   }
   
-  // Garante string
   finalValue = String(finalValue ?? '');
 
   let descriptor: PropertyDescriptor | undefined;
 
-  // Busca o descritor no protótipo CORRETO para evitar "Illegal Invocation"
+  // Busca o descritor no protótipo CORRETO para evitar erro de "Illegal Invocation"
   if (element instanceof HTMLInputElement) {
       descriptor = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
   } else if (element instanceof HTMLSelectElement) {
@@ -162,7 +174,11 @@ export const setNativeValue = (element: HTMLElement, value: any) => {
 
 /**
  * Define o estado 'checked' de um Checkbox/Radio de forma absoluta e segura.
- * Diferente de .click(), esta função não inverte o estado (toggle), ela define exatamente o que foi pedido.
+ *
+ * **Diferença do .click():** O método `.click()` inverte o valor (toggle). Esta função usa o setter
+ * do protótipo para definir EXATAMENTE true ou false, sem risco de desmarcar o que já estava marcado.
+ *
+ * Usado principalmente na função resetSection (Carga de dados).
  */
 export const setNativeChecked = (element: HTMLInputElement, checked: boolean) => {
   if (element.disabled || element.readOnly) return;
@@ -174,7 +190,7 @@ export const setNativeChecked = (element: HTMLInputElement, checked: boolean) =>
       element.checked = checked;
   }
 
-  // Dispara 'change' para notificar a aplicação da mudança de estado
+  // Apenas dispara change. O click() não é necessário aqui e causaria toggle indesejado.
   element.dispatchEvent(new Event('change', { bubbles: true }));
 };
 
@@ -183,6 +199,7 @@ export const setNativeChecked = (element: HTMLInputElement, checked: boolean) =>
 /**
  * Helper Interno: Recalcula o estado visual do Checkbox Mestre ("Selecionar Todos").
  * Define se ele deve estar Checked (Tudo), Unchecked (Nada) ou Indeterminate (Parcial).
+ * O estado 'indeterminate' (traço) é puramente visual e não afeta o valor do formulário.
  */
 const updateMasterState = (master: HTMLInputElement, form: HTMLElement) => {
   const groupName = master.dataset.checkboxMaster;
@@ -200,28 +217,32 @@ const updateMasterState = (master: HTMLInputElement, form: HTMLElement) => {
     master.checked = true;
     master.indeterminate = false;
   } else {
-    // Indeterminado: Quando nem todos estão marcados (ex: seleção parcial)
+    // Indeterminado: Quando nem todos estão marcados (ex: seleção parcial ou item disabled desmarcado)
     master.checked = false;
-    master.indeterminate = true; // Visualmente vira um traço (-)
+    master.indeterminate = true;
   }
 };
 
 /**
- * Inicializa todos os Mestres dentro de um container.
- * Deve ser chamado no `mount` ou após carregar dados (Load Data) para corrigir o visual.
+ * Inicializa o estado visual de todos os Mestres dentro de um container.
+ * Deve ser chamado ao montar o formulário ou após resetar dados (Edição),
+ * para garantir que o "Selecionar Todos" reflita corretamente os dados carregados.
  */
 export const initializeCheckboxMasters = (root: HTMLElement) => {
   const masters = root.querySelectorAll<HTMLInputElement>('input[type="checkbox"][data-checkbox-master]');
   masters.forEach(master => {
-    // Prioriza o form nativo, senão usa o root como contexto
     const context = master.form || root;
     updateMasterState(master, context as HTMLElement);
   });
 };
 
 /**
- * Gerencia a interação em grupos de Checkbox.
+ * Gerencia a interação em grupos de Checkbox (Mestre <-> Detalhe).
  * Chamado automaticamente pelo useForm no evento 'change'.
+ *
+ * **Estratégia de Sincronia:**
+ * 1. Se clicou no Mestre: Usa `element.click()` nos filhos para propagar eventos nativos e acordar o React.
+ * 2. Se clicou no Filho: Recalcula o estado visual do Mestre.
  */
 export const syncCheckboxGroup = (target: HTMLInputElement, form: HTMLElement) => {
   // CASO A: Mestre Clicado (Controle Downstream)
@@ -229,22 +250,26 @@ export const syncCheckboxGroup = (target: HTMLInputElement, form: HTMLElement) =
     const groupName = target.dataset.checkboxMaster;
     const children = Array.from(form.querySelectorAll<HTMLInputElement>(`input[type="checkbox"][name="${groupName}"]`));
     
-    // Filtra apenas os habilitados para decisão lógica
     const enabledChildren = children.filter(child => !child.disabled && !child.readOnly);
     
-    // Lógica Inteligente: Se existir UM desmarcado, a intenção é MARCAR TODOS.
-    // Se TODOS os habilitados já estão marcados, a intenção é DESMARCAR TODOS.
+    // Lógica Inteligente de Toggle:
+    // Se existir ALGUM filho habilitado que está desmarcado -> A intenção é MARCAR TODOS.
+    // Se TODOS os habilitados já estão marcados -> A intenção é DESMARCAR TUDO.
     const shouldCheckAll = enabledChildren.some(child => !child.checked);
     
     enabledChildren.forEach(child => {
-      // Aplica estado apenas se necessário
+      // Sincronia via CLICK():
+      // Se o estado atual do filho for diferente do desejado, clicamos nele.
+      // Isso garante que o React (onChange) e o DOM (change) sejam notificados nativamente,
+      // permitindo que "Ilhas de Reatividade" (inputs condicionais) funcionem.
       if (child.checked !== shouldCheckAll) {
-        setNativeChecked(child, shouldCheckAll);
+        child.click();
       }
     });
     
-    // Recalcula o mestre no final para refletir a realidade (ex: itens disabled que sobraram)
-    updateMasterState(target, form);
+    // Recalcula o mestre no final para refletir a realidade (considerando itens disabled que sobraram)
+    // Pequeno timeout para garantir que o ciclo de eventos dos filhos terminou
+    setTimeout(() => updateMasterState(target, form), 0);
     return;
   }
 
