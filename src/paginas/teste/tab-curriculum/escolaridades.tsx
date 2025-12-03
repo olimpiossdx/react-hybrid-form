@@ -1,115 +1,74 @@
 import React from 'react'
-import type { IEscolaridade, ISectionProps } from './types';
+import type { IEscolaridade } from './types';
 import useList from '../../../hooks/list';
-import ActionButtons from './action-button';
 
-const Escolaridades: React.FC<ISectionProps> = ({ editingId, handleCancel, handleEdit }) => {
-  const isEditingAny = editingId !== null;
-
-  const [initialEscolaridade] = React.useState<IEscolaridade[]>([{ nivel: 'Ensino Técnico - Superior', curso: 'Engenharia de Computação', situacao: 'Completo' }]);
-  const { fields: escolaridadeFields, append: appendEscolaridade, remove: removeEscolaridade } = useList<IEscolaridade>(initialEscolaridade);
-
-  return (
-    <fieldset
-      className='mb-6 border rounded border-gray-700'
-      disabled={isEditingAny && editingId !== 'escolaridades'}
-    >
-      <legend className='text-lg font-semibold text-cyan-400 px-2 w-full flex justify-between items-center'>
-        Escolaridades
-        <ActionButtons
-          sectionId='escolaridades'
-          prefix='escolaridades.'
-          isEditingThis={editingId === 'escolaridades'}
-          isOtherEditing={isEditingAny && editingId !== 'escolaridades'}
-          onEdit={() => handleEdit('escolaridades', 'escolaridades.')}
-          onCancel={() => handleCancel('escolaridades', 'escolaridades.')}
-        //onSave={() => {}} // O submit faz o save
-        />
-      </legend>
-      <div className='p-4 space-y-4'>
-        {escolaridadeFields.map((field, index) => {
-          const isEditingThisSection = editingId === 'escolaridades';
-          return (
-            <fieldset
-              key={field.id}
-              className={`p-3 border rounded relative border-gray-600`}
-            >
-              {/* Botão de remover SÓ aparece no modo de edição da seção */}
-              {isEditingThisSection && (
-                <button
-                  type='button'
-                  onClick={() => removeEscolaridade(index)}
-                  className={`absolute top-2 right-2 py-0.5 px-2 rounded text-xs bg-red-600 hover:bg-red-700 text-white`}
-                  title='Remover'
-                >
-                  X
-                </button>
-              )}
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-2 mt-1'>
-                <div>
-                  <label className='block text-sm mb-1'>
-                    Escolaridade *
-                  </label>
-                  <select
-                    name={`escolaridades.${index}.nivel`}
-                    className='form-input bg-gray-600'
-                    required
-                    defaultValue={field.value.nivel}
-                    disabled={!isEditingThisSection}
-                  >
-                    <option>Ensino Médio</option>
-                    <option>Ensino Técnico - Superior</option>
-                    <option>Pós-graduação</option>
-                  </select>
-                </div>
-                <div>
-                  <label className='block text-sm mb-1'>Curso *</label>
-                  <input
-                    name={`escolaridades.${index}.curso`}
-                    className='form-input'
-                    required
-                    defaultValue={field.value.curso}
-                    readOnly={!isEditingThisSection}
-                  />
-                </div>
-                <div>
-                  <label className='block text-sm mb-1'>Situação *</label>
-                  <select
-                    name={`escolaridades.${index}.situacao`}
-                    className='form-input bg-gray-600'
-                    required
-                    defaultValue={field.value.situacao}
-                    disabled={!isEditingThisSection}
-                  >
-                    <option>Completo</option>
-                    <option>Cursando</option>
-                    <option>Incompleto</option>
-                  </select>
-                </div>
-              </div>
-            </fieldset>
-          );
-        })}
-        {/* Botão Adicionar SÓ é habilitado/visível quando a seção está em edição */}
-        {editingId === 'escolaridades' && (
-          <button
-            type='button'
-            onClick={() =>
-              appendEscolaridade({
-                nivel: 'Ensino Médio',
-                curso: '',
-                situacao: 'Cursando',
-              })
-            }
-            className={`text-sm bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded w-full`}
-          >
-            + Adicionar Escolaridade
-          </button>
-        )}
-      </div>
-    </fieldset>
-
-  )
+interface Props {
+  data?: IEscolaridade[]; // Tipagem Forte!
 }
 
-export default Escolaridades
+const Escolaridades: React.FC<Props> = ({ data = [] }) => {
+  // O useList<IEscolaridade> cria itens onde item.data é do tipo IEscolaridade
+  const { items, add, remove } = useList<IEscolaridade>(data);
+
+  return (
+    <div className="bg-gray-900/30 p-4 rounded border border-gray-700/50">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-sm font-bold text-gray-300 uppercase">2. Formação Acadêmica</h3>
+        <button type="button" onClick={() => add()} className="text-xs bg-cyan-900 text-cyan-200 px-3 py-1 rounded hover:bg-cyan-800 transition-colors">
+          + Adicionar
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        {items.map((item, index) => (
+          <div key={item.id} className="bg-gray-800 p-3 rounded border border-gray-700 flex flex-col md:flex-row gap-3 relative animate-in fade-in slide-in-from-left-2">
+            <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-[10px] text-gray-500 uppercase">Instituição</label>
+                <input
+                  name={`escolaridades[${index}].instituicao`}
+                  // AQUI: Injeção direta do valor inicial via prop
+                  defaultValue={item.data.instituicao}
+                  className="form-input w-full bg-gray-900 border-gray-600 rounded p-2 text-sm text-white focus:border-cyan-500 outline-none"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-gray-500 uppercase">Curso</label>
+                <input
+                  name={`escolaridades[${index}].curso`}
+                  defaultValue={item.data.curso}
+                  className="form-input w-full bg-gray-900 border-gray-600 rounded p-2 text-sm text-white focus:border-cyan-500 outline-none"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-gray-500 uppercase">Ano</label>
+                <input
+                  name={`escolaridades[${index}].ano`}
+                  type="number"
+                  defaultValue={item.data.ano}
+                  className="form-input w-full bg-gray-900 border-gray-600 rounded p-2 text-sm text-white focus:border-cyan-500 outline-none"
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => remove(index)}
+              className="text-gray-500 hover:text-red-400 self-center p-2 hover:bg-red-900/20 rounded transition-colors"
+              title="Remover curso"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+
+        {items.length === 0 && <p className="text-center text-xs text-gray-500 py-2">Nenhuma formação adicionada.</p>}
+      </div>
+    </div>
+  );
+};
+
+export default Escolaridades;

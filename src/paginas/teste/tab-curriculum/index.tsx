@@ -1,5 +1,3 @@
-// --- NOVO CENÁRIO 5: Currículo Completo (com Edição Contextual e Submit Parcial) ---
-
 import React from 'react';
 import showModal from '../../../componentes/modal/hook';
 import useForm from '../../../hooks/use-form';
@@ -8,63 +6,109 @@ import DadosAdicionais from './dados-adicionais';
 import Escolaridades from './escolaridades';
 import Experiencias from './experiencias';
 import Conhecimentos from './conhecimentos';
+import DadosPessoais from './dados-pessoais';
 
-const CurriculumForm = ({ }) => {
-  const { handleSubmit, formId, getValue, resetSection } = useForm<ICurriculumFormValues>('curriculum-form');
+// MOCK
+const DATA_MOCK: ICurriculumFormValues = {
+  nome: 'Ana Souza',
+  email: 'ana.souza@tech.com',
+  resumo: 'Engenheira de Software com foco em React.',
+  escolaridades: [
+    { instituicao: 'USP', curso: 'Ciência da Computação', ano: 2019 },
+    { instituicao: 'Rocketseat', curso: 'Ignite ReactJS', ano: 2021 }
+  ],
+  experiencias: [
+    { empresa: 'StartUp X', cargo: 'Frontend Jr', anoInicio: 2020, anoFim: 2021 },
+    { empresa: 'Big Tech Y', cargo: 'Frontend Pleno', anoInicio: 2022, anoFim: 2024 }
+  ],
+  conhecimentos: ['react', 'typescript', 'docker'],
+  adicionais: {
+    pretensaoSalarial: 8500,
+    disponibilidadeImediata: true
+  }
+};
 
-  const [editingId, setEditingId] = React.useState<string | null>(null);
+// ESTADO VAZIO ESTÁVEL (Crucial para evitar Loop Infinito no useList)
+const EMPTY_DATA: ICurriculumFormValues = {
+  nome: '',
+  email: '',
+  resumo: '',
+  escolaridades: [], // Array estável
+  experiencias: [],  // Array estável
+  conhecimentos: [], // Array estável
+  adicionais: { pretensaoSalarial: 0, disponibilidadeImediata: false }
+};
 
-  // Ref para snapshot
-  const originalEditDataRef = React.useRef<any>(null);
+const CurriculumForm = () => {
+  const { handleSubmit, formId, resetSection } = useForm<ICurriculumFormValues>("curriculum-form");
 
-  const handleEdit = (id: string, prefix: string) => {
-    originalEditDataRef.current = getValue(prefix);
-    setEditingId(id);
+  // CORREÇÃO: Inicializa com EMPTY_DATA em vez de null.
+  // Isso garante que as listas recebam arrays estáveis desde a primeira renderização,
+  // evitando que o 'useList' entre em loop infinito de dependência.
+  const [formData, setFormData] = React.useState<ICurriculumFormValues>(EMPTY_DATA);
+
+  const handleLoadData = () => {
+    // Simula API Call
+    setFormData(DATA_MOCK);
+
+    // Sincroniza valores no DOM
+    setTimeout(() => {
+      resetSection("", DATA_MOCK);
+    }, 50);
   };
 
-  const handleCancel = (_: string, prefix: string) => {
-    resetSection(prefix, originalEditDataRef.current);
-    originalEditDataRef.current = null;
-    setEditingId(null);
+  const handleReset = () => {
+    // Volta para estrutura vazia estável
+    setFormData(EMPTY_DATA);
+
+    setTimeout(() => {
+      resetSection("", null);
+    }, 50);
   };
 
   const onSubmit = (data: ICurriculumFormValues) => {
-    /* ... clone ... */
-    const cleanData = { ...data };
-
     showModal({
-      title: 'Seção Salva!',
-      content: () => (<>
-        <div className="text-green-400">Dados do Formulário Inteiro:</div>
-        <pre className="text-xs bg-black p-4 rounded text-green-400 overflow-auto">
-          {JSON.stringify(data, null, 2)}
-        </pre>
-      </>),
-      // Callback - adicionando função de execução ao final do modal
-      onClose: () => console.log('Fechou!'),
+      title: "Currículo Salvo",
+      content: () => <pre className="text-xs bg-black p-4 text-green-400">{JSON.stringify(data, null, 2)}</pre>
     });
-    console.log('body', cleanData);
-    setEditingId(null);
-    originalEditDataRef.current = null;
   };
 
-  return (<div className='bg-gray-800 p-6 rounded-lg shadow-xl'>
-    <form id={formId} onSubmit={handleSubmit(onSubmit)} noValidate>
-      {/* --- SEÇÃO DADOS ADICIONAIS --- */}
-      <DadosAdicionais editingId={editingId} handleCancel={handleCancel} handleEdit={handleEdit} />
+  return (
+    <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700 max-w-4xl mx-auto">
+      <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-700">
+        <h2 className="text-2xl font-bold text-cyan-400">Currículo (Data-Driven)</h2>
+        <div className="flex gap-2">
+          <button onClick={handleLoadData} type="button" className="px-3 py-1 text-sm bg-blue-900 text-blue-200 rounded hover:bg-blue-800 border border-blue-700">
+            📥 Carregar Mock
+          </button>
+          <button onClick={handleReset} type="button" className="px-3 py-1 text-sm bg-gray-700 text-gray-300 rounded hover:bg-gray-600 border border-gray-600">
+            ↺ Limpar
+          </button>
+        </div>
+      </div>
 
-      {/* --- SEÇÃO ESCOLARIDADES (LISTA) --- */}
-      <Escolaridades editingId={editingId} handleCancel={handleCancel} handleEdit={handleEdit} />
+      {/* Usamos uma key baseada no objeto para forçar remontagem limpa apenas se necessário,
+          mas com a correção do estado estável, isso é menos crítico. */}
+      <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-8" key={formData === DATA_MOCK ? 'loaded' : 'empty'}>
 
-      {/* --- SEÇÃO EXPERIÊNCIAS (LISTA) --- */}
-      <Experiencias editingId={editingId} handleCancel={handleCancel} handleEdit={handleEdit} />
+        <DadosPessoais data={formData} />
 
-      {/* --- SEÇÃO CONHECIMENTOS (LISTA) --- */}
-      <Conhecimentos editingId={editingId} handleCancel={handleCancel} handleEdit={handleEdit} />
+        {/* Listas Dinâmicas agora recebem arrays estáveis de EMPTY_DATA na inicialização */}
+        <Escolaridades data={formData.escolaridades} />
+        <Experiencias data={formData.experiencias} />
 
-      {/* O submit geral agora está dentro dos botões 'Salvar Seção' */}
-    </form>
-  </div>);
+        {/* Grupos */}
+        <Conhecimentos selected={formData.conhecimentos} />
+        <DadosAdicionais data={formData.adicionais} />
+
+        <div className="flex justify-end pt-6 border-t border-gray-700">
+          <button type="submit" className="px-8 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded shadow-lg">
+            Salvar
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 };
 
 export default CurriculumForm;

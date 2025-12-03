@@ -1,91 +1,46 @@
-import React from 'react'
-import type { IConhecimento, ISectionProps } from './types'
-import useList from '../../../hooks/list';
-import ActionButtons from './action-button';
+import React from 'react';
 
-const Conhecimentos: React.FC<ISectionProps> = ({ editingId, handleCancel, handleEdit }) => {
-  const isEditingAny = editingId !== null;
-
-  const [initialConhecimentos] = React.useState<IConhecimento[]>([{ nivel: 'Intermediário', descricao: 'asdasd' },]);
-  const { fields: conhecimentoFields, append: appendConhecimento, remove: removeConhecimento, } = useList<IConhecimento>(initialConhecimentos);
-
-  return (<fieldset
-    className='mb-6 border rounded border-gray-700'
-    disabled={isEditingAny && editingId !== 'conhecimentos'}
-  >
-    <legend className='text-lg font-semibold text-cyan-400 px-2 w-full flex justify-between items-center'>
-      Conhecimentos
-      <ActionButtons
-        sectionId='conhecimentos'
-        prefix='conhecimentos.'
-        isEditingThis={editingId === 'conhecimentos'}
-        isOtherEditing={isEditingAny && editingId !== 'conhecimentos'}
-        onEdit={() => handleEdit('conhecimentos', 'conhecimentos.')}
-        onCancel={() => handleCancel('conhecimentos', 'conhecimentos.')}
-      //onSave={() => {}} // O submit faz o save
-      />
-    </legend>
-    <div className='p-4 space-y-4'>
-      {conhecimentoFields.map((field, index) => {
-        const isEditingThisSection = editingId === 'conhecimentos';
-        return (
-          <fieldset
-            key={field.id}
-            className={`p-3 border rounded relative border-gray-600`}
-          >
-            {isEditingThisSection && (
-              <button
-                type='button'
-                onClick={() => removeConhecimento(index)}
-                className={`absolute top-2 right-2 py-0.5 px-2 rounded text-xs bg-red-600 hover:bg-red-700 text-white`}
-                title='Remover'
-              >
-                X
-              </button>
-            )}
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-2 mt-1'>
-              <div>
-                <label className='block text-sm mb-1'>Nível *</label>
-                <select
-                  name={`conhecimentos.${index}.nivel`}
-                  className='form-input bg-gray-600'
-                  required
-                  defaultValue={field.value.nivel}
-                  disabled={!isEditingThisSection}
-                >
-                  <option>Básico</option>
-                  <option>Intermediário</option>
-                  <option>Avançado</option>
-                </select>
-              </div>
-              <div className='md:col-span-2'>
-                <label className='block text-sm mb-1'>Descrição *</label>
-                <input
-                  name={`conhecimentos.${index}.descricao`}
-                  className='form-input'
-                  required
-                  defaultValue={field.value.descricao}
-                  readOnly={!isEditingThisSection}
-                />
-              </div>
-            </div>
-          </fieldset>
-        );
-      })}
-      {editingId === 'conhecimentos' && (
-        <button
-          type='button'
-          onClick={() =>
-            appendConhecimento({ nivel: 'Básico', descricao: '' })
-          }
-          className={`text-sm bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded w-full`}
-        >
-          + Adicionar Conhecimento
-        </button>
-      )}
-    </div>
-  </fieldset>
-  )
+interface Props {
+  selected?: string[];
 }
+const Conhecimentos: React.FC<Props> = ({ selected = [] }) => {
+  const stacks = ['react', 'typescript', 'node', 'python', 'java', 'docker', 'aws', 'sql'];
 
-export default Conhecimentos
+  return (
+    <div className="bg-gray-900/30 p-4 rounded border border-gray-700/50">
+      <h3 className="text-sm font-bold text-gray-300 uppercase mb-4">4. Conhecimentos Técnicos</h3>
+
+      {/* MESTRE (Controller) */}
+      <div className="mb-3 pb-3 border-b border-gray-700">
+        <label className="flex items-center gap-2 text-cyan-400 font-bold cursor-pointer w-fit hover:opacity-80">
+          <input
+            type="checkbox"
+            data-checkbox-master="conhecimentos"
+            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-gray-900"
+          />
+          Selecionar Todas as Stacks
+        </label>
+      </div>
+
+      {/* FILHOS (Dados) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pl-2">
+        {stacks.map((tech) => (
+          <label key={tech} className="flex items-center gap-2 text-gray-300 cursor-pointer hover:text-white transition-colors p-1 rounded hover:bg-gray-800">
+            <input
+              type="checkbox"
+              name="conhecimentos"
+              value={tech}
+              // A MÁGICA DO DATA-DRIVEN: 
+              // Se o valor estiver no array 'selected', nasce marcado.
+              defaultChecked={selected.includes(tech)}
+              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-gray-900"
+            />
+            {tech.charAt(0).toUpperCase() + tech.slice(1)}
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default Conhecimentos;

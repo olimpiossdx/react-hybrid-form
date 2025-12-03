@@ -1,57 +1,33 @@
 
 // --- Tipos para o Currículo ---
 export interface IEscolaridade {
-  nivel: string;
+  instituicao: string;
   curso: string;
-  situacao: string;
-};
+  ano: number; // number para facilitar input type="number"
+}
 
 export interface IExperiencia {
-  nomeEmpresa: string;
+  empresa: string;
   cargo: string;
-  inicio: string;
-  finalizacao: string;
-  atual: boolean;
-  atividades: string;
-};
-
-export interface IConhecimento {
-  nivel: string;
-  descricao: string;
-};
+  anoInicio: number;
+  anoFim: number;
+  descricao?: string;
+}
 
 export interface IDadosAdicionais {
-  rg: string;
-  orgaoEmissor: string;
-  pis: string;
-  filiacao1: string;
-  filiacao2: string;
-  nacionalidade: string;
-  naturalidade: string;
-  raca: string;
-  tipoResidencia: string;
-  parenteEmpresa: string;
-  situacao: string;
-  ultimaConsulta: string;
-  retorno: string;
-  exFuncionario: string;
-  pcdFisico: boolean;
-  pcdIntelectual: boolean;
-  pcdVisual: boolean;
-  pcdAuditivo: boolean;
-  pcdOutra: boolean;
-  pcdDetalhe: string;
-  altura: string;
-  tamanhoUniforme: string;
-  tamanhoCalcado: string;
-};
+  pretensaoSalarial: number;
+  disponibilidadeImediata: boolean;
+}
 
 export interface ICurriculumFormValues {
-  dadosAdicionais?: IDadosAdicionais;
-  escolaridades?: IEscolaridade[];
-  experiencias?: IExperiencia[];
-  conhecimentos?: IConhecimento[];
-};
+  nome: string;
+  email: string;
+  resumo: string;
+  escolaridades: IEscolaridade[];
+  experiencias: IExperiencia[];
+  conhecimentos: string[]; // Checkbox Group (Array de strings)
+  adicionais: IDadosAdicionais;
+}
 
 export interface IActionButton {
   sectionId: string;
