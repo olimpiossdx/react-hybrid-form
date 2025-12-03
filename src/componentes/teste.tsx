@@ -1,6 +1,7 @@
 import React from 'react';
 import type { AutocompleteProps } from './autocomplete';
 import { createRoot } from 'react-dom/client';
+import useForm from '../hooks/use-form';
 // Importa o novo componente - REMOVIDO: import Autocomplete from './Autocomplete';
 
 // --- DEFINIÇÕES DE TIPO ---
@@ -33,162 +34,7 @@ type ValidateFn<FormValues> = (
 // Mapa de validadores (tipado)
 type ValidatorMap<FV> = Record<string, ValidateFn<FV>>;
 
-// --- O HOOK `useForm` (v4.0 Tipado + IValidator) ---
-// (O código do hook useForm permanece inalterado)
-function useForm<FV extends Record<string, any>>(providedId?: string) {
-  const generatedId = React.useId();
-  const formId = providedId || generatedId; // Usa ID fornecido ou gera um
 
-  const formRef = React.useRef<HTMLFormElement | null>(null);
-  const fieldRefs = React.useRef<Record<string, HTMLElement>>({});
-  const validationKeysRef = React.useRef<Record<string, string>>({});
-  const validatorsRef = React.useRef<ValidatorMap<FV>>({}); // Tipado com FV
-
-  // Função para o componente "registrar" suas funções de validação
-  const setValidators = React.useCallback((validators: ValidatorMap<FV>) => { // Tipado com FV
-    validatorsRef.current = validators;
-  }, []);
-
-  const getValues = React.useCallback((): FV => { // Retorna o tipo FV
-    const values: any = {};
-    for (const name in fieldRefs.current) {
-      const element = fieldRefs.current[name] as HTMLInputElement | HTMLSelectElement; // Ajustado para incluir select
-      if (element) {
-        values[name] = element.type === 'number' ? element.valueAsNumber || (element.value === "" ? "" : 0) :
-          element.type === 'checkbox' ? element.checked :
-            // Garante que leia o valor corretamente de select também
-            element.value;
-      }
-    }
-    return values as FV; // Cast para FV
-  }, []);
-
-  // --- `handleInteraction` (Re-validação em tempo real com IValidator) ---
-  const handleInteraction = React.useCallback((e: Event) => {
-    const currentField = e.currentTarget as HTMLInputElement | HTMLSelectElement;
-    currentField.classList.add('is-touched');
-
-    const formValues = getValues();
-    const validatorFns = validatorsRef.current;
-
-    for (const name in fieldRefs.current) {
-      const field = fieldRefs.current[name] as HTMLInputElement | HTMLSelectElement;
-      // Adicionado null check para segurança
-      if (!field) {
-        continue;
-      };
-      const validationKey = validationKeysRef.current[name];
-
-      // Limpa validação customizada anterior antes de revalidar
-      field.setCustomValidity('');
-
-      if (validationKey) {
-        const customValidate = validatorFns[validationKey];
-        if (customValidate) {
-          // Passa os 3 argumentos tipados (exceto 'value')
-          const result = customValidate(formValues[name], field, formValues);
-
-          // Processa o resultado (string, IValidator, true, undefined)
-          if (typeof result === 'string') {
-            field.setCustomValidity(result); // Erro
-          } else if (typeof result === 'object' && result?.type === 'error') {
-            field.setCustomValidity(result.message); // Erro
-          }
-          // Outros tipos ('warning', 'info', 'success', true, undefined) não definem erro customizado
-        }
-      }
-      // A validação nativa será reavaliada pelo navegador de qualquer forma
-    }
-  }, [getValues]); // Depende do getValues
-
-  // Efeito para encontrar o formulário e registrar os campos automaticamente
-  React.useLayoutEffect(() => {
-    // Usa o formId (fornecido ou gerado)
-    const form = document.getElementById(formId) as HTMLFormElement | null;
-    if (!form) {
-      console.warn(`[useForm] Formulário com id '${formId}' não encontrado.`);
-      return;
-    }
-    formRef.current = form;
-
-    const fields = form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
-      'input[name], select[name], textarea[name]'
-    );
-
-    const registeredFields: HTMLElement[] = [];
-
-    fields.forEach((field) => {
-      const name = field.name;
-      if (!name) return;
-
-      fieldRefs.current[name] = field;
-      validationKeysRef.current[name] = field.dataset.validation || '';
-      registeredFields.push(field);
-
-      field.addEventListener('blur', handleInteraction);
-      field.addEventListener('change', handleInteraction);
-    });
-
-    return () => {
-      registeredFields.forEach((field) => {
-        field.removeEventListener('blur', handleInteraction);
-        field.removeEventListener('change', handleInteraction);
-      });
-      fieldRefs.current = {};
-      validationKeysRef.current = {};
-      formRef.current = null;
-    };
-  }, [formId, handleInteraction]);
-
-  const handleSubmit = React.useCallback((onValid: (data: FV) => void) => // Usa FV
-    (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      const form = formRef.current;
-      if (!form) return;
-
-      const formValues = getValues();
-      const validatorFns = validatorsRef.current;
-
-      // Fase 1: Forçar 'touched' e rodar validações customizadas (uma última vez)
-      for (const name in fieldRefs.current) {
-        const field = fieldRefs.current[name] as HTMLInputElement | HTMLSelectElement;
-        if (!field) continue;
-
-        field.classList.add('is-touched');
-        // Limpa antes de validar no submit
-        field.setCustomValidity('');
-
-        const validationKey = validationKeysRef.current[name];
-        if (validationKey) {
-          const customValidate = validatorFns[validationKey];
-          if (customValidate) {
-            // Passa os 3 argumentos
-            const result = customValidate(formValues[name], field, formValues);
-
-            // Processa o resultado (igual ao handleInteraction)
-            if (typeof result === 'string') {
-              field.setCustomValidity(result); // Erro
-            } else if (typeof result === 'object' && result?.type === 'error') {
-              field.setCustomValidity(result.message); // Erro
-            }
-            // Outros tipos não definem erro para o balão
-          }
-        }
-      }
-
-      // Fase 2: Pedir ao navegador para checar TUDO
-      const isFormValid = form.checkValidity();
-
-      if (!isFormValid) {
-        form.reportValidity(); // Mostra o balão nativo (apenas para 'error')
-      } else {
-        onValid(formValues); // Sucesso! (passa FV)
-      }
-    }, [getValues]);
-
-  // Retorna as funções e o formId
-  return { handleSubmit, setValidators, formId };
-}
 
 // --- COMPONENTE AUTOCOMPLETE (MOVIDO PARA CÁ) ---
 const Autocomplete: React.FC<AutocompleteProps> = ({
@@ -596,7 +442,7 @@ const HybridForm = () => {
   // Exemplo de validação para o Autocomplete
   const validarCor = React.useCallback((value: any, field: HTMLFieldElements, formValues: MyHybridForm): ValidationResult => {
     console.log('validarCor-formValues,field', formValues, field);
-    
+
     if (value === 'verde') {
       return { message: 'Verde é uma ótima cor!', type: 'success' };
     }
