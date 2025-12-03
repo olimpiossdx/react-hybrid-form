@@ -114,7 +114,8 @@ const BudgetProjectForm = () => {
   const onSubmit = (data: IProjetoForm) => {
     // Cálculo para o modal
     const total = Number(data.projeto.orcamento_total);
-    const gasto = data.projeto.despesas.reduce((acc, item) => acc + Number(item.valor), 0);
+    const despesas = data.projeto?.despesas || [];
+    const gasto = despesas.reduce((acc, item) => acc + Number(item.valor), 0);
 
     showModal({
       title: "Orçamento Processado",
