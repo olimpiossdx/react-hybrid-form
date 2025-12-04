@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 
 export interface IOption extends React.DetailedHTMLProps<React.OptionHTMLAttributes<HTMLOptionElement>, HTMLOptionElement> {
@@ -36,27 +36,11 @@ export interface AutocompleteProps {
   renderOption?: (option: IOption) => React.ReactNode;
 }
 
-const Autocomplete: React.FC<AutocompleteProps> = ({
-  name,
-  label,
-  options = [],
-  required,
-  validationKey,
-  initialValue = "",
-  disabled,
-  readOnly,
-  onSearch,
-  onLoadMore,
-  isLoading = false,
-  isLoadingMore = false,
-  hasMore = false,
-  errorMessage,
-  clearable = false,
-  debounceTime = 300,
-  className = "",
-  placeholder,
-  renderOption
-}) => {
+const Autocomplete: React.FC<AutocompleteProps> = (props) => {
+  const { name, label, options = [], required, validationKey, initialValue = "", disabled, readOnly, onSearch, onLoadMore,
+    isLoading = false, isLoadingMore = false, hasMore = false, errorMessage, clearable = false, debounceTime = 300,
+    className = "", placeholder, renderOption } = props;
+
   const getOptionLabel = (opt: IOption) => opt.label || (typeof opt.children === 'string' ? opt.children : "");
 
   const findLabelByValue = (val: string) => {
@@ -64,22 +48,22 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
     return found ? getOptionLabel(found) : "";
   };
 
-  const [inputValue, setInputValue] = useState<string>("");
-  const [selectedValue, setSelectedValue] = useState<string>(initialValue);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [activeIndex, setActiveIndex] = useState<number>(-1);
-  const [isTyping, setIsTyping] = useState(false);
+  const [inputValue, setInputValue] = React.useState<string>("");
+  const [selectedValue, setSelectedValue] = React.useState<string>(initialValue);
+  const [showSuggestions, setShowSuggestions] = React.useState(false);
+  const [activeIndex, setActiveIndex] = React.useState<number>(-1);
+  const [isTyping, setIsTyping] = React.useState(false);
 
-  const [dropdownCoords, setDropdownCoords] = useState({ top: 0, left: 0, width: 0 });
+  const [dropdownCoords, setDropdownCoords] = React.useState({ top: 0, left: 0, width: 0 });
 
-  const selectRef = useRef<HTMLSelectElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const visibleInputRef = useRef<HTMLInputElement>(null);
-  const listRef = useRef<HTMLUListElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const selectRef = React.useRef<HTMLSelectElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const visibleInputRef = React.useRef<HTMLInputElement>(null);
+  const listRef = React.useRef<HTMLUListElement>(null);
+  const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // --- SINCRONIA DOM BLINDADA (Edição/Reset) ---
-  useEffect(() => {
+  React.useEffect(() => {
     const select = selectRef.current;
     if (!select) return;
 
@@ -130,7 +114,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
     }
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     updateDropdownPosition();
     window.addEventListener('resize', updateDropdownPosition);
     window.addEventListener('scroll', updateDropdownPosition, { capture: true });
@@ -140,7 +124,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
     };
   }, [showSuggestions]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (showSuggestions && activeIndex >= 0 && listRef.current) {
       const activeItem = listRef.current.children[activeIndex] as HTMLElement;
       if (activeItem) activeItem.scrollIntoView({ block: 'nearest' });
@@ -172,7 +156,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
     }
   };
 
-  const filteredSuggestions = useMemo(() => {
+  const filteredSuggestions = React.useMemo(() => {
     if (onSearch) return options;
     if (!inputValue && !showSuggestions) return options;
     if (!inputValue) return options;
