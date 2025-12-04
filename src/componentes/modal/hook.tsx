@@ -1,55 +1,78 @@
-import { useState, useCallback } from 'react';
+import { createRoot } from 'react-dom/client';
 import type { IModalOptions } from './types';
+import Modal from './index';
+
+// Pilha de modais ativos para gerenciar o fechamento global (LIFO)
+const activeModals: { close: () => void }[] = [];
 
 /**
- * Interface de retorno do showModal para permitir controle imperativo (ex: fechar após fetch).
+ * Fecha o último modal aberto na pilha.
  */
-export interface IModalHandle {
-  close: () => void;
-}
-
-export const useModal = () => {
-  // Estado interno do modal
-  const [isOpen, setIsOpen] = useState(false);
-
-  // O estado do config precisa ser genérico (any) pois ele muda a cada chamada
-  const [config, setConfig] = useState<IModalOptions<any, any, any> | null>(null);
-
-  /**
-   * Fecha o modal e limpa a configuração após um delay (animação).
-   */
-  const closeModal = useCallback(() => {
-    setIsOpen(false);
-    // Limpa o config após a animação de saída (300ms) para evitar glitches visuais
-    setTimeout(() => {
-      setConfig(null);
-    }, 300);
-  }, []);
-
-  /**
-   * Abre o modal com tipagem forte (Generics).
-   * O TypeScript inferirá H, C, A baseados nos componentes passados.
-   */
-  const showModal = useCallback(<H, C, A>(options: IModalOptions<H, C, A>): IModalHandle => {
-    setConfig(options);
-    setIsOpen(true);
-
-    return { close: closeModal };
-  }, [closeModal]);
-
-  return {
-    // Funções de Controle
-    showModal,
-    closeModal,
-
-    // Props prontas para passar para o componente <Modal />
-    // Uso: <Modal {...modalProps} />
-    modalProps: {
-      isOpen,
-      config,
-      onClose: closeModal
-    }
-  };
+export const closeModal = () => {
+  const lastModal = activeModals[activeModals.length - 1];
+  if (lastModal) {
+    lastModal.close();
+  }
 };
 
-export default useModal;
+/**
+ * Função Imperativa para abrir modais.
+ * Cria um novo nó React no DOM para cada chamada, permitindo empilhamento.
+ */
+const showModal = <H, C, A>(options: IModalOptions<H, C, A>) => {
+  // 1. Cria o container físico no DOM
+  const container = document.createElement('div');
+  // Adiciona identificador para debug, mas permite múltiplos
+  container.classList.add('hybrid-modal-host');
+  document.body.appendChild(container);
+
+  // 2. Cria a raiz React isolada
+  const root = createRoot(container);
+
+  // Função interna de limpeza (Animação -> Unmount -> Remove DOM)
+  const destroy = () => {
+    // 1. Renderiza fechado para disparar animação de saída no Modal
+    root.render(
+      <Modal
+        options={options}
+        onClose={() => { }}
+      />
+    );
+
+    // 2. Aguarda a animação terminar e limpa tudo
+    setTimeout(() => {
+      // Remove da pilha global
+      const index = activeModals.findIndex(m => m.close === destroy);
+      if (index !== -1) activeModals.splice(index, 1);
+
+      // Desmonta React e remove Elemento
+      root.unmount();
+      if (document.body.contains(container)) {
+        document.body.removeChild(container);
+      }
+    }, 300); // Tempo sincronizado com a transição CSS do Modal
+  };
+
+  // Handler que será passado para o componente
+  const handleClose = () => {
+    // Chama callback do usuário se existir
+    if (options.onClose) options.onClose();
+    destroy();
+  };
+
+  // Adiciona à pilha para que closeModal() global funcione
+  activeModals.push({ close: handleClose });
+
+  // 3. Renderiza Inicial (Aberto)
+  root.render(
+    <Modal
+      options={options}
+      onClose={handleClose}
+    />
+  );
+
+  // Retorna controle para quem chamou
+  return { close: handleClose };
+};
+
+export default showModal;
