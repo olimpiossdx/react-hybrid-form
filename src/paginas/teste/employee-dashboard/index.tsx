@@ -15,47 +15,52 @@ const TabEmployeeDashboard = () => {
   // Estado para recarregar a tabela
   const [filters, setFilters] = useState<IEmployeeFilter | undefined>(undefined);
 
+  // --- LÓGICA LIMPA (SEM TRY/CATCH) ---
   const loadData = async () => {
     setLoading(true);
-    try {
-      const data = await EmployeeService.getAll(filters);
-      setEmployees(data);
-    } catch (error) {
-      toast.error("Erro ao carregar dados.");
-    } finally {
-      setLoading(false);
+
+    // O Serviço garante o tratamento de exceção e retorna o envelope seguro
+    const response = await EmployeeService.getAll(filters);
+
+    if (response.isSuccess && response.data) {
+      setEmployees(response.data);
     }
+    // Se falhou (isSuccess: false), o serviço já disparou o Toast. 
+    // A UI apenas para de carregar.
+
+    setLoading(false);
   };
 
-  // Recarrega quando filtros mudam
   useEffect(() => {
     loadData();
   }, [filters]);
 
   const handleSave = async (data: any) => {
-    try {
-      await EmployeeService.save(data);
+    // Salva e recebe o envelope
+    const response = await EmployeeService.save(data);
+
+    if (response.isSuccess) {
       toast.success("Funcionário salvo com sucesso!");
-      loadData(); // Refresh
-      return true; // Sinaliza sucesso para fechar modal se fosse promise
-    } catch (e) {
-      toast.error("Erro ao salvar.");
-      throw e; // Repassa erro para o form tratar se quiser
+      loadData(); // Recarrega tabela
+      return true; // Sinaliza para o modal fechar
     }
+
+    // Se falhou, o modal continua aberto. O toast de erro já foi exibido pelo serviço.
+    return false;
   };
 
   const openEditModal = (employee?: IEmployee) => {
     showModal({
       title: <div className="flex items-center gap-2 text-cyan-400"><Users /> <span>{employee ? 'Editar Funcionário' : 'Novo Funcionário'}</span></div>,
       size: 'lg',
-      // Injetamos o componente de formulário dentro do modal
       content: ({ onClose }: any) => (
         <EmployeeModal
           employee={employee || null}
           onCancel={onClose}
           onSave={async (data) => {
-            await handleSave({ ...employee, ...data });
-            onClose();
+            // Só fecha o modal se o save retornar sucesso
+            const success = await handleSave({ ...employee, ...data });
+            if (success) onClose();
           }}
         />
       )
@@ -63,14 +68,16 @@ const TabEmployeeDashboard = () => {
   };
 
   const handleToggleStatus = async (id: number, status: boolean) => {
-    // Optimistic UI: Poderíamos atualizar o estado local antes, mas aqui vamos esperar a API
-    try {
-      await EmployeeService.toggleStatus(id, status);
-      toast.info(`Status alterado para ${status ? 'Ativo' : 'Inativo'}`);
-      // Atualiza lista localmente para evitar refetch total (Opcional)
-      setEmployees(prev => prev.map(e => e.id === id ? { ...e, status } : e));
-    } catch {
-      toast.error("Falha ao alterar status");
+    // Optimistic UI: Atualiza na hora
+    setEmployees(prev => prev.map(e => e.id === id ? { ...e, status } : e));
+
+    // Chama API em background
+    const response = await EmployeeService.toggleStatus(id, status);
+
+    if (!response.isSuccess) {
+      // Se deu erro, reverte (Rollback)
+      setEmployees(prev => prev.map(e => e.id === id ? { ...e, status: !status } : e));
+      // Toast de erro já foi disparado pelo serviço
     }
   };
 
