@@ -13,6 +13,7 @@ import TabAsyncAutocompleteExample from "./tab-autocomplete";
 import ValidationFeedbackExample from "./tab-validacao";
 import RegistrationComplexExample from "./tab-registration";
 import BudgetProjectForm from "./tab-budget-project-form";
+import ToastContainerExample from "./tab-toast-container";
 
 // Foca no nova tab/formulário-ativo
 const Homologacao: React.FC = () => {
@@ -33,6 +34,7 @@ const Homologacao: React.FC = () => {
     validationFeedbackExample: <ValidationFeedbackExample />,
     registrationComplexExample: <RegistrationComplexExample />,
     budgetProjectForm: <BudgetProjectForm />,
+    toastContainerExample: <ToastContainerExample />,
   };
 
   return (<div className="bg-gray-800 text-white min-h-screen p-2 sm:p-4 font-sans">
@@ -122,6 +124,12 @@ const Homologacao: React.FC = () => {
           tabId="budgetProjectForm"
           label="Projeto orcamento"
           isActive={activeTab === "budgetProjectForm"}
+          onClick={setActiveTab}
+        />
+        <TabButton
+          tabId="toastContainerExample"
+          label="Toast"
+          isActive={activeTab === "toastContainerExample"}
           onClick={setActiveTab}
         />
       </div>
