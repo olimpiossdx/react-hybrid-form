@@ -245,7 +245,7 @@ const BudgetProjectForm = () => {
                   <div className="text-gray-600 font-mono text-xs pt-3 w-6">#{index + 1}</div>
 
                   {/* Descrição */}
-                  <div className="flex-grow w-full">
+                  <div className="grow w-full">
                     <label className="block text-[10px] text-gray-500 uppercase mb-1">Descrição</label>
                     <input
                       name={`projeto.despesas[${index}].descricao`}

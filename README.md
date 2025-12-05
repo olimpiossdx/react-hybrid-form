@@ -47,6 +47,29 @@ src/
 
 -----
 
+### 🛡️ Estratégia de Validação: "Native-First"
+
+A biblioteca segue um pipeline estrito para garantir performance e UX:
+
+1.  **Nível 1 (Browser):** Verifica regras HTML (`required`, `min`, `pattern`, `type="email"`).
+    * *Se falhar:* O processo para e exibe a mensagem nativa do navegador.
+    * *Benefício:* Zero custo de processamento JS para erros básicos.
+2.  **Nível 2 (Custom):** Verifica regras JavaScript (`setValidators`).
+    * *Se falhar:* Define `setCustomValidity` e exibe o balão nativo com sua mensagem.
+
+> **⚠️ Nota Importante sobre Campos Opcionais:**
+> Se um campo **não** tiver o atributo `required`, o navegador considera o valor vazio como **Válido**.
+> Portanto, sua função de validação customizada deve prever isso:
+>
+> ```typescript
+> validarEmailCorp: (val) => {
+>   if (!val) return; // <-- Se for vazio e opcional, retorne undefined (Válido)
+>   if (!val.includes('@empresa.com')) return { message: "Email incorreto" };
+> }
+> ```
+
+-----
+
 ## 🛠️ Hook Core: `useForm`
 
 Conecte o formulário HTML à lógica React com apenas uma linha de props.
