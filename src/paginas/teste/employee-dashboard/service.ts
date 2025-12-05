@@ -1,10 +1,11 @@
-import { toast } from "../../../componentes/toast";
+import { api } from "../../../service/api";
 import type { IApiResponse } from "../../../service/http/types";
 import type { IEmployee, IEmployeeFilter } from "./types";
 
 const ROLES = ['Frontend Developer', 'Backend Engineer', 'Product Owner', 'UX Designer'];
 
-// Helper para gerar dados fakes
+// Helper: Transforma o dado cru da API (JSONPlaceholder) no nosso Modelo de Domínio (IEmployee)
+// Adiciona campos que a API fake não tem (Rating, Status, Data)
 const enrichUser = (user: any): IEmployee => ({
   id: user.id,
   name: user.name,
@@ -15,73 +16,86 @@ const enrichUser = (user: any): IEmployee => ({
   admissionDate: new Date(2020, 0, user.id * 10).toISOString().split('T')[0]
 });
 
-// Helper para criar Envelope de Sucesso
-const success = <T>(data: T): IApiResponse<T> => ({
-    data, error: null, isSuccess: true, status: 200, headers: new Headers()
-});
-
-// Helper para criar Envelope de Erro (e notificar)
-// CORREÇÃO: Usamos 'any' no genérico para que o retorno seja compatível com qualquer tipo de resposta esperado (IEmployee[], boolean, etc)
-const failure = (message: string): IApiResponse<any> => {
-    // A camada de serviço notifica, a UI não precisa saber
-    toast.error(message);
-    return {
-        data: null, 
-        error: { code: 'MOCK_ERROR', message }, 
-        isSuccess: false, 
-        status: 500, 
-        headers: new Headers()
-    };
-};
-
 export const EmployeeService = {
-  // Retorna IApiResponse, garantindo que nunca lança exceção para a UI
+  
+  /**
+   * Busca todos os funcionários e aplica filtros em memória (simulação).
+   */
   async getAll(filters?: IEmployeeFilter): Promise<IApiResponse<IEmployee[]>> {
-    try {
-        await new Promise(r => setTimeout(r, 600));
+    // 1. Chamada Real
+    // O smartAdapter no HttpClient detecta que o retorno é um Array e processa corretamente
+    const response = await api.get<any[]>('https://jsonplaceholder.typicode.com/users');
 
-        const response = await fetch('https://jsonplaceholder.typicode.com/users');
-        if (!response.ok) return failure("Erro ao conectar com API externa.");
+    // 2. Tratamento de Negócio (Transformação de Dados)
+    if (response.isSuccess && response.data) {
+        let employees = response.data.map(enrichUser);
 
-        const users = await response.json();
-        let employees = users.map(enrichUser);
-
-        // Filtro Backend Simulado
+        // Filtro em Memória (Simulando o que um Backend real faria com SQL)
         if (filters) {
             if (filters.term) {
                 const t = filters.term.toLowerCase();
-                employees = employees.filter((e: IEmployee) => e.name.toLowerCase().includes(t) || e.email.includes(t));
+                employees = employees.filter(e => e.name.toLowerCase().includes(t) || e.email.includes(t));
             }
             if (filters.role) {
-                employees = employees.filter((e: IEmployee) => e.role === filters.role);
+                employees = employees.filter(e => e.role === filters.role);
+            }
+            if (filters.date_start) {
+                employees = employees.filter(e => e.admissionDate >= filters.date_start);
+            }
+            if (filters.date_end) {
+                employees = employees.filter(e => e.admissionDate <= filters.date_end);
             }
         }
-        
-        return success(employees);
 
-    } catch (e) {
-        return failure("Falha crítica no serviço de funcionários.");
+        // Retorna o envelope mantendo o status original, mas com dados transformados
+        return { ...response, data: employees };
     }
+
+    // Se deu erro, retorna o envelope de erro original
+    return response as IApiResponse<IEmployee[]>;
   },
 
+  /**
+   * Simula o salvamento de um funcionário.
+   */
   async save(data: Partial<IEmployee>): Promise<IApiResponse<IEmployee>> {
-    try {
-        await new Promise(r => setTimeout(r, 1000));
-        
-        // Simulação de Validação de Backend
-        if (data.name === 'Erro') return failure("Nome inválido (Simulação de Backend).");
-
-        const saved = { ...data, id: data.id || Math.floor(Math.random() * 1000) } as IEmployee;
-        return success(saved);
-
-    } catch (e) {
-        return failure("Não foi possível salvar os dados.");
+    // Simulação de Regra de Negócio Específica (Validação de Backend)
+    if (data.name === 'Erro') {
+        return {
+            isSuccess: false,
+            data: null,
+            status: 400,
+            headers: new Headers(),
+            notifications: [],
+            error: { code: 'BUSINESS_RULE', message: "Nome inválido (Simulação de Backend)." }
+        };
     }
+
+    const response = await api.post<IEmployee>('https://jsonplaceholder.typicode.com/users', data);
+    
+    // Complementa o dado retornado (pois a API fake retorna objeto incompleto)
+    if (response.isSuccess && response.data) {
+        const saved = { ...data, id: response.data.id || Math.floor(Math.random() * 1000) } as IEmployee;
+        return { ...response, data: saved };
+    }
+
+    return response;
   },
   
-  async toggleStatus(_: number, __: boolean): Promise<IApiResponse<boolean>> {
-     await new Promise(r => setTimeout(r, 300));
-     // Simula sucesso sempre
-     return success(true);
+  /**
+   * Altera o status (Ativo/Inativo).
+   */
+  async toggleStatus(id: number, status: boolean): Promise<IApiResponse<any>> {
+     // Se o ID for > 10, forçamos um erro 500 para testar o tratamento de erro na UI
+     const url = id > 10 
+        ? 'https://httpstat.us/500' 
+        : `https://jsonplaceholder.typicode.com/users/${id}`;
+
+     const response = await api.request(url, { 
+         method: id > 10 ? 'GET' : 'PATCH', // JSONPlaceholder aceita PATCH
+         body: JSON.stringify({ status }) 
+     });
+
+     return response;
   }
 };

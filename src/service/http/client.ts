@@ -1,23 +1,31 @@
-import { toast } from "../../componentes/toast";
-import type { RequestInterceptor, ResponseInterceptor, HttpRequestConfig, IApiResponse } from "./types";
+import  { toast } from "../../componentes/toast";
+import { smartAdapter } from "./adapters";
+import type { RequestInterceptor, ResponseInterceptor, HttpClientOptions, HttpRequestConfig, IApiResponse } from "./types";
+
 
 export class HttpClient {
   private baseURL: string;
   private defaultHeaders: Headers;
-  private defaultRetries = 0;
-  private defaultRetryDelay = 1000;
+  private adapter: any; 
+  private defaultRetries: number;
+  private defaultRetryDelay: number;
   private defaultRetryBackoff = true;
 
   private requestInterceptors: RequestInterceptor[] = [];
   private responseInterceptors: ResponseInterceptor[] = [];
 
-  constructor(baseURL: string = '', defaultHeaders: Record<string, string> = {}) {
-    this.baseURL = baseURL;
+  constructor(options: HttpClientOptions = {}) {
+    this.baseURL = options.baseURL || '';
+    
     this.defaultHeaders = new Headers({
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      ...defaultHeaders
+      ...(options.headers || {})
     });
+
+    this.adapter = options.defaultAdapter || smartAdapter;
+    this.defaultRetries = options.defaultRetries || 0;
+    this.defaultRetryDelay = options.defaultRetryDelay || 1000;
   }
 
   useRequestInterceptor(interceptor: RequestInterceptor) {
@@ -34,28 +42,32 @@ export class HttpClient {
 
   private isRetryable(error: any, response?: Response): boolean {
       if (error && error.name !== 'AbortError') return true;
-      if (response) {
-          return response.status >= 500 || response.status === 429;
-      }
+      if (response) return response.status >= 500 || response.status === 429;
       return false;
   }
 
   async request<T>(endpoint: string, config: Partial<HttpRequestConfig> = {}): Promise<IApiResponse<T>> {
-    let url = `${this.baseURL}${endpoint}`;
+    const isAbsolute = endpoint.startsWith('http');
+    let url = isAbsolute ? endpoint : `${this.baseURL}${endpoint}`;
 
     if (config.params) {
       const query = new URLSearchParams();
       Object.entries(config.params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) query.append(key, String(value));
       });
-      url += `?${query.toString()}`;
+      const separator = url.includes('?') ? '&' : '?';
+      if (Array.from(query).length > 0) {
+          url = `${url}${separator}${query.toString()}`;
+      }
     }
 
     let finalConfig: HttpRequestConfig = {
       retries: this.defaultRetries,
       retryDelay: this.defaultRetryDelay,
       retryBackoff: this.defaultRetryBackoff,
+      adapter: this.adapter, 
       ...config,
+      url: url,
       headers: new Headers(config.headers || this.defaultHeaders),
       method: config.method || 'GET'
     };
@@ -68,13 +80,8 @@ export class HttpClient {
       finalConfig = await interceptor(finalConfig);
     }
 
-    // CORREÇÃO: Inicialização padrão para evitar erro "used before assigned"
     let apiResponse: IApiResponse<T> = {
-        data: null,
-        error: { code: 'INIT_ERROR', message: 'Falha na inicialização da requisição' },
-        isSuccess: false,
-        status: 0,
-        headers: new Headers()
+        data: null, error: { code: 'INIT', message: '' }, isSuccess: false, status: 0, headers: new Headers(), notifications: []
     };
 
     let attempt = 0;
@@ -84,61 +91,33 @@ export class HttpClient {
         try {
             const fetchResponse = await fetch(url, finalConfig);
             
-            // Retry lógico (Status 5xx/429)
             if (attempt < totalAttempts && this.isRetryable(null, fetchResponse)) {
-                const delay = finalConfig.retryBackoff 
-                    ? (finalConfig.retryDelay || 1000) * Math.pow(2, attempt - 1)
-                    : (finalConfig.retryDelay || 1000);
-                
-                console.warn(`[API] Retry attempt ${attempt} for ${url}. Waiting ${delay}ms.`);
+                const delay = (finalConfig.retryDelay || 1000) * (finalConfig.retryBackoff ? Math.pow(2, attempt - 1) : 1);
                 await this.sleep(delay);
                 continue;
             }
 
-            // Processamento de Resposta
-            let data: any = null;
+            let body: any = null;
             const contentType = fetchResponse.headers.get('content-type');
-            
             if (fetchResponse.status !== 204) {
                 if (contentType && contentType.includes('application/json')) {
-                    data = await fetchResponse.json().catch(() => null);
+                    body = await fetchResponse.json().catch(() => null);
                 } else {
-                    data = await fetchResponse.text();
+                    body = await fetchResponse.text();
                 }
             }
 
-            if (fetchResponse.ok) {
-                apiResponse = {
-                    data: data as T,
-                    error: null,
-                    isSuccess: true,
-                    status: fetchResponse.status,
-                    headers: fetchResponse.headers
-                };
-            } else {
-                const errorMsg = data?.message || data?.error_description || fetchResponse.statusText || 'Erro na requisição';
-                const errorCode = data?.code || data?.error || String(fetchResponse.status);
-                
-                apiResponse = {
-                    data: null,
-                    error: { code: errorCode, message: errorMsg, details: data },
-                    isSuccess: false,
-                    status: fetchResponse.status,
-                    headers: fetchResponse.headers
-                };
+            if (finalConfig.adapter) {
+                apiResponse = finalConfig.adapter<T>(fetchResponse, body);
             }
-            break; // Sucesso ou Erro final (não retryable)
+
+            break; 
 
         } catch (error) {
-            // Erro de Rede / Abort
             const isAbort = error instanceof Error && error.name === 'AbortError';
-
+            
             if (!isAbort && attempt < totalAttempts && this.isRetryable(error)) {
-                const delay = finalConfig.retryBackoff 
-                    ? (finalConfig.retryDelay || 1000) * Math.pow(2, attempt - 1)
-                    : (finalConfig.retryDelay || 1000);
-
-                console.warn(`[API] Network error on attempt ${attempt}. Waiting ${delay}ms.`);
+                 const delay = (finalConfig.retryDelay || 1000) * (finalConfig.retryBackoff ? Math.pow(2, attempt - 1) : 1);
                 await this.sleep(delay);
                 continue;
             }
@@ -147,24 +126,29 @@ export class HttpClient {
                 data: null,
                 error: { 
                     code: isAbort ? 'REQUEST_ABORTED' : 'NETWORK_ERROR', 
-                    message: isAbort ? 'Requisição cancelada.' : (error instanceof Error ? error.message : 'Falha de conexão.') 
+                    message: isAbort ? 'Cancelado.' : (error instanceof Error ? error.message : 'Falha de conexão.') 
                 },
-                isSuccess: false,
-                status: 0,
-                headers: new Headers()
+                isSuccess: false, status: 0, headers: new Headers(), notifications: []
             };
             break;
         }
     }
 
-    // 7. Response Interceptors (Agora seguro, pois apiResponse está inicializada)
     for (const interceptor of this.responseInterceptors) {
         apiResponse = await interceptor(apiResponse);
     }
 
-    // 8. Feature DX: Notify on Error
     if (!apiResponse.isSuccess && finalConfig.notifyOnError && apiResponse.error?.code !== 'REQUEST_ABORTED') {
         toast.error(apiResponse.error?.message || "Ocorreu um erro");
+    }
+
+    if (finalConfig.notifyOnError && apiResponse.notifications.length > 0) {
+        apiResponse.notifications.forEach(n => {
+             if (n.type === 'error') toast.error(n.message);
+             if (n.type === 'success') toast.success(n.message);
+             if (n.type === 'warning') toast.warning(n.message);
+             if (n.type === 'info') toast.info(n.message);
+        });
     }
 
     return apiResponse;

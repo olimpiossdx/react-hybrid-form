@@ -1,40 +1,31 @@
+import { HttpClient } from './http/client';
+import { smartAdapter } from './http/adapters';
 
-import { HttpClient } from "./http/client";
+// ÚNICA INSTÂNCIA (Singleton)
+// Configuramos o padrão "Enterprise" (StandardAdapter) como default.
+export const api = new HttpClient({
+    baseURL: 'https://api.meusistema.com/v1',
+    defaultAdapter: smartAdapter
+});
 
-// Simulação de Cookie/Storage
-const getToken = () => localStorage.getItem('access_token');
+// --- INTERCEPTORS ---
 
-export const api = new HttpClient('https://api.dev.com/v1');
-
-// --- INTERCEPTOR DE REQUEST ---
 api.useRequestInterceptor(async (config) => {
-  // CORREÇÃO DO ERRO DE TYPE:
-  // 1. Se não existir headers, cria um novo.
-  // 2. Se existir mas for um objeto simples, converte para a classe Headers.
+  const token = localStorage.getItem('token');
+  
+  // Garante que headers é um objeto Headers para podermos usar .set()
   if (!config.headers) {
     config.headers = new Headers();
   } else if (!(config.headers instanceof Headers)) {
     config.headers = new Headers(config.headers);
   }
 
-  const token = getToken();
+  // Lógica de Segurança: Só injeta token se for para nossa API interna
+  const isInternal = !config.url?.startsWith('http') || config.url?.includes('api.meusistema.com');
   
-  // Agora o TypeScript sabe que config.headers é do tipo Headers e possui .set()
-  if (token) {
-    config.headers.set('Authorization', `Bearer ${token}`);
+  if (token && isInternal) {
+      config.headers.set('Authorization', `Bearer ${token}`);
   }
   
-  // Exemplo: Adicionar Language ou Versionamento
-  config.headers.set('Accept-Language', 'pt-BR');
-  
-  // Log de Debug (Opcional)
-  console.log(`[API] Request: ${config.method} ${config.baseURL}`);
-  
   return config;
-});
-
-// --- INTERCEPTOR DE RESPONSE (Opcional: Tratamento Global) ---
-api.useResponseInterceptor(async (response) => {
-    // Aqui você poderia capturar 401 para refresh token ou logging global
-    return response;
 });
