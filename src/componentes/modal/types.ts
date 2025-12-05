@@ -1,5 +1,10 @@
 import React from 'react';
 
+export interface IModalProps {
+  options: IModalOptions<any, any, any>;
+  onClose: () => void; // Callback para destruir a árvore
+};
+
 // O manager lida com qualquer tipo de modal, então usamos generics default ou any
 export type Listener = (options: IModalOptions<any, any, any> | null) => void;
 

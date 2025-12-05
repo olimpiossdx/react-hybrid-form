@@ -1,6 +1,6 @@
-import { createRoot } from 'react-dom/client';
-import type { IModalOptions } from './types';
-import Modal from './index';
+import { createRoot } from "react-dom/client";
+import type { IModalOptions } from "./types";
+import Modal from "./index";
 
 // Pilha de modais ativos para gerenciar o fechamento global (LIFO)
 const activeModals: { close: () => void }[] = [];
@@ -12,7 +12,7 @@ export const closeModal = () => {
   const lastModal = activeModals[activeModals.length - 1];
   if (lastModal) {
     lastModal.close();
-  }
+  };
 };
 
 /**
@@ -21,9 +21,9 @@ export const closeModal = () => {
  */
 const showModal = <H, C, A>(options: IModalOptions<H, C, A>) => {
   // 1. Cria o container físico no DOM
-  const container = document.createElement('div');
+  const container = document.createElement("div");
   // Adiciona identificador para debug, mas permite múltiplos
-  container.classList.add('hybrid-modal-host');
+  container.classList.add("hybrid-modal-host");
   document.body.appendChild(container);
 
   // 2. Cria a raiz React isolada
@@ -32,17 +32,12 @@ const showModal = <H, C, A>(options: IModalOptions<H, C, A>) => {
   // Função interna de limpeza (Animação -> Unmount -> Remove DOM)
   const destroy = () => {
     // 1. Renderiza fechado para disparar animação de saída no Modal
-    root.render(
-      <Modal
-        options={options}
-        onClose={() => { }}
-      />
-    );
+    root.render(<Modal options={options} onClose={() => {}} />);
 
     // 2. Aguarda a animação terminar e limpa tudo
     setTimeout(() => {
       // Remove da pilha global
-      const index = activeModals.findIndex(m => m.close === destroy);
+      const index = activeModals.findIndex((m) => m.close === destroy);
       if (index !== -1) activeModals.splice(index, 1);
 
       // Desmonta React e remove Elemento
@@ -56,7 +51,9 @@ const showModal = <H, C, A>(options: IModalOptions<H, C, A>) => {
   // Handler que será passado para o componente
   const handleClose = () => {
     // Chama callback do usuário se existir
-    if (options.onClose) options.onClose();
+    if (options.onClose){ 
+      options.onClose();
+    };
     destroy();
   };
 
@@ -64,12 +61,7 @@ const showModal = <H, C, A>(options: IModalOptions<H, C, A>) => {
   activeModals.push({ close: handleClose });
 
   // 3. Renderiza Inicial (Aberto)
-  root.render(
-    <Modal
-      options={options}
-      onClose={handleClose}
-    />
-  );
+  root.render(<Modal options={options} onClose={handleClose} />);
 
   // Retorna controle para quem chamou
   return { close: handleClose };

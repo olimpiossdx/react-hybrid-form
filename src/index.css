@@ -39,7 +39,8 @@ select.form-input {
 }
 
 /* --- ESTILOS PARA readOnly/disabled (MODO VISUALIZAÇÃO) --- */
-.form-input[readOnly], textarea.form-input[readOnly] {
+.form-input[readOnly],
+textarea.form-input[readOnly] {
   background-color: transparent !important;
   border-color: transparent !important;
   padding-left: 0.1rem !important;
@@ -73,16 +74,19 @@ select.form-input:disabled {
   line-height: 1.5;
 }
 
-input[type="checkbox"]:disabled, input[type="radio"]:disabled {
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled {
   opacity: 1;
   /* Opacidade controlada pelo fieldset */
 }
 
-label:has(input[type="checkbox"]:disabled), label:has(input[type="radio"]:disabled) {
+label:has(input[type="checkbox"]:disabled),
+label:has(input[type="radio"]:disabled) {
   cursor: default;
 }
 
-input[type="month"][readOnly], input[type="date"][readOnly] {
+input[type="month"][readOnly],
+input[type="date"][readOnly] {
   color: #D1D5DB !important;
   background-color: transparent !important;
   border-color: transparent !important;
@@ -105,7 +109,8 @@ input[name^="rating"]:invalid.is-touched~.star-display {
   border-radius: 0.375rem;
 }
 
-.star-display:focus, .star-display:focus-within {
+.star-display:focus,
+.star-display:focus-within {
   outline: 2px solid #06b6d4;
   border-radius: 0.375rem;
 }

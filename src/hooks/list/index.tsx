@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import React from 'react';
 
 /**
  * Hook para gerenciar listas dinâmicas.
@@ -13,7 +13,7 @@ const useList = <T = any>(initialDataOrCount: T[] | number = []) => {
   });
 
   // Inicializa o estado mesclando IDs com os Dados recebidos
-  const [items, setItems] = useState(() => {
+  const [items, setItems] = React.useState(() => {
     if (typeof initialDataOrCount === 'number') {
       return Array.from({ length: initialDataOrCount }, () => generateItem());
     }
@@ -21,10 +21,10 @@ const useList = <T = any>(initialDataOrCount: T[] | number = []) => {
   });
 
   // Ref para controlar se é a primeira renderização (evita resetar se o pai re-renderizar)
-  const isFirstRender = useRef(true);
+  const isFirstRender = React.useRef(true);
 
   // Sincroniza apenas se a prop mudar drasticamente (ex: nova busca de API)
-  useEffect(() => {
+  React.useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
@@ -41,15 +41,15 @@ const useList = <T = any>(initialDataOrCount: T[] | number = []) => {
     }
   }, [initialDataOrCount]);
 
-  const add = useCallback((initialValues?: T) => {
+  const add = React.useCallback((initialValues?: T) => {
     setItems(prev => [...prev, generateItem(initialValues)]);
   }, []);
 
-  const remove = useCallback((index: number) => {
+  const remove = React.useCallback((index: number) => {
     setItems(prev => prev.filter((_, i) => i !== index));
   }, []);
 
-  const clear = useCallback(() => setItems([]), []);
+  const clear = React.useCallback(() => setItems([]), []);
 
   return { items, add, remove, clear };
 };

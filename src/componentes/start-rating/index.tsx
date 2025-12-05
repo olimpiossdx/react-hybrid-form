@@ -1,25 +1,12 @@
 import React from "react";
-
-interface StarRatingProps {
-  name: string;
-  label?: string;
-  initialValue?: number;
-  maxStars?: number;
-  required?: boolean;
-  readOnly?: boolean;
-  disabled?: boolean;
-  onChange?: (value: number) => void;
-  validationKey?: string;
-  className?: string;
-  starClassName?: string;
-}
+import type { IStarRatingProps } from "./props";
 
 /**
  * Componente de Avaliação Híbrido (Versão Homologada v2.5).
  * * Camada Visual (Z-10): SVGs que recebem interação do usuário.
  * * Camada de Dados (Z-0): Input 'Sentinela' (1px) para validação nativa.
  */
-const StarRating: React.FC<StarRatingProps> = ({
+const StarRating: React.FC<IStarRatingProps> = ({
   name,
   label,
   required,
@@ -32,9 +19,7 @@ const StarRating: React.FC<StarRatingProps> = ({
   className = "",
   starClassName = "w-8 h-8",
 }) => {
-  const [currentValue, setCurrentValue] = React.useState<number>(
-    Number(initialValue) || 0
-  );
+  const [currentValue, setCurrentValue] = React.useState<number>(Number(initialValue) || 0);
   const [hoverValue, setHoverValue] = React.useState<number>(0);
 
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -73,17 +58,17 @@ const StarRating: React.FC<StarRatingProps> = ({
     };
   }, []); // Dependência vazia para performance máxima
 
-  function validate(inputRef: React.RefObject<HTMLInputElement | null>,newValue: number ) {
+  function validate(inputRef: React.RefObject<HTMLInputElement | null>, newValue: number ) {
     if (!inputRef.current) {
       return;
-    };
+    }
 
     if (inputRef.current.value !== String(newValue || "")) {
       inputRef.current.value = newValue === 0 ? "" : String(newValue);
       inputRef.current.dispatchEvent(new Event("change", { bubbles: true }));
-    };
+    }
     inputRef.current.setCustomValidity("");
-  };
+  }
 
   const updateValue = (newValue: number) => {
     if (newValue !== currentValue) {
@@ -144,14 +129,17 @@ const StarRating: React.FC<StarRatingProps> = ({
   const handleBlur = () => {
     if (effectiveDisabled) {
       return;
-    };
+    }
 
     inputRef.current?.dispatchEvent(new Event("blur", { bubbles: true }));
   };
 
   const displayValue = hoverValue || currentValue;
 
-  return (<div className={`relative mb-4 ${effectiveDisabled ? "opacity-50" : ""} ${className}`}>
+  return (
+    <div
+      className={`relative mb-4 ${effectiveDisabled ? "opacity-50" : ""} ${className}`}
+    >
       {label ? (
         <label className="block mb-1 text-gray-300">
           {label} {required && <span className="text-red-400">*</span>}

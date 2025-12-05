@@ -208,32 +208,21 @@ const NestedLevelForm = () => {
         </div>
       </div>
 
-      <form id={formId} onSubmit={handleSubmit(onSubmit)} autoComplete="off">
-        {isGenerated ? (
-            <div className="animate-in fade-in zoom-in duration-300">
-                <RecursiveLevel 
-                    depth={0} 
-                    maxDepth={targetDepth}
-                    prefix="projeto" // Raiz
-                />
-                
-                <div className="mt-8 flex justify-end border-t border-gray-700 pt-6 sticky bottom-0 bg-gray-800/95 p-4 backdrop-blur-sm z-50">
-                    <button
-                        type="submit"
-                        className="py-3 px-8 rounded bg-green-600 hover:bg-green-500 text-white font-bold shadow-lg hover:shadow-green-500/20 transition-all transform hover:-translate-y-1"
-                    >
-                        Validar e Salvar Estrutura
-                    </button>
-                </div>
-            </div>
-        ) : (
-            <div className="text-center py-20 border-2 border-dashed border-gray-700 rounded-lg text-gray-500">
-                <p>Clique em "Iniciar" para gerar a árvore de inputs.</p>
-            </div>
-        )}
-      </form>
-    </div>
-  );
+     <form id={formId} onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+       {isGenerated 
+       ? (<div className="animate-in fade-in zoom-in duration-300">
+               <RecursiveLevel depth={0} maxDepth={targetDepth} prefix="projeto" />
+               <div className="mt-8 flex justify-end border-t border-gray-700 pt-6 sticky bottom-0 bg-gray-800/95 p-4 backdrop-blur-sm z-50">
+                   <button type="submit" className="py-3 px-8 rounded bg-green-600 hover:bg-green-500 text-white font-bold shadow-lg hover:shadow-green-500/20 transition-all transform hover:-translate-y-1"                   >
+                       Validar e Salvar Estrutura
+                   </button>
+               </div>
+           </div>) 
+           : (<div className="text-center py-20 border-2 border-dashed border-gray-700 rounded-lg text-gray-500">
+               <p>Clique em "Iniciar" para gerar a árvore de inputs.</p>
+           </div>)}
+     </form>
+   </div>);
 };
 
 export default NestedLevelForm;
