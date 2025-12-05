@@ -16,6 +16,7 @@ import BudgetProjectForm from "./tab-budget-project-form";
 import ToastContainerExample from "./tab-toast-container";
 import TabAlertExample from "./tab-alert";
 import TabSwitchExample from "./tab-switch";
+import DateRangeExample from "./tab-range-date";
 
 // Foca no nova tab/formulário-ativo
 const Homologacao: React.FC = () => {
@@ -39,6 +40,7 @@ const Homologacao: React.FC = () => {
     toastContainerExample: <ToastContainerExample />,
     tabAlertExample: <TabAlertExample />,
     tabSwitchExample: <TabSwitchExample />,
+    dateRangeExample: <DateRangeExample />,
   };
 
   return (<div className="bg-gray-800 text-white min-h-screen p-2 sm:p-4 font-sans">
@@ -146,6 +148,12 @@ const Homologacao: React.FC = () => {
           tabId="tabSwitchExample"
           label="Switch"
           isActive={activeTab === "tabSwitchExample"}
+          onClick={setActiveTab}
+        />
+        <TabButton
+          tabId="dateRangeExample"
+          label="range-date"
+          isActive={activeTab === "dateRangeExample"}
           onClick={setActiveTab}
         />
       </div>
