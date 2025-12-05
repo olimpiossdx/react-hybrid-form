@@ -3,27 +3,39 @@ import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getToday, addDays, parseISODate, toISODate, isWeekend, isBefore, isAfter, toDisplayDate, addMonths, getDaysInMonthGrid, isSameDay, isBetween } from '../../utils/date';
 import Popover from '../popover';
 
+// Interface exportada para quem quiser criar presets customizados
+export interface DatePreset {
+  label: string;
+  getValue: () => [Date, Date];
+}
+
 interface DateRangeProps {
   startDateName: string;
   endDateName: string;
   label?: string;
   
-  minDate?: string; // YYYY-MM-DD
-  maxDate?: string; // YYYY-MM-DD
+  minDate?: string;
+  maxDate?: string;
   excludeWeekends?: boolean;
+  
+  // --- CONFIGURAÇÃO DE PRESETS ---
+  showPresets?: boolean; // Default: true
+  presets?: DatePreset[]; // Default: Lista padrão
   
   required?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
 }
 
-// CORREÇÃO: Tipagem explícita para garantir Tupla [Date, Date]
-const PRESETS: { label: string; getValue: () => [Date, Date] }[] = [
+const DEFAULT_PRESETS: DatePreset[] = [
   { label: 'Hoje', getValue: () => [getToday(), getToday()] },
   { label: 'Ontem', getValue: () => [addDays(getToday(), -1), addDays(getToday(), -1)] },
   { label: 'Últimos 7 Dias', getValue: () => [addDays(getToday(), -7), getToday()] },
   { label: 'Últimos 30 Dias', getValue: () => [addDays(getToday(), -30), getToday()] },
-  { label: 'Próximos 7 Dias', getValue: () => [getToday(), addDays(getToday(), 7)] },
+  { label: 'Este Mês', getValue: () => {
+      const now = getToday();
+      return [new Date(now.getFullYear(), now.getMonth(), 1), new Date(now.getFullYear(), now.getMonth() + 1, 0)];
+  }},
 ];
 
 const DateRangePicker: React.FC<DateRangeProps> = ({
@@ -35,45 +47,38 @@ const DateRangePicker: React.FC<DateRangeProps> = ({
   readOnly,
   excludeWeekends,
   minDate,
-  maxDate
+  maxDate,
+  showPresets = true,
+  presets = DEFAULT_PRESETS
 }) => {
-  // ESTADOS INTERNOS
   const [isOpen, setIsOpen] = useState(false);
-  const [viewDate, setViewDate] = useState(getToday()); // Mês visível
+  const [viewDate, setViewDate] = useState(getToday());
   
-  // Intervalo Selecionado (Objeto Date ou null)
   const [start, setStart] = useState<Date | null>(null);
   const [end, setEnd] = useState<Date | null>(null);
   const [hoverDate, setHoverDate] = useState<Date | null>(null);
 
-  // REFS (DOM)
   const containerRef = useRef<HTMLDivElement>(null);
   const startInputRef = useRef<HTMLInputElement>(null);
   const endInputRef = useRef<HTMLInputElement>(null);
 
   const effectiveDisabled = disabled || readOnly;
 
-  // --- SINCRONIA COM DOM (Reset/Load) ---
-  // Ouve mudanças nos inputs ocultos vindas do useForm
+  // Sincronia com DOM
   useEffect(() => {
     const handleExternalUpdate = () => {
        if (startInputRef.current) setStart(parseISODate(startInputRef.current.value));
        if (endInputRef.current) setEnd(parseISODate(endInputRef.current.value));
     };
-
-    // Inicializa
     handleExternalUpdate();
-
     const sInput = startInputRef.current;
     const eInput = endInputRef.current;
-
     if (sInput && eInput) {
-        sInput.addEventListener('input', handleExternalUpdate); // Reset dispara input
+        sInput.addEventListener('input', handleExternalUpdate);
         sInput.addEventListener('change', handleExternalUpdate);
         eInput.addEventListener('input', handleExternalUpdate);
         eInput.addEventListener('change', handleExternalUpdate);
     }
-
     return () => {
         if (sInput && eInput) {
             sInput.removeEventListener('input', handleExternalUpdate);
@@ -84,12 +89,10 @@ const DateRangePicker: React.FC<DateRangeProps> = ({
     };
   }, []);
 
-  // --- ATUALIZAÇÃO DO DOM ---
   const applyRange = (newStart: Date | null, newEnd: Date | null) => {
     setStart(newStart);
     setEnd(newEnd);
 
-    // Atualiza Input Start
     if (startInputRef.current) {
         const iso = toISODate(newStart);
         if (startInputRef.current.value !== iso) {
@@ -98,25 +101,18 @@ const DateRangePicker: React.FC<DateRangeProps> = ({
         }
     }
 
-    // Atualiza Input End
     if (endInputRef.current) {
         const iso = toISODate(newEnd);
         if (endInputRef.current.value !== iso) {
             endInputRef.current.value = iso;
             endInputRef.current.dispatchEvent(new Event('change', { bubbles: true }));
-            
-            // Cross-Validation: Define min do fim como o início
             if (newStart) endInputRef.current.min = toISODate(newStart);
         }
     }
   };
 
-  // --- HELPER DE VISIBILIDADE ---
-  // Verifica se o dia está bloqueado por regras de negócio (Fim de semana ou Min/Max)
   const isDateDisabled = (date: Date) => {
       if (excludeWeekends && isWeekend(date)) return true;
-      
-      // Parse dos limites se existirem
       if (minDate) {
           const min = parseISODate(minDate);
           if (min && isBefore(date, min)) return true;
@@ -125,47 +121,30 @@ const DateRangePicker: React.FC<DateRangeProps> = ({
           const max = parseISODate(maxDate);
           if (max && isAfter(date, max)) return true;
       }
-      
       return false;
   };
 
-  // --- LÓGICA DE SELEÇÃO ---
   const handleDayClick = (date: Date) => {
     if (isDateDisabled(date)) return;
-
-    // Caso 1: Novo Início (se já tinha range completo ou nenhum)
     if (!start || (start && end)) {
         applyRange(date, null);
         return;
     }
-
-    // Caso 2: Fechando o Range
     if (isBefore(date, start)) {
-        // Clicou antes do início -> Inverte (Auto-swap UX)
         applyRange(date, start);
     } else {
-        // Clicou depois -> Fecha normal
         applyRange(start, date);
-        setIsOpen(false); // Fecha ao completar
+        setIsOpen(false);
     }
   };
 
-  const handlePresetClick = (preset: { getValue: () => [Date, Date] }) => {
+  const handlePresetClick = (preset: DatePreset) => {
      const [s, e] = preset.getValue();
-     
-     // Valida se o preset respeita os limites (Opcional, mas boa prática)
-     if ((minDate && isBefore(s, parseISODate(minDate)!)) || 
-         (maxDate && isAfter(e, parseISODate(maxDate)!))) {
-         // Poderíamos mostrar um erro ou apenas ignorar
-         // Por enquanto aplicamos e deixamos a validação nativa do input pegar
-     }
-
      applyRange(s, e);
-     setViewDate(s); // Pula para o mês do início
+     setViewDate(s);
      setIsOpen(false);
   };
 
-  // Renderização do Texto Visual
   const displayText = start 
     ? `${toDisplayDate(start)} ${end ? ` - ${toDisplayDate(end)}` : ''}` 
     : "Selecione o período...";
@@ -178,7 +157,6 @@ const DateRangePicker: React.FC<DateRangeProps> = ({
          </label>
       )}
 
-      {/* 1. TRIGGER VISUAL */}
       <div 
         className={`
             flex items-center justify-between p-2.5 bg-gray-800 border border-gray-600 rounded-lg cursor-pointer hover:border-gray-500 transition-colors
@@ -195,28 +173,28 @@ const DateRangePicker: React.FC<DateRangeProps> = ({
         <Calendar size={18} className="text-gray-400" />
       </div>
 
-      {/* 2. POPOVER (PORTAL) */}
       <Popover 
         isOpen={isOpen} 
         onClose={() => setIsOpen(false)} 
         triggerRef={containerRef}
         className="flex overflow-hidden w-auto max-w-[90vw]"
       >
-        {/* Sidebar Presets */}
-        <div className="w-40 border-r border-gray-700 p-2 bg-gray-900/50 hidden sm:block">
-            {PRESETS.map((p, i) => (
-                <button
-                   key={i}
-                   type="button"
-                   onClick={() => handlePresetClick(p)}
-                   className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-700 hover:text-white rounded transition-colors"
-                >
-                    {p.label}
-                </button>
-            ))}
-        </div>
+        {/* Sidebar de Presets (Condicional) */}
+        {showPresets && (
+            <div className="w-40 border-r border-gray-700 p-2 bg-gray-900/50 hidden sm:block">
+                {presets.map((p, i) => (
+                    <button
+                    key={i}
+                    type="button"
+                    onClick={() => handlePresetClick(p)}
+                    className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-700 hover:text-white rounded transition-colors"
+                    >
+                        {p.label}
+                    </button>
+                ))}
+            </div>
+        )}
 
-        {/* Calendar Grid */}
         <div className="p-4 w-72">
             <div className="flex justify-between items-center mb-4">
                 <button type="button" onClick={() => setViewDate(addMonths(viewDate, -1))} className="p-1 hover:bg-gray-700 rounded text-gray-400"><ChevronLeft size={20}/></button>
@@ -237,8 +215,6 @@ const DateRangePicker: React.FC<DateRangeProps> = ({
                     if (!day) return <div key={idx} />;
                     
                     const disabledDay = isDateDisabled(day);
-
-                    // Estado Visual
                     const isSelStart = start && isSameDay(day, start);
                     const isSelEnd = end && isSameDay(day, end);
                     const isInRange = start && end && isBetween(day, start, end);
@@ -268,27 +244,8 @@ const DateRangePicker: React.FC<DateRangeProps> = ({
         </div>
       </Popover>
 
-      {/* 3. DUAL SHADOW INPUTS (A Verdade do DOM) */}
-      <input 
-          ref={startInputRef} 
-          type="date" 
-          name={startDateName} 
-          required={required} 
-          min={minDate} 
-          max={maxDate}
-          className="sr-only" 
-          tabIndex={-1}
-      />
-      <input 
-          ref={endInputRef} 
-          type="date" 
-          name={endDateName} 
-          required={required} 
-          min={toISODate(start) || minDate} // Cross-validation nativa
-          max={maxDate}
-          className="sr-only"
-          tabIndex={-1}
-      />
+      <input ref={startInputRef} type="date" name={startDateName} required={required} min={minDate} max={maxDate} className="sr-only" tabIndex={-1} />
+      <input ref={endInputRef} type="date" name={endDateName} required={required} min={toISODate(start) || minDate} max={maxDate} className="sr-only" tabIndex={-1} />
     </div>
   );
 };
