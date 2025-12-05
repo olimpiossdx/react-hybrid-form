@@ -1,6 +1,6 @@
 import React from 'react';
 import { toastManager } from './manager';
-import type { IToast, ToastPosition } from './types';
+import type { IToast, IToastItem, ToastPosition } from './types';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle, Star } from 'lucide-react';
 
 const ToastContainer = () => {
@@ -36,7 +36,7 @@ const ToastContainer = () => {
   </>);
 };
 
-const ToastItem = ({ toast }: { toast: IToast }) => {
+const ToastItem: React.FC<IToastItem> = ({ toast }) => {
   const [isExiting, setIsExiting] = React.useState(false);
 
   const handleClose = () => {

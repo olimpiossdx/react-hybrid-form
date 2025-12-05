@@ -28,3 +28,7 @@ export interface IToast extends IToastOptions {
   message: string; // A mensagem torna-se obrigatória apenas no objeto final construído
   createdAt: number;
 };
+
+export interface IToastItem {
+  toast: IToast
+};
