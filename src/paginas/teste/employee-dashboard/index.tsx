@@ -45,7 +45,7 @@ const TabEmployeeDashboard = () => {
   };
 
   const openEditModal = (employee?: IEmployee) => {
-    const modalHandle = showModal({
+    showModal({
       title: <div className="flex items-center gap-2 text-cyan-400"><Users /> <span>{employee ? 'Editar Funcionário' : 'Novo Funcionário'}</span></div>,
       size: 'lg',
       // Injetamos o componente de formulário dentro do modal
