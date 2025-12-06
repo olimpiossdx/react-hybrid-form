@@ -147,7 +147,7 @@ const BudgetProjectForm = () => {
     }, 50);
   };
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6">
 
       {/* BARRA DE FERRAMENTAS */}
       <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 flex justify-between items-center">

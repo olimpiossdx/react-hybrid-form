@@ -157,7 +157,7 @@ const NestedListForm = () => {
   };
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700 max-w-4xl mx-auto">
+    <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700 max-w-7xl mx-auto">
 
       {/* Header */}
       <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-700">
@@ -202,7 +202,7 @@ const NestedListForm = () => {
 
               {/* Cabeçalho da Categoria */}
               <div className="flex gap-4 items-center mb-2">
-                <div className="flex-grow">
+                <div className="grow">
                   <input
                     name={`categories[${index}].name`}
                     defaultValue={categoryItem.data.name}

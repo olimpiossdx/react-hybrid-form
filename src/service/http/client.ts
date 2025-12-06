@@ -2,7 +2,6 @@ import  { toast } from "../../componentes/toast";
 import { smartAdapter } from "./adapters";
 import type { RequestInterceptor, ResponseInterceptor, HttpClientOptions, HttpRequestConfig, IApiResponse } from "./types";
 
-
 export class HttpClient {
   private baseURL: string;
   private defaultHeaders: Headers;

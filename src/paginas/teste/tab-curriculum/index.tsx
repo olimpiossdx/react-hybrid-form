@@ -74,7 +74,7 @@ const CurriculumForm = () => {
   };
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700 max-w-4xl mx-auto">
+    <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-700">
         <h2 className="text-2xl font-bold text-cyan-400">Currículo (Data-Driven)</h2>
         <div className="flex gap-2">

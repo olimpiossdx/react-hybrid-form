@@ -27,7 +27,7 @@ const DADOS_VAZIOS = {
     urgente: false
 };
 
-const AsyncAutocompleteExample = () => {
+const AsyncAutocompleteExample: React.FC = () => {
     
     const onSubmit = (data: any) => {
         showModal({
@@ -143,7 +143,7 @@ const AsyncAutocompleteExample = () => {
     };
 
     return (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700 max-w-4xl mx-auto relative">
+        <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700 max-w-7xl mx-auto relative">
             <div className="mb-6 flex flex-col md:flex-row justify-between items-start gap-4">
                 <div>
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -218,7 +218,7 @@ const AsyncAutocompleteExample = () => {
             </form>
 
             {showTestModal && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 backdrop-blur-sm" onClick={() => setShowTestModal(false)}>
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-100 p-4 backdrop-blur-sm" onClick={() => setShowTestModal(false)}>
                     <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md border border-gray-600 shadow-2xl relative" onClick={e => e.stopPropagation()}>
                         <h3 className="text-lg font-bold text-white mb-2">Teste de Portal</h3>
                         <div className="border border-red-900/50 p-4 rounded bg-gray-900 overflow-hidden relative h-32 mb-4 ring-1 ring-red-900/30">
