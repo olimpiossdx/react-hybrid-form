@@ -22,8 +22,13 @@ import type { IGraphEvents } from "./event";
 // CENÁRIO 1: BROADCAST GLOBAL (Header -> Widgets)
 // ============================================================================
 
-const HeaderControl = () => {
-  const { emit } = useGraph<IGraphEvents>(); // <--- Tipado
+// Otimização: React.Memo para evitar re-render se o pai mudar
+const HeaderControl = React.memo(() => {
+  const { emit } = useGraph<IGraphEvents>();
+
+  // Debug de Render
+  // console.log("Render: HeaderControl");
+
   return (
     <div className="border-b border-gray-700 p-4 flex justify-between items-center bg-gray-900 rounded-t-lg">
       <div className="flex items-center gap-2">
@@ -53,9 +58,9 @@ const HeaderControl = () => {
       </div>
     </div>
   );
-};
+});
 
-const StatusWidget = ({ label }: { id: string; label: string }) => {
+const StatusWidget = React.memo(({ label }: { id: string; label: string }) => {
   const { on } = useGraph<IGraphEvents>();
   const [status, setStatus] = React.useState("normal");
 
@@ -82,13 +87,13 @@ const StatusWidget = ({ label }: { id: string; label: string }) => {
       </span>
     </div>
   );
-};
+});
 
 // ============================================================================
 // CENÁRIO 2: COMUNICAÇÃO ENTRE IRMÃOS (Filtro -> Tabela)
 // ============================================================================
 
-const SidebarFilter = () => {
+const SidebarFilter = React.memo(() => {
   const { emit } = useGraph<IGraphEvents>();
   return (
     <div className="w-1/3 bg-gray-900/50 p-4 rounded border border-gray-700 flex flex-col gap-2 h-64">
@@ -121,9 +126,9 @@ const SidebarFilter = () => {
       </button>
     </div>
   );
-};
+});
 
-const ContentTable = () => {
+const ContentTable = React.memo(() => {
   const { on } = useGraph<IGraphEvents>();
   const [filter, setFilter] = React.useState("Todos");
   const [loading, setLoading] = React.useState(false);
@@ -143,6 +148,7 @@ const ContentTable = () => {
       <div className="absolute top-2 left-3 text-xs font-bold text-gray-500 uppercase">
         Grid de Dados
       </div>
+
       {loading ? (
         <span className="text-cyan-400 animate-pulse text-sm">
           Carregando dados de {filter}...
@@ -160,22 +166,25 @@ const ContentTable = () => {
       )}
     </div>
   );
-};
+});
 
 // ============================================================================
 // CENÁRIO 3: ALTA PERFORMANCE (Mouse Tracker)
 // ============================================================================
 
-const MouseTracker = () => {
+// Componente isolado para não causar re-render no pai
+const MouseTracker = React.memo(() => {
   const { emit, on } = useGraph<IGraphEvents>();
   const labelRef = React.useRef<HTMLSpanElement>(null);
   const targetRef = React.useRef<HTMLDivElement>(null);
 
+  // Usa native event para máxima velocidade
   const handleMove = (e: React.MouseEvent) => {
     emit("mouse:move", { x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY });
   };
 
   React.useEffect(() => {
+    // Manipulação direta do DOM = Zero React Render Cycle
     return on("mouse:move", ({ x, y }) => {
       if (labelRef.current) labelRef.current.textContent = `X: ${x} | Y: ${y}`;
       if (targetRef.current)
@@ -206,7 +215,7 @@ const MouseTracker = () => {
       </div>
     </div>
   );
-};
+});
 
 // ============================================================================
 // CENÁRIO 4: TREE VIEW (Busca em Profundidade)
@@ -251,73 +260,76 @@ const FILE_SYSTEM: TreeNode[] = [
   },
 ];
 
-const FileNode = ({ node, level = 0 }: { node: TreeNode; level?: number }) => {
-  const { on } = useGraph<IGraphEvents>();
-  const [isMatch, setIsMatch] = React.useState(false);
-  const [isDimmed, setIsDimmed] = React.useState(false);
-  const [isExpanded, setIsExpanded] = React.useState(true);
+// Otimização Crítica: React.Memoization em nós recursivos previne re-render da árvore inteira se o pai mudar
+const FileNode = React.memo(
+  ({ node, level = 0 }: { node: TreeNode; level?: number }) => {
+    const { on } = useGraph<IGraphEvents>();
+    const [isMatch, setIsMatch] = React.useState(false);
+    const [isDimmed, setIsDimmed] = React.useState(false);
+    const [isExpanded, setIsExpanded] = React.useState(true);
 
-  React.useEffect(() => {
-    return on("tree:search", ({ term }) => {
-      if (!term) {
-        setIsMatch(false);
-        setIsDimmed(false);
-        setIsExpanded(level < 1);
-        return;
-      }
+    React.useEffect(() => {
+      return on("tree:search", ({ term }) => {
+        if (!term) {
+          setIsMatch(false);
+          setIsDimmed(false);
+          setIsExpanded(level < 1);
+          return;
+        }
 
-      const termLower = term.toLowerCase();
-      const match = node.label.toLowerCase().includes(termLower);
+        const termLower = term.toLowerCase();
+        const match = node.label.toLowerCase().includes(termLower);
 
-      setIsMatch(match);
-      setIsExpanded(true);
-      setIsDimmed(!match);
-    });
-  }, [node.label, on, level]);
+        setIsMatch(match);
+        setIsExpanded(true);
+        setIsDimmed(!match);
+      });
+    }, [node.label, on, level]);
 
-  return (
-    <div style={{ paddingLeft: level * 16 }}>
-      <div
-        className={`
+    return (
+      <div style={{ paddingLeft: level * 16 }}>
+        <div
+          className={`
                     flex items-center gap-2 py-1 px-2 rounded text-sm cursor-pointer transition-all duration-300
                     ${isMatch ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 font-bold" : ""}
                     ${isDimmed && !isMatch ? "opacity-30 grayscale" : "opacity-100"}
                     ${!isMatch && !isDimmed ? "text-gray-300 hover:bg-gray-800" : ""}
                 `}
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        {node.children ? (
-          <span className="text-gray-500">
-            {isExpanded ? (
-              <ChevronDown size={14} />
-            ) : (
-              <ChevronRight size={14} />
-            )}
-          </span>
-        ) : (
-          <div className="w-3.5" />
-        )}
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          {node.children ? (
+            <span className="text-gray-500">
+              {isExpanded ? (
+                <ChevronDown size={14} />
+              ) : (
+                <ChevronRight size={14} />
+              )}
+            </span>
+          ) : (
+            <div className="w-3.5" />
+          )}
 
-        {node.children ? (
-          <FolderOpen size={16} className="text-blue-400" />
-        ) : (
-          <FileText size={16} className="text-gray-500" />
-        )}
-        <span>{node.label}</span>
-      </div>
-
-      {node.children && isExpanded && (
-        <div className="border-l border-gray-700 ml-2">
-          {node.children.map((child) => (
-            <FileNode key={child.id} node={child} level={level + 1} />
-          ))}
+          {node.children ? (
+            <FolderOpen size={16} className="text-blue-400" />
+          ) : (
+            <FileText size={16} className="text-gray-500" />
+          )}
+          <span>{node.label}</span>
         </div>
-      )}
-    </div>
-  );
-};
 
-const TreeSearch = () => {
+        {node.children && isExpanded && (
+          <div className="border-l border-gray-700 ml-2">
+            {node.children.map((child) => (
+              <FileNode key={child.id} node={child} level={level + 1} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+);
+
+const TreeSearch = React.memo(() => {
   const { emit } = useGraph<IGraphEvents>();
   return (
     <div className="relative mb-4">
@@ -329,7 +341,7 @@ const TreeSearch = () => {
       />
     </div>
   );
-};
+});
 
 // ============================================================================
 // CENÁRIO 5: SERVICE MESH (Navegação Cruzada)
@@ -366,7 +378,7 @@ const SERVICES = [
   },
 ];
 
-const ServiceNode = ({ data }: { data: any }) => {
+const ServiceNode = React.memo(({ data }: { data: any }) => {
   const { emit } = useGraph<IGraphEvents>();
 
   const icons: any = { globe: Globe, server: Server, cpu: Cpu, db: Database };
@@ -397,9 +409,9 @@ const ServiceNode = ({ data }: { data: any }) => {
       )}
     </div>
   );
-};
+});
 
-const ServiceDetails = () => {
+const ServiceDetails = React.memo(() => {
   const { on } = useGraph<IGraphEvents>();
   const [selected, setSelected] = React.useState<any>(null);
 
@@ -407,14 +419,13 @@ const ServiceDetails = () => {
     return on("service:select", (data) => setSelected(data));
   }, [on]);
 
-  if (!selected) {
+  if (!selected)
     return (
       <div className="h-full flex flex-col items-center justify-center text-gray-600 border-2 border-dashed border-gray-700 rounded-lg">
         <MousePointer2 size={32} className="mb-2 opacity-50" />
         <p className="text-sm">Selecione um serviço para ver detalhes</p>
       </div>
     );
-  }
 
   return (
     <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 h-full animate-in slide-in-from-right-4 fade-in">
@@ -458,13 +469,13 @@ const ServiceDetails = () => {
       </div>
     </div>
   );
-};
+});
 
 // ============================================================================
-// ORQUESTRADOR
+// ORQUESTRADOR (Página Principal)
 // ============================================================================
 
-const GraphExample = () => {
+const TabGraphExample = () => {
   return (
     <div className="bg-gray-800 p-8 rounded-lg shadow-xl border border-gray-700 max-w-6xl mx-auto space-y-12">
       {/* Header */}
@@ -475,6 +486,11 @@ const GraphExample = () => {
         <p className="text-gray-400 mt-2">
           Comunicação desacoplada entre componentes isolados usando{" "}
           <code>Native EventTarget</code>.
+          <br />
+          <span className="text-xs text-gray-500">
+            Otimizado com <code>React.React.memo</code> para prevenir re-renders em
+            cascata.
+          </span>
         </p>
       </div>
 
@@ -522,7 +538,7 @@ const GraphExample = () => {
               Cenário 3
             </span>
             <h3 className="font-bold text-white text-sm">
-              Busca Profunda em Árvore
+              Busca Profunda (Performance Recursiva)
             </h3>
           </div>
           <div className="bg-gray-900/50 p-6 rounded border border-gray-700 h-96 overflow-y-auto custom-scrollbar flex flex-col">
@@ -546,7 +562,7 @@ const GraphExample = () => {
             </h3>
           </div>
           <div className="grid grid-cols-2 gap-4 h-96">
-            <div className="bg-gray-900/50 p-4 rounded border border-gray-700 overflow-y-auto space-y-3">
+            <div className="bg-gray-900/50 p-4 rounded border border-gray-700 overflow-y-auto space-y-3 custom-scrollbar">
               {SERVICES.map((svc) => (
                 <ServiceNode key={svc.id} data={svc} />
               ))}
@@ -574,4 +590,4 @@ const GraphExample = () => {
   );
 };
 
-export default GraphExample;
+export default TabGraphExample;
