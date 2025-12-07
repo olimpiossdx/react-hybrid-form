@@ -17,62 +17,44 @@ export interface UseListReturn<T> {
   items: ListItem<T>[];
 
   /**
-   * Adiciona novos itens à lista.
-   * Suporta adição única ou em lote (batch) para performance.
-   * * @param payload - O dado do novo item, um array de dados, ou vazio (undefined).
-   * * @example
-   * // 1. Adicionar linha vazia
-   * add();
-   * * // 2. Adicionar com dados padrão
-   * add({ name: "Novo Item", qtd: 1 });
-   * * // 3. Adicionar Múltiplos (Batch - 1 Render)
-   * add([{ name: "A" }, { name: "B" }]);
+   * Adiciona novos itens ao final da lista.
+   * Suporta adição única ou em lote (batch).
    */
   add: (payload?: T | T[]) => void;
 
   /**
+   * Insere um item em uma posição específica.
+   * @param index - O índice onde inserir.
+   * @param payload - O dado do item (opcional).
+   */
+  insertAt: (index: number, payload?: T) => void;
+
+  /**
+   * Move um item de uma posição para outra.
+   * Útil para Drag & Drop ou botões de ordenação.
+   */
+  move: (fromIndex: number, toIndex: number) => void;
+
+  /**
    * Remove um item da lista.
-   * Flexível: aceita índice numérico, ID string ou o próprio objeto do item.
-   * * @param identifier - O índice (number), o ID (string) ou o Objeto Item.
-   * * @example
-   * // 1. Por Índice (comum em maps)
-   * <button onClick={() => remove(index)}>X</button>
-   * * // 2. Por ID (mais seguro se a lista for filtrada)
-   * remove("item-123-abc");
-   * * // 3. Pelo Objeto (se você tiver a referência)
-   * remove(itemAtual);
+   * Aceita índice numérico, ID string ou o próprio objeto do item.
    */
   remove: (identifier: number | string | { id: string }) => void;
 
   /**
-   * Substitui a lista inteira por N linhas novas vazias.
-   * Útil para preparar a estrutura do formulário antes de injetar dados via DOM (`resetSection`).
-   * * @param count - O número de linhas a serem criadas.
-   * * @example
-   * // "Limpa" a lista e deixa 5 espaços prontos para edição
-   * replace(5);
+   * Substitui a lista inteira.
+   * Aceita um número (cria linhas vazias) OU um array de dados (cria linhas preenchidas).
    */
-  replace: (count: number) => void;
+  replace: (dataOrCount: T[] | number) => void;
 
   /**
-   * Remove todos os itens da lista, deixando-a com tamanho 0.
+   * Remove todos os itens da lista.
    */
   clear: () => void;
 }
 
 /**
  * Hook para gerenciar a ESTRUTURA de listas dinâmicas em formulários não controlados.
- * * * **Filosofia:**
- * Este hook não controla os valores dos inputs em tempo real (para performance). 
- * Ele gerencia a quantidade de linhas e seus IDs únicos, permitindo renderizar a lista 
- * e injetar dados iniciais via `defaultValue`.
- * * @template T Tipo dos dados da lista.
- * @param initialDataOrCount Dados iniciais (Array de objetos) ou Quantidade de linhas vazias (Number).
- * * @example
- * // 1. Inicializar vazio (1 linha)
- * const list = useList(1);
- * * // 2. Inicializar com dados (Edição)
- * const list = useList([{ name: "Ana" }, { name: "Bob" }]);
  */
 export const useList = <T = any>(initialDataOrCount: T[] | number = []): UseListReturn<T> => {
   
@@ -92,14 +74,35 @@ export const useList = <T = any>(initialDataOrCount: T[] | number = []): UseList
 
   const add = useCallback((payload?: T | T[]) => {
     setItems(prev => {
-        // Cenário Lote (Array)
         if (Array.isArray(payload)) {
             const newItems = payload.map(item => generateItem(item));
             return [...prev, ...newItems];
         }
-
-        // Cenário Único (Item ou Vazio)
         return [...prev, generateItem(payload)];
+    });
+  }, []);
+
+  // --- NOVO: Inserção em índice específico ---
+  const insertAt = useCallback((index: number, payload?: T) => {
+    setItems(prev => {
+        const newItem = generateItem(payload);
+        const newItems = [...prev];
+        // Insere na posição sem substituir nada
+        newItems.splice(index, 0, newItem);
+        return newItems;
+    });
+  }, []);
+
+  // --- NOVO: Reordenação ---
+  const move = useCallback((fromIndex: number, toIndex: number) => {
+    setItems(prev => {
+        if (toIndex < 0 || toIndex >= prev.length || fromIndex < 0 || fromIndex >= prev.length) {
+            return prev;
+        }
+        const newItems = [...prev];
+        const [movedItem] = newItems.splice(fromIndex, 1);
+        newItems.splice(toIndex, 0, movedItem);
+        return newItems;
     });
   }, []);
 
@@ -118,13 +121,19 @@ export const useList = <T = any>(initialDataOrCount: T[] | number = []): UseList
     });
   }, []);
 
-  const replace = useCallback((count: number) => {
-    setItems(Array.from({ length: count }, () => generateItem()));
+  // --- MELHORIA: Replace Polimórfico (Dados ou Quantidade) ---
+  const replace = useCallback((dataOrCount: T[] | number) => {
+    setItems(() => {
+        if (typeof dataOrCount === 'number') {
+            return Array.from({ length: dataOrCount }, () => generateItem());
+        }
+        return (dataOrCount || []).map(item => generateItem(item));
+    });
   }, []);
 
   const clear = useCallback(() => setItems([]), []);
 
-  return { items, add, remove, replace, clear };
+  return { items, add, insertAt, move, remove, replace, clear };
 };
 
 export default useList;
