@@ -1,45 +1,29 @@
 import React from 'react';
 
 /**
- * Hook para gerenciar listas dinâmicas.
- * Suporta inicialização com DADOS (para edição) ou QUANTIDADE (para vazio).
- * * @template T Tipo dos dados da lista
+ * Hook para gerenciar a ESTRUTURA de listas dinâmicas.
+ * * * Correção de Arquitetura (v0.6):
+ * O hook agora trata 'initialDataOrCount' estritamente como VALOR INICIAL.
+ * Removemos o useEffect de sincronização automática para evitar loops infinitos 
+ * quando arrays literais são passados.
+ * * Para atualizar a lista após o mount, use o método 'replace'.
  */
-const useList = <T = any>(initialDataOrCount: T[] | number = []) => {
-
+export const useList = <T = any>(initialDataOrCount: T[] | number = []) => {
+  
   const generateItem = (data?: T) => ({
-    id: `item-${crypto.randomUUID()}`, // Chave estável para o React
-    data: data || ({} as T)            // Dados para o defaultValue
+    id: `item-${crypto.randomUUID()}`, 
+    data: data || null
   });
 
-  // Inicializa o estado mesclando IDs com os Dados recebidos
+  // Inicializa o estado UMA VEZ. 
+  // Alterações subsequentes na prop initialDataOrCount serão ignoradas,
+  // prevenindo re-renders cíclicos.
   const [items, setItems] = React.useState(() => {
     if (typeof initialDataOrCount === 'number') {
-      return Array.from({ length: initialDataOrCount }, () => generateItem());
+        return Array.from({ length: initialDataOrCount }, () => generateItem());
     }
     return (initialDataOrCount || []).map(item => generateItem(item));
   });
-
-  // Ref para controlar se é a primeira renderização (evita resetar se o pai re-renderizar)
-  const isFirstRender = React.useRef(true);
-
-  // Sincroniza apenas se a prop mudar drasticamente (ex: nova busca de API)
-  React.useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-
-    if (Array.isArray(initialDataOrCount)) {
-      setItems(initialDataOrCount.map(item => generateItem(item)));
-    } else if (typeof initialDataOrCount === 'number') {
-      // Se mudou a contagem fixa
-      setItems(prev => {
-        if (prev.length === initialDataOrCount) return prev;
-        return Array.from({ length: initialDataOrCount }, () => generateItem());
-      });
-    }
-  }, [initialDataOrCount]);
 
   const add = React.useCallback((initialValues?: T) => {
     setItems(prev => [...prev, generateItem(initialValues)]);
@@ -49,9 +33,13 @@ const useList = <T = any>(initialDataOrCount: T[] | number = []) => {
     setItems(prev => prev.filter((_, i) => i !== index));
   }, []);
 
+  const replace = React.useCallback((count: number) => {
+    setItems(Array.from({ length: count }, () => generateItem()));
+  }, []);
+
   const clear = React.useCallback(() => setItems([]), []);
 
-  return { items, add, remove, clear };
+  return { items, add, remove, replace, clear };
 };
 
 export default useList;
