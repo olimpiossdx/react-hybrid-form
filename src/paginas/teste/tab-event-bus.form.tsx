@@ -7,6 +7,7 @@ import { useGraphBus } from "../../hooks/native-bus";
 interface IBarramentoAeB {
   limparListB: { isResertOrFill: boolean };
 }
+
 const ListaComprasA = () => {
   const { emit } = useGraphBus<IBarramentoAeB>();
   const { items, add } = useList(["leite", "pão", "ovos"]);
@@ -47,7 +48,7 @@ const ListaComprasA = () => {
 
 const ListaComprasB = () => {
   const { on } = useGraphBus<IBarramentoAeB>();
-  const initial = ["arroz", "feijão", "macarrão"]
+  const initial = ["arroz", "feijão", "macarrão"];
   const { items, add, remove, clear } = useList(initial);
 
   React.useEffect(() => {
@@ -55,7 +56,7 @@ const ListaComprasB = () => {
       if (isResertOrFill) {
         clear();
       } else {
-       initial.map(item => add(item));
+        add(initial);
       }
     });
   }, []);
