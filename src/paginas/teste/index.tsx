@@ -20,6 +20,7 @@ import DateRangeExample from "./tab-range-date";
 import TabServiceExample from "./tab-service";
 import TabEmployeeDashboard from "./employee-dashboard";
 import TabGraphExample from "./graph-event-bus";
+import TabEventBusForm from "./tab-event-bus.form";
 
 // Foca no nova tab/formulário-ativo
 const Homologacao: React.FC = () => {
@@ -47,6 +48,7 @@ const Homologacao: React.FC = () => {
     tabServiceExample: <TabServiceExample />,
     tabEmployeeDashboard: <TabEmployeeDashboard />,
     tabGraphExample: <TabGraphExample />,
+    tabEventBusForm: <TabEventBusForm />,
   };
 
   return (<div className="bg-gray-800 text-white min-h-screen p-2 sm:p-4 font-sans">
@@ -179,6 +181,12 @@ const Homologacao: React.FC = () => {
           tabId="tabGraphExample"
           label="Barra de Eventos"
           isActive={activeTab === "tabGraphExample"}
+          onClick={setActiveTab}
+        />
+        <TabButton
+          tabId="tabEventBusForm"
+          label="Eventos Form"
+          isActive={activeTab === "tabEventBusForm"}
           onClick={setActiveTab}
         />
       </div>

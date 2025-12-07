@@ -8,7 +8,7 @@ type DefaultEventMap = Record<string, any>;
  * Hook para comunicação via Graph Bus (Pub/Sub).
  * @template E - Interface que define o mapa de eventos { 'evento': payload }
  */
-export const useGraph = <E extends Record<string, any> = DefaultEventMap>() => {
+export const useGraphBus = <E extends Record<string, any> = DefaultEventMap>() => {
   // Emitir com tipagem forte baseada em E
   const emit = useCallback(<K extends keyof E>( event: K extends string ? K : never, payload: E[K]) => {
     graph.emit(event as string, payload);

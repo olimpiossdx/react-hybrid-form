@@ -15,7 +15,7 @@ import {
   MousePointer2,
   Server,
 } from "lucide-react";
-import { useGraph } from "../../../hooks/native-bus";
+import { useGraphBus } from "../../../hooks/native-bus";
 import type { IGraphEvents } from "./event";
 
 // ============================================================================
@@ -24,7 +24,7 @@ import type { IGraphEvents } from "./event";
 
 // Otimização: React.Memo para evitar re-render se o pai mudar
 const HeaderControl = React.memo(() => {
-  const { emit } = useGraph<IGraphEvents>();
+  const { emit } = useGraphBus<IGraphEvents>();
 
   // Debug de Render
   // console.log("Render: HeaderControl");
@@ -61,7 +61,7 @@ const HeaderControl = React.memo(() => {
 });
 
 const StatusWidget = React.memo(({ label }: { id: string; label: string }) => {
-  const { on } = useGraph<IGraphEvents>();
+  const { on } = useGraphBus<IGraphEvents>();
   const [status, setStatus] = React.useState("normal");
 
   React.useEffect(() => {
@@ -94,7 +94,7 @@ const StatusWidget = React.memo(({ label }: { id: string; label: string }) => {
 // ============================================================================
 
 const SidebarFilter = React.memo(() => {
-  const { emit } = useGraph<IGraphEvents>();
+  const { emit } = useGraphBus<IGraphEvents>();
   return (
     <div className="w-1/3 bg-gray-900/50 p-4 rounded border border-gray-700 flex flex-col gap-2 h-64">
       <h4 className="text-xs font-bold text-gray-500 uppercase">
@@ -129,7 +129,7 @@ const SidebarFilter = React.memo(() => {
 });
 
 const ContentTable = React.memo(() => {
-  const { on } = useGraph<IGraphEvents>();
+  const { on } = useGraphBus<IGraphEvents>();
   const [filter, setFilter] = React.useState("Todos");
   const [loading, setLoading] = React.useState(false);
 
@@ -174,7 +174,7 @@ const ContentTable = React.memo(() => {
 
 // Componente isolado para não causar re-render no pai
 const MouseTracker = React.memo(() => {
-  const { emit, on } = useGraph<IGraphEvents>();
+  const { emit, on } = useGraphBus<IGraphEvents>();
   const labelRef = React.useRef<HTMLSpanElement>(null);
   const targetRef = React.useRef<HTMLDivElement>(null);
 
@@ -263,7 +263,7 @@ const FILE_SYSTEM: TreeNode[] = [
 // Otimização Crítica: React.Memoization em nós recursivos previne re-render da árvore inteira se o pai mudar
 const FileNode = React.memo(
   ({ node, level = 0 }: { node: TreeNode; level?: number }) => {
-    const { on } = useGraph<IGraphEvents>();
+    const { on } = useGraphBus<IGraphEvents>();
     const [isMatch, setIsMatch] = React.useState(false);
     const [isDimmed, setIsDimmed] = React.useState(false);
     const [isExpanded, setIsExpanded] = React.useState(true);
@@ -330,7 +330,7 @@ const FileNode = React.memo(
 );
 
 const TreeSearch = React.memo(() => {
-  const { emit } = useGraph<IGraphEvents>();
+  const { emit } = useGraphBus<IGraphEvents>();
   return (
     <div className="relative mb-4">
       <Search className="absolute left-3 top-2.5 text-gray-500 w-4 h-4" />
@@ -379,7 +379,7 @@ const SERVICES = [
 ];
 
 const ServiceNode = React.memo(({ data }: { data: any }) => {
-  const { emit } = useGraph<IGraphEvents>();
+  const { emit } = useGraphBus<IGraphEvents>();
 
   const icons: any = { globe: Globe, server: Server, cpu: Cpu, db: Database };
   const Icon = icons[data.type];
@@ -412,7 +412,7 @@ const ServiceNode = React.memo(({ data }: { data: any }) => {
 });
 
 const ServiceDetails = React.memo(() => {
-  const { on } = useGraph<IGraphEvents>();
+  const { on } = useGraphBus<IGraphEvents>();
   const [selected, setSelected] = React.useState<any>(null);
 
   React.useEffect(() => {
