@@ -32,7 +32,9 @@ const ServiceExample = () => {
         // Busca lista real de usuários
         const res = await api.get('https://jsonplaceholder.typicode.com/users');
 
-        if (res.isSuccess) toast.success(`Carregados ${Array.isArray(res.data) ? res.data.length : 0} usuários.`);
+        if (res.isSuccess) {
+            toast.success(`Carregados ${Array.isArray(res.data) ? res.data.length : 0} usuários.`);
+        }
         displayResult(res, "Listar Usuários", "GET");
     };
 

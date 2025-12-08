@@ -10,6 +10,8 @@ interface IBarramentoAeB {
 
 const ListaComprasA = () => {
   const { emit } = useGraphBus<IBarramentoAeB>();
+  const isResertOrFill = React.useRef(false);
+
   const { items, add } = useList(["leite", "pão", "ovos"]);
 
   function handleAddItem(_: React.MouseEvent<HTMLUListElement, MouseEvent>) {
@@ -18,32 +20,29 @@ const ListaComprasA = () => {
     if (newItem) {
       add(newItem);
     }
-  }
+  };
 
-  function handleLimparListaB(
-    _: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ): void {
-    emit("limparListB", { isResertOrFill: true });
-  }
+  function handleLimparListaB(_: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+    emit("limparListB", { isResertOrFill: isResertOrFill.current });
+    isResertOrFill.current = !isResertOrFill.current;
+  };
 
-  return (
-    <div>
-      <div className="flex justify-between">
-        <h1>Lista de Compras A</h1>
-        <button
-          onClick={handleLimparListaB}
-          className="border border-red-50 bg-red-500 rounded p-0.5"
-        >
-          Limpar lista B
-        </button>
-      </div>
-      <ul onClick={handleAddItem}>
-        {items.map((item) => (
-          <li key={item.id}>{item.data}</li>
-        ))}
-      </ul>
+  return (<div>
+    <div className="flex justify-between">
+      <h1>Lista de Compras A</h1>
+      <button
+        onClick={handleLimparListaB}
+        className="border border-red-50 bg-red-500 rounded p-0.5"
+      >
+        Limpar lista B
+      </button>
     </div>
-  );
+    <ul onClick={handleAddItem}>
+      {items.map((item) => (
+        <li key={item.id}>{item.data}</li>
+      ))}
+    </ul>
+  </div>);
 };
 
 const ListaComprasB = () => {
@@ -103,7 +102,7 @@ const ListaComprasB = () => {
   return (
     <div>
       <div className="flex justify-between items-center">
-        <h1>Lista de Compras A</h1>
+        <h1>Lista de Compras B</h1>
         <button
           onClick={handleAddItem}
           className="px-3 py-1 text-sm bg-blue-900 text-blue-200 rounded hover:bg-blue-800 border border-blue-700 cursor-pointer flex items-center"
