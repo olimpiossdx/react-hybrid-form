@@ -29,21 +29,25 @@ export class HttpClient {
 
   useRequestInterceptor(interceptor: RequestInterceptor) {
     this.requestInterceptors.push(interceptor);
-  }
+  };
 
   useResponseInterceptor(interceptor: ResponseInterceptor) {
     this.responseInterceptors.push(interceptor);
-  }
+  };
 
   private sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
-  }
+  };
 
   private isRetryable(error: any, response?: Response): boolean {
-      if (error && error.name !== 'AbortError') return true;
-      if (response) return response.status >= 500 || response.status === 429;
+      if (error && error.name !== 'AbortError'){ 
+        return true;
+      };
+      if (response){ 
+        return response.status >= 500 || response.status === 429;
+      }
       return false;
-  }
+  };
 
   async request<T>(endpoint: string, config: Partial<HttpRequestConfig> = {}): Promise<IApiResponse<T>> {
     const isAbsolute = endpoint.startsWith('http');
@@ -77,7 +81,7 @@ export class HttpClient {
 
     for (const interceptor of this.requestInterceptors) {
       finalConfig = await interceptor(finalConfig);
-    }
+    };
 
     let apiResponse: IApiResponse<T> = {
         data: null, error: { code: 'INIT', message: '' }, isSuccess: false, status: 0, headers: new Headers(), notifications: []
@@ -143,10 +147,18 @@ export class HttpClient {
 
     if (finalConfig.notifyOnError && apiResponse.notifications.length > 0) {
         apiResponse.notifications.forEach(n => {
-             if (n.type === 'error') toast.error(n.message);
-             if (n.type === 'success') toast.success(n.message);
-             if (n.type === 'warning') toast.warning(n.message);
-             if (n.type === 'info') toast.info(n.message);
+             if (n.type === 'error'){ 
+              toast.error(n.message);
+            }
+             if (n.type === 'success'){ 
+              toast.success(n.message);
+            }
+             if (n.type === 'warning'){ 
+              toast.warning(n.message);
+            }
+             if (n.type === 'info'){ 
+              toast.info(n.message);
+            }
         });
     }
 

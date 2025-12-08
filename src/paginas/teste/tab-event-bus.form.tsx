@@ -61,9 +61,7 @@ const ListaComprasB = () => {
     });
   }, []);
 
-  function handleAddItem(
-    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ): void {
+  function handleAddItem(_: React.MouseEvent<HTMLButtonElement, MouseEvent>): void {
     let newItem: string | undefined;
     showModal({
       title: "Adicionar Item",
@@ -97,9 +95,7 @@ const ListaComprasB = () => {
     });
   }
 
-  function handleRemoveItem(
-    event: React.MouseEvent<SVGSVGElement, MouseEvent>
-  ) {
+  function handleRemoveItem(event: React.MouseEvent<SVGSVGElement, MouseEvent>) {
     const itemId = event.currentTarget.getAttribute("id");
     remove(itemId!);
   }
