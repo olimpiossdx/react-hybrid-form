@@ -1,5 +1,5 @@
+import React, { useMemo, useRef, useState } from "react";
 import { Database, RotateCcw, Save } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
 import showModal from "../../componentes/modal/hook";
 import { toast } from "../../componentes/toast";
 import useForm from "../../hooks/use-form";
@@ -12,53 +12,55 @@ interface IBigDataItem {
   stock: number;
 }
 
-
 const VirtualListExample = () => {
   const { formProps, handleSubmit, resetSection } = useForm("virtual-form");
 
-  // Fonte da Verdade (Memória)
-  const dataStore = useRef<IBigDataItem[]>(
-    Array.from({ length: 10000 }, (_, i) => ({
+  // Helper para gerar os dados originais (Single Source of Truth)
+  const generateData = (count: number) =>
+    Array.from({ length: count }, (_, i) => ({
       id: i,
       sku: `PROD-${String(i + 1).padStart(5, '0')}`,
       label: `Item Comercial ${i + 1}`,
-      stock: Math.floor(Math.random() * 500)
-    }))
-  );
+      stock: 0 // Valor inicial zero
+    }));
 
-  // 1. CORREÇÃO DE RENDERIZAÇÃO: Usar State em vez de Ref
-  // Isso garante que o componente re-renderize assim que a DIV de scroll for montada no DOM.
+
+  // 1. MEMÓRIA: Dados mutáveis de alta performance
+  const dataStore = useRef<IBigDataItem[]>(generateData(10000));
+
+  // 2. VERSIONAMENTO: Controla o ciclo de vida visual da lista
+  // Toda vez que isso mudar, a lista virtual é destruída e recriada
+  const [dataVersion, setDataVersion] = useState(0);
+
   const [scrollElement, setScrollElement] = useState<HTMLElement | null>(null);
-
-  // 2. CORREÇÃO DE TIPO E ESTABILIDADE
-  // Criamos um objeto "falsa ref" que muda sempre que o scrollElement muda.
-  // Isso força o useEffect dentro do useVirtualizer a rodar novamente e detectar a altura correta.
-  // O cast 'as any' resolve o conflito estrito de tipos entre HTMLDivElement e HTMLElement no RefObject.
   const scrollRefProxy = useMemo(() => ({ current: scrollElement }), [scrollElement]);
 
   const { virtualItems, totalHeight } = useVirtualizer({
     count: dataStore.current.length,
-    scrollRef: scrollRefProxy as any, // Cast necessário para satisfazer a assinatura estrita do hook
+    scrollRef: scrollRefProxy as any,
     estimateSize: () => 56,
     overscan: 5
   });
 
   const onSubmit = (formData: any) => {
-    debugger;
     const payload = {
       batchInfo: formData,
       items: dataStore.current
     };
+
+    // Validação visual simples: Conta quantos itens têm estoque > 0
+    const changedCount = dataStore.current.filter(i => i.stock > 0).length;
 
     showModal({
       title: "Processamento em Lote",
       content: () => (
         <div className="space-y-4">
           <p className="text-green-400 font-bold">
-            Sucesso! {payload.items.length.toLocaleString()} itens processados.
+            Sucesso! Total: {payload.items.length.toLocaleString()} | Alterados: {changedCount}
           </p>
-          <pre className="text-xs bg-black p-4 rounded text-gray-300 max-h-60 overflow-auto">
-            {JSON.stringify(payload.items.slice(0, 3), null, 2)}
+          <pre className="text-xs bg-black p-4 rounded text-gray-300 max-h-60 overflow-auto border border-gray-700">
+            {/* Mostra itens que realmente mudaram para provar que a memória está funcionando */}
+            {JSON.stringify(dataStore.current.filter(i => i.stock > 0).slice(0, 5), null, 2)}
           </pre>
         </div>
       )
@@ -66,18 +68,22 @@ const VirtualListExample = () => {
   };
 
   const handleReset = () => {
+    // A. Reseta Header (Campos normais do DOM)
     resetSection("", null);
 
-    dataStore.current = Array.from({ length: 10000 }, (_, i) => ({
-      id: i,
-      sku: `PROD-${String(i + 1).padStart(5, '0')}`,
-      label: `Item Comercial ${i + 1}`,
-      stock: 0
-    }));
+    // B. Reseta Memória (Dados invisíveis e visíveis)
+    // Restauramos o array original
+    dataStore.current = generateData(10000);
 
-    // Reseta a posição do scroll visualmente
+    // C. Reseta Visual (Força Remount)
+    // Ao mudar a key, o React joga fora os inputs sujos e cria novos.
+    // Os novos inputs leem o defaultValue da memória (que acabamos de limpar no passo B).
+    setDataVersion(prev => prev + 1);
+
+    // Opcional: Volta o scroll para o topo
     if (scrollElement) scrollElement.scrollTop = 0;
-    toast.info("Dados resetados para zero.");
+
+    toast.info("Todos os 10.000 itens foram resetados.");
   };
 
   return (
@@ -91,6 +97,9 @@ const VirtualListExample = () => {
           <div className="flex items-center gap-2 mt-1">
             <span className="text-xs bg-purple-900/50 text-purple-200 px-2 py-0.5 rounded border border-purple-800">
               10.000 Itens
+            </span>
+            <span className="text-xs text-gray-400">
+              Edição Direta em Memória + Reset Total
             </span>
           </div>
         </div>
@@ -124,59 +133,68 @@ const VirtualListExample = () => {
           <div className="col-span-3 text-right">Estoque</div>
         </div>
 
-        {/* CONTAINER DE SCROLL COM CALLBACK REF */}
+        {/* CONTAINER DE SCROLL */}
         <div
           ref={setScrollElement}
           className="flex-1 border-x border-b border-gray-700 rounded-b-lg bg-gray-900/10 overflow-y-auto relative custom-scrollbar"
         >
           <div style={{ height: `${totalHeight}px`, position: 'relative', width: '100%' }}>
-            {virtualItems.map((virtualRow) => {
-              const item = dataStore.current[virtualRow.index];
+            {/* A KEY MÁGICA: `dataVersion`. 
+                   Quando ela muda (no reset), o React desmonta tudo aqui dentro e remonta.
+                   Os novos inputs leem o `defaultValue` fresco do `dataStore.current`.
+                */}
+            <React.Fragment key={dataVersion}>
+              {virtualItems.map((virtualRow) => {
+                const item = dataStore.current[virtualRow.index];
 
-              return (
-                <div
-                  key={virtualRow.index}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: `${virtualRow.size}px`,
-                    transform: `translateY(${virtualRow.start}px)`
-                  }}
-                  className="grid grid-cols-12 gap-4 items-center px-4 border-b border-gray-800 hover:bg-gray-800/50 transition-colors h-56px"
-                >
-                  <span className="col-span-1 text-gray-600 font-mono text-xs text-right">
-                    {virtualRow.index + 1}
-                  </span>
+                return (
+                  <div
+                    key={virtualRow.index}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: `${virtualRow.size}px`,
+                      transform: `translateY(${virtualRow.start}px)`
+                    }}
+                    className="grid grid-cols-12 gap-4 items-center px-4 border-b border-gray-800 hover:bg-gray-800/50 transition-colors h-56px"
+                  >
+                    <span className="col-span-1 text-gray-600 font-mono text-xs text-right">
+                      {virtualRow.index + 1}
+                    </span>
 
-                  <span className="col-span-2 text-cyan-500 font-mono text-xs truncate">
-                    {item.sku}
-                  </span>
+                    <span className="col-span-2 text-cyan-500 font-mono text-xs truncate">
+                      {item.sku}
+                    </span>
 
-                  <div className="col-span-6">
-                    <input
-                      defaultValue={item.label}
-                      onChange={(e) => {
-                        dataStore.current[virtualRow.index].label = e.target.value;
-                      }}
-                      className="w-full bg-transparent text-sm text-gray-300 outline-none focus:text-white border-b border-transparent focus:border-purple-500 transition-colors placeholder-gray-600"
-                    />
+                    <div className="col-span-6">
+                      <input
+                        defaultValue={item.label}
+                        onChange={(e) => {
+                          // Atualização Atômica na Memória
+                          dataStore.current[virtualRow.index].label = e.target.value;
+                        }}
+                        className="w-full bg-transparent text-sm text-gray-300 outline-none focus:text-white border-b border-transparent focus:border-purple-500 transition-colors placeholder-gray-600"
+                      />
+                    </div>
+
+                    <div className="col-span-3">
+                      <input
+                        type="number"
+                        // IMPORTANTE: defaultValue lê da memória. 
+                        // Se resetamos a memória e remontamos o componente, ele lê o zero.
+                        defaultValue={item.stock}
+                        onChange={(e) => {
+                          dataStore.current[virtualRow.index].stock = Number(e.target.value);
+                        }}
+                        className="w-full bg-gray-800 text-right text-sm text-green-400 rounded px-2 py-1 outline-none focus:ring-1 ring-green-500 border border-gray-700"
+                      />
+                    </div>
                   </div>
-
-                  <div className="col-span-3">
-                    <input
-                      type="number"
-                      defaultValue={item.stock}
-                      onChange={(e) => {
-                        dataStore.current[virtualRow.index].stock = Number(e.target.value);
-                      }}
-                      className="w-full bg-gray-800 text-right text-sm text-green-400 rounded px-2 py-1 outline-none focus:ring-1 ring-green-500 border border-gray-700"
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </React.Fragment>
           </div>
         </div>
       </form>
