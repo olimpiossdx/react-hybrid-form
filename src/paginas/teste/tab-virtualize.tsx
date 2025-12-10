@@ -56,6 +56,17 @@ const TabVirtualListExample = () => {
     toast.info("Dados resetados.");
   };
 
+  function handleChangeDescricao(event: React.ChangeEvent<HTMLInputElement>) {
+    const itemID = parseInt(event.target.getAttribute('itemID') ?? '');
+
+    if (Number.NaN != itemID) {
+      toast.warning("Não foi possível alterar descrição, tente outro momento.")
+      return;
+    }
+
+    dataStore.current[itemID].label = event.target.value;
+  }
+
   const onSubmit = (formData: any) => {
     const payload = {
       batchInfo: formData,
@@ -140,61 +151,55 @@ const TabVirtualListExample = () => {
           {...containerProps} // Injeta ref, onScroll e overflow
           className="flex-1 border-x border-b border-gray-700 rounded-b-lg bg-gray-900/10 custom-scrollbar"
         >
-            {/* Injeta height total e relative */}
+          {/* Injeta height total e relative */}
           <div {...wrapperProps}>
             {virtualItems.map((virtualRow) => {
               const itemStruct = listItems[virtualRow.index];
               const itemData = dataStore.current[virtualRow.index];
-              if (!itemStruct || !itemData){ 
+              if (!itemStruct || !itemData) {
                 return null;
-              }
+              };
 
-              return (
-                <div
-                  key={itemStruct.id}
-                  // Injeta position: absolute, top, height automaticamente
-                  {...virtualRow.props}
-                  className="grid grid-cols-12 gap-4 items-center px-4 border-b border-gray-800 hover:bg-gray-800/50 transition-colors"
-                >
-                  {/* Conteúdo da linha (Mantido igual) */}
-                  <span className="col-span-1 text-gray-600 font-mono text-xs text-right">
-                    {virtualRow.index + 1}
-                  </span>
-                  <span className="col-span-2 text-cyan-500 font-mono text-xs truncate">
-                    {itemData.sku}
-                  </span>
-                  <div className="col-span-6">
-                    <input
-                      defaultValue={itemData.label}
-                      onChange={(e) => {
-                        dataStore.current[virtualRow.index].label =
-                          e.target.value;
-                      }}
-                      className="w-full bg-transparent text-sm text-gray-300 outline-none focus:text-white border-b border-transparent focus:border-purple-500"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <input
-                      type="number"
-                      defaultValue={itemData.stock}
-                      onChange={(e) => {
-                        dataStore.current[virtualRow.index].stock = Number(
-                          e.target.value
-                        );
-                      }}
-                      className={`w-full bg-gray-800 text-right text-sm rounded px-2 py-1 outline-none focus:ring-1 border border-gray-700 ${itemData.stock < 0 ? "text-red-400" : "text-green-400"}`}
-                    />
-                  </div>
-                  <div className="col-span-1 text-center">
-                    <button
-                      type="button"
-                      onClick={() => handleRemove(virtualRow.index)}
-                      className="text-gray-600 hover:text-red-400"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+              // Injeta position: absolute, top, height automaticamente
+              return (<div key={itemStruct.id} {...virtualRow.props}
+                className="grid grid-cols-12 gap-4 items-center px-4 border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
+                {/* Conteúdo da linha (Mantido igual) */}
+                <span className="col-span-1 text-gray-600 font-mono text-xs text-right">
+                  {virtualRow.index + 1}
+                </span>
+                <span className="col-span-2 text-cyan-500 font-mono text-xs truncate">
+                  {itemData.sku}
+                </span>
+                <div className="col-span-6">
+                  <input
+                    defaultValue={itemData.label}
+                    itemID={`${virtualRow.index}`}
+                    onChange={handleChangeDescricao}
+                    className="w-full bg-transparent text-sm text-gray-300 outline-none focus:text-white border-b border-transparent focus:border-purple-500"
+                  />
                 </div>
+                <div className="col-span-2">
+                  <input
+                    type="number"
+                    defaultValue={itemData.stock}
+                    onChange={(e) => {
+                      dataStore.current[virtualRow.index].stock = Number(
+                        e.target.value
+                      );
+                    }}
+                    className={`w-full bg-gray-800 text-right text-sm rounded px-2 py-1 outline-none focus:ring-1 border border-gray-700 ${itemData.stock < 0 ? "text-red-400" : "text-green-400"}`}
+                  />
+                </div>
+                <div className="col-span-1 text-center">
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(virtualRow.index)}
+                    className="text-gray-600 hover:text-red-400"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
               );
             })}
           </div>
