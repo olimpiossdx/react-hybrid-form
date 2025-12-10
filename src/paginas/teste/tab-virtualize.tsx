@@ -59,12 +59,23 @@ const TabVirtualListExample = () => {
   function handleChangeDescricao(event: React.ChangeEvent<HTMLInputElement>) {
     const itemID = parseInt(event.target.getAttribute('itemID') ?? '');
 
-    if (Number.NaN != itemID) {
+    if (Number.NaN == itemID) {
       toast.warning("Não foi possível alterar descrição, tente outro momento.")
       return;
     }
 
     dataStore.current[itemID].label = event.target.value;
+  }
+
+  function handleChangeEstoque(event: React.ChangeEvent<HTMLInputElement>) {
+    const itemID = parseInt(event.target.getAttribute('itemID') ?? '');
+
+    if (Number.NaN == itemID) {
+      toast.warning("Não foi possível alterar estoque, tente outro momento.")
+      return;
+    };
+
+    dataStore.current[itemID].stock = Number(event.target.value);
   }
 
   const onSubmit = (formData: any) => {
@@ -182,11 +193,8 @@ const TabVirtualListExample = () => {
                   <input
                     type="number"
                     defaultValue={itemData.stock}
-                    onChange={(e) => {
-                      dataStore.current[virtualRow.index].stock = Number(
-                        e.target.value
-                      );
-                    }}
+                    itemID={`${virtualRow.index}`}
+                    onChange={handleChangeEstoque}
                     className={`w-full bg-gray-800 text-right text-sm rounded px-2 py-1 outline-none focus:ring-1 border border-gray-700 ${itemData.stock < 0 ? "text-red-400" : "text-green-400"}`}
                   />
                 </div>
