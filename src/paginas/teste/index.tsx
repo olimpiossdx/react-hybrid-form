@@ -57,7 +57,7 @@ const Homologacao: React.FC = () => {
     <div className='max-w-7xl mx-auto'>
       <header className='text-center mb-8'>
         <h1 className='text-xl sm:text-4xl font-extrabold text-cyan-400'>
-          `useForm` - v0.6.0
+          `useForm` - v0.6.1
         </h1>
         <p className='text-gray-400 mt-2'>Edição Contextual por Seção</p>
       </header>
