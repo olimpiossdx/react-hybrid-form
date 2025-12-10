@@ -10,7 +10,7 @@ interface IBarramentoAeB {
 
 const ListaComprasA = () => {
   const { emit } = useGraphBus<IBarramentoAeB>();
-  const isResertOrFill = React.useRef(false);
+  const isResertOrFill = React.useRef(true);
 
   const { items, add } = useList(["leite", "pão", "ovos"]);
 
