@@ -1,66 +1,59 @@
 import React, { useCallback } from 'react';
+import { applyPatternMask, applyCurrencyMask } from '../../utils/mask';
 
-type MaskType = 'cpf' | 'cnpj' | 'cep' | 'phone' | 'currency' | string;
+export type MaskPreset = 'cpf' | 'cnpj' | 'cep' | 'phone' | 'currency' | 'credit_card' | 'date' | 'time';
+export type MaskFormat = MaskPreset | string | ((value: string) => string);
 
 interface UseMaskOptions {
-  // Callbacks opcionais do usuário
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
+  // Configuração Específica para Currency
+  currencyOptions?: {
+    locale?: string;   // 'pt-BR', 'en-US'
+    currency?: string; // 'BRL', 'USD', 'EUR'
+  };
 }
 
-/**
- * Hook para aplicar máscaras de formatação em inputs.
- * Retorna as props necessárias (onChange, maxLength, etc) para espalhar no input.
- */
-export const useMask = (format: MaskType, options?: UseMaskOptions) => {
+const PRESETS: Record<string, string> = {
+  cpf: '999.999.999-99',
+  cnpj: '99.999.999/9999-99',
+  cep: '99999-999',
+  date: '99/99/9999',
+  time: '99:99',
+  credit_card: '9999 9999 9999 9999',
+};
 
-  const applyMask = (value: string, type: MaskType) => {
-    const raw = value.replace(/\D/g, ''); // Remove não-números
-    let pattern = type;
+export const useMask = (format: MaskFormat, options?: UseMaskOptions) => {
 
-    // 1. Lógica Dinâmica (Telefone 8 vs 9 dígitos)
-    if (type === 'phone') {
-        pattern = raw.length > 10 ? '(99) 99999-9999' : '(99) 9999-9999';
-    } 
-    // 2. Padrões Fixos
-    else if (type === 'cpf') pattern = '999.999.999-99';
-    else if (type === 'cnpj') pattern = '99.999.999/9999-99';
-    else if (type === 'cep') pattern = '99999-999';
-    
-    // Se for string customizada (ex: '999-99'), usa ela direto.
+  const resolvePattern = (value: string): string => {
+    if (typeof format === 'function') return format(value);
 
-    // 3. Aplicação caractere por caractere
-    let i = 0;
-    let v = 0;
-    let output = '';
-    
-    while (v < raw.length && i < pattern.length) {
-      const maskChar = pattern[i];
-      const valChar = raw[v];
-
-      if (maskChar === '9') {
-        output += valChar;
-        v++;
-      } else {
-        output += maskChar;
-        // Se o usuário digitou o caractere especial, avançamos no valor também
-        if (valChar === maskChar) v++;
-      }
-      i++;
+    if (format === 'phone') {
+      const raw = value.replace(/\D/g, '');
+      return raw.length > 10 ? '(99) 99999-9999' : '(99) 9999-9999';
     }
-    return output;
+
+    if (PRESETS[format as string]) return PRESETS[format as string];
+    return format; // Custom pattern "AAA-0000"
   };
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    // 1. Aplica a máscara
-    const originalValue = e.target.value;
-    const maskedValue = applyMask(originalValue, format);
-    
-    // 2. Atualiza o DOM
+    const { value } = e.target;
+    let maskedValue = '';
+
+    if (format === 'currency') {
+      maskedValue = applyCurrencyMask(
+        value,
+        options?.currencyOptions?.locale,
+        options?.currencyOptions?.currency
+      );
+    } else {
+      const pattern = resolvePattern(value);
+      maskedValue = applyPatternMask(value, pattern);
+    }
+
     e.target.value = maskedValue;
 
-    // 3. Executa o callback do usuário (se existir)
-    // O evento já vai com o valor formatado no target
     if (options?.onChange) {
       options.onChange(e);
     }
@@ -72,22 +65,12 @@ export const useMask = (format: MaskType, options?: UseMaskOptions) => {
     }
   }, [options]);
 
-  // Definição de MaxLength baseada no tipo para ajudar o navegador
-  const getMaxLength = () => {
-      if (format === 'cpf') return 14;
-      if (format === 'cnpj') return 18;
-      if (format === 'cep') return 9;
-      if (format === 'phone') return 15; // (11) 99999-9999
-      return undefined;
-  };
-
   return {
     onChange: handleChange,
     onBlur: handleBlur,
-    maxLength: getMaxLength(),
-    placeholder: format === 'phone' ? '(99) 99999-9999' : undefined,
-    // Marcador para o nosso parser saber que deve limpar formatação no submit
-    'data-unmask': true 
+    maxLength: format === 'cpf' ? 14 : undefined,
+    inputMode: (format === 'currency' || format === 'phone' || format === 'cpf') ? 'numeric' as const : 'text' as const,
+    'data-unmask': format === 'currency' ? 'currency' : 'default'
   };
 };
 
