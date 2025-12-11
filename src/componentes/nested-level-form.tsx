@@ -4,7 +4,6 @@ import Autocomplete, { type IOption } from "./autocomplete";
 import StarRating from "./start-rating";
 import showModal from "./modal/hook";
 
-
 // --- DADOS ESTÁTICOS ---
 const DEPARTAMENTOS: IOption[] = [
   { value: 'ti', label: 'Tecnologia' },
@@ -165,7 +164,6 @@ interface INestedFormValues {
 }
 
 const NestedLevelForm = () => {
-  const { handleSubmit, formId } = useForm<INestedFormValues>("nested-level-form");
   const [targetDepth, setTargetDepth] = React.useState(3);
   const [isGenerated, setIsGenerated] = React.useState(false);
 
@@ -178,7 +176,9 @@ const NestedLevelForm = () => {
         </pre>
       ),
     });
-  };
+  }
+  ;
+  const { formProps } = useForm<INestedFormValues>({id: "nested-level-form", onSubmit});
 
   return (
     <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700">
@@ -208,7 +208,7 @@ const NestedLevelForm = () => {
         </div>
       </div>
 
-     <form id={formId} onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+     <form {...formProps} autoComplete="off">
        {isGenerated 
        ? (<div className="animate-in fade-in zoom-in duration-300">
                <RecursiveLevel depth={0} maxDepth={targetDepth} prefix="projeto" />
