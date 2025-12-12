@@ -5,13 +5,13 @@ export interface IApiError {
   code: string;
   message: string;
   details?: any;
-}
+};
 
 export interface IApiNotification {
   type: 'success' | 'error' | 'info' | 'warning';
   message: string;
   code?: string;
-}
+};
 
 // O Nosso Envelope Padrão (A verdade única da aplicação)
 export interface IApiResponse<T = any> {
@@ -21,7 +21,7 @@ export interface IApiResponse<T = any> {
   status: number;
   headers: Headers;
   notifications: IApiNotification[]; 
-}
+};
 
 // Assinatura do Adaptador
 export type ResponseAdapter = <T>(response: Response, body: any) => IApiResponse<T>;
@@ -37,7 +37,7 @@ export interface HttpClientOptions {
   // Defaults de resiliência
   defaultRetries?: number;
   defaultRetryDelay?: number;
-}
+};
 
 export interface HttpRequestConfig extends RequestInit {
   baseURL?: string;
@@ -55,7 +55,7 @@ export interface HttpRequestConfig extends RequestInit {
 
   // Estratégia de Parsing
   adapter?: ResponseAdapter;
-}
+};
 
 export type RequestInterceptor = (config: HttpRequestConfig) => Promise<HttpRequestConfig> | HttpRequestConfig;
 export type ResponseInterceptor = (response: IApiResponse) => Promise<IApiResponse> | IApiResponse;

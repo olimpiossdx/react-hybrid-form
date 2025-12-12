@@ -146,21 +146,8 @@ export class HttpClient {
     }
 
     if (finalConfig.notifyOnError && apiResponse.notifications.length > 0) {
-        apiResponse.notifications.forEach(n => {
-             if (n.type === 'error'){ 
-              toast.error(n.message);
-            }
-             if (n.type === 'success'){ 
-              toast.success(n.message);
-            }
-             if (n.type === 'warning'){ 
-              toast.warning(n.message);
-            }
-             if (n.type === 'info'){ 
-              toast.info(n.message);
-            }
-        });
-    }
+        apiResponse.notifications.map(notification => toast[notification.type](notification.message));
+    };
 
     return apiResponse;
   }
