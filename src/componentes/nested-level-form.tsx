@@ -1,228 +1,175 @@
 import React from "react";
+import {
+  FolderTree,
+  Plus,
+  Trash2,
+  Save,
+  CornerDownRight,
+  FileJson,
+} from "lucide-react";
+import useList from "../hooks/list";
 import useForm from "../hooks/use-form";
-import Autocomplete, { type IOption } from "./autocomplete";
-import StarRating from "./start-rating";
 import showModal from "./modal/hook";
 
-// --- DADOS ESTÁTICOS ---
-const DEPARTAMENTOS: IOption[] = [
-  { value: 'ti', label: 'Tecnologia' },
-  { value: 'rh', label: 'Recursos Humanos' },
-  { value: 'fin', label: 'Financeiro' },
-  { value: 'mkt', label: 'Marketing' },
-  { value: 'ops', label: 'Operações' }
-];
-
-// --- COMPONENTE RECURSIVO (SUPER NÓ) ---
-interface RecursiveLevelProps {
-  depth: number;
-  maxDepth: number;
-  prefix: string; 
-  onDelete?: () => void;
+// Tipagem Recursiva
+interface CategoryNode {
+  name: string;
+  subcategories: CategoryNode[];
 }
 
-const RecursiveLevel = ({ depth, maxDepth, prefix, onDelete }: RecursiveLevelProps) => {
-  const [children, setChildren] = React.useState<{ id: number }[]>([]);
-  
-  const addChild = () => {
-    setChildren(prev => [...prev, { id: Date.now() + Math.random() }]);
-  };
+interface FormValues {
+  taxonomy: CategoryNode[];
+}
 
-  const removeChild = (indexToRemove: number) => {
-    setChildren(prev => prev.filter((_, i) => i !== indexToRemove));
-  };
+// --- COMPONENTE RECURSIVO (O Nó da Árvore) ---
+interface CategoryItemProps {
+  prefix: string; // Caminho atual (ex: taxonomy[0].subcategories[2])
+  onDelete?: () => void;
+  level?: number;
+}
 
-  // Cores e estilos baseados na profundidade para facilitar visualização
-  const colors = ['border-l-cyan-500', 'border-l-purple-500', 'border-l-yellow-500', 'border-l-green-500'];
-  const borderColor = colors[depth % colors.length];
-  const bgOpacity = `rgba(17, 24, 39, ${Math.max(0.3, 1 - depth * 0.1)})`; // Escurece conforme afunda
+const CategoryItem: React.FC<CategoryItemProps> = ({
+  prefix,
+  onDelete,
+  level = 0,
+}) => {
+  // Cada nó gerencia sua própria lista de filhos estruturalmente
+  const { items, add, remove } = useList<CategoryNode>(0);
 
   return (
-    <div className={`pl-4 ml-2 border-l-2 ${borderColor} my-4 transition-all`}>
-      
-      {/* --- O CARD DO NÍVEL ATUAL --- */}
-      <div 
-        className="p-4 rounded-lg border border-gray-700 shadow-sm mb-2"
-        style={{ backgroundColor: bgOpacity }}
-      >
-        <div className="flex justify-between items-start mb-4">
-          <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest bg-gray-900 px-2 py-1 rounded">
-            Nível {depth}
-          </span>
+    <div
+      className={`relative pl-4 sm:pl-6 ${level > 0 ? "border-l border-gray-200 dark:border-gray-700 ml-2" : ""} transition-colors`}
+    >
+      {/* Linha do Item Atual */}
+      <div className="flex flex-wrap items-center gap-2 mb-3 group">
+        <CornerDownRight
+          size={16}
+          className="text-gray-400 dark:text-gray-500"
+        />
+
+        <input
+          name={`${prefix}.name`}
+          className="form-input w-48 sm:w-64"
+          placeholder="Nome da Categoria"
+          required
+        />
+
+        {/* Ações (Aparecem no Hover ou Foco) */}
+        <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+          <button
+            type="button"
+            onClick={() => add()}
+            className="p-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors border border-blue-200 dark:border-blue-800"
+            title="Adicionar Subcategoria"
+          >
+            <Plus size={14} />
+          </button>
+
           {onDelete && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={onDelete}
-              className="text-red-400 hover:text-red-300 text-xs px-2 hover:bg-red-900/20 rounded py-1 transition-colors"
+              className="p-1.5 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors border border-red-200 dark:border-red-800"
+              title="Remover esta categoria"
             >
-              ✕ Remover Item
+              <Trash2 size={14} />
             </button>
           )}
         </div>
-
-        {/* --- GRID DE CAMPOS COMPLEXOS --- */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          
-          {/* 1. Input Texto */}
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Título da Tarefa</label>
-            <input 
-              name={`${prefix}.titulo`} 
-              placeholder="Ex: Refatorar Código"
-              className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:border-cyan-500 outline-none"
-              required // Teste de validação nativa
-            />
-          </div>
-
-          {/* 2. Autocomplete (Select Oculto) */}
-          <div>
-             {/* Note que passamos initialValue vazio para ele começar limpo ou ler do DOM se já existir */}
-            <Autocomplete 
-              name={`${prefix}.departamento`}
-              label="Departamento Responsável"
-              options={DEPARTAMENTOS}
-              required
-              validationKey={`validarDepto-${depth}`} // Só para diferenciar se usarmos custom val
-            />
-          </div>
-
-          {/* 3. StarRating (Input Âncora) */}
-          <div className="md:col-span-2 flex gap-4 items-start">
-            <div className="flex-1">
-               <StarRating 
-                 name={`${prefix}.prioridade`}
-                 label="Nível de Prioridade"
-                 required
-               />
-            </div>
-            
-            {/* 4. Input Date Nativo */}
-            <div className="w-1/3">
-                <label className="block text-xs text-gray-400 mb-1">Prazo Limite</label>
-                <input 
-                    type="date"
-                    name={`${prefix}.prazo`}
-                    className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-white focus:border-cyan-500 outline-none"
-                />
-            </div>
-          </div>
-
-          {/* 5. Textarea */}
-          <div className="md:col-span-2">
-            <label className="block text-xs text-gray-400 mb-1">Descrição Detalhada</label>
-            <textarea 
-                name={`${prefix}.descricao`}
-                rows={2}
-                className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:border-cyan-500 outline-none resize-y"
-                placeholder="Descreva os detalhes desta etapa..."
-            />
-          </div>
-
-        </div>
       </div>
 
-      {/* --- ÁREA RECURSIVA (FILHOS) --- */}
-      {depth < maxDepth ? (
-        <div className="flex flex-col gap-2 mt-2">
-          {children.map((child, index) => (
-            <RecursiveLevel
-              key={child.id}
-              depth={depth + 1}
-              maxDepth={maxDepth}
-              // A Mágica: "pai.filhos[0]"
-              prefix={`${prefix}.subtarefas[${index}]`} 
-              onDelete={() => removeChild(index)}
-            />
-          ))}
-          
-          <button
-            type="button"
-            onClick={addChild}
-            className="self-start text-xs bg-gray-800 hover:bg-gray-700 text-cyan-400 border border-cyan-900/30 px-4 py-2 rounded mt-2 flex items-center gap-2 transition-all hover:shadow-lg hover:shadow-cyan-900/20"
-          >
-            <span className="text-lg leading-none">+</span> 
-            Adicionar Subtarefa (Nível {depth + 1})
-          </button>
-        </div>
-      ) : (
-        <div className="text-xs text-gray-600 italic pl-4 border-l border-gray-800">
-          • Limite de profundidade atingido.
-        </div>
-      )}
+      {/* Renderização Recursiva dos Filhos */}
+      <div className="space-y-2">
+        {items.map((item, index) => (
+          <CategoryItem
+            key={item.id}
+            // Constrói o caminho profundo dinamicamente
+            prefix={`${prefix}.subcategories[${index}]`}
+            onDelete={() => remove(index)}
+            level={level + 1}
+          />
+        ))}
+      </div>
     </div>
   );
 };
 
-// --- CENÁRIO PRINCIPAL ---
-
-interface INestedFormValues {
-  config: {
-    maxDepth: number;
-    projectParams: string;
-  };
-  projeto: any; 
-}
-
+// --- COMPONENTE PRINCIPAL ---
 const NestedLevelForm = () => {
-  const [targetDepth, setTargetDepth] = React.useState(3);
-  const [isGenerated, setIsGenerated] = React.useState(false);
-
-  const onSubmit = (data: INestedFormValues) => {
+  const onSubmit = (data: FormValues) => {
     showModal({
-      title: "JSON da Estrutura Complexa",
-      content: () => (
-        <pre className="text-xs bg-black p-4 rounded text-green-400 overflow-auto max-h-[60vh] font-mono border border-gray-700">
-          {JSON.stringify(data, null, 2)}
-        </pre>
+      title: "Taxonomia Gerada",
+      size: "lg",
+      content: (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+            <FileJson size={20} />
+            <span className="font-bold">Estrutura JSON Resultante</span>
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            O <code>useForm</code> percorreu a árvore DOM recursiva e montou
+            este objeto automaticamente:
+          </p>
+          <pre className="text-xs bg-gray-100 dark:bg-black p-4 rounded border border-gray-200 dark:border-gray-700 overflow-auto max-h-[60vh] text-gray-800 dark:text-gray-300 font-mono">
+            {JSON.stringify(data, null, 2)}
+          </pre>
+        </div>
       ),
     });
-  }
-  ;
-  const { formProps } = useForm<INestedFormValues>({id: "nested-level-form", onSubmit});
+  };
+
+  const { formProps } = useForm<FormValues>({
+    id: "fractal-form",
+    onSubmit,
+  });
+
+  // Lista Raiz (Começa com 1 item)
+  const { items, add, remove } = useList<CategoryNode>(1);
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+    <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-colors max-w-4xl mx-auto">
+      <div className="mb-8 border-b border-gray-100 dark:border-gray-700 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h2 className="text-xl font-bold text-cyan-400">Gerador de Projetos (Fractal UI)</h2>
-            <p className="text-xs text-gray-400">Teste de inputs complexos aninhados recursivamente.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-cyan-400 flex items-center gap-2">
+            <FolderTree className="w-6 h-6" />
+            Taxonomia Fractal
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Formulário recursivo infinito. Cada nó gerencia seus próprios filhos
+            estruturalmente.
+          </p>
         </div>
-        
-        <div className="flex items-center gap-2 bg-gray-900 p-2 rounded border border-gray-700">
-            <label className="text-xs text-gray-400">Profundidade Max:</label>
-            <input 
-                type="number" 
-                min="1" 
-                max="5" 
-                value={targetDepth} 
-                onChange={e => setTargetDepth(Number(e.target.value))}
-                className="w-12 bg-gray-800 border border-gray-600 rounded px-1 py-0.5 text-white text-center text-sm"
-            />
-            <button 
-                type="button"
-                onClick={() => setIsGenerated(true)}
-                className="bg-cyan-600 hover:bg-cyan-500 text-white text-xs px-3 py-1 rounded transition-colors uppercase font-bold tracking-wide"
-            >
-                {isGenerated ? 'Reiniciar' : 'Iniciar'}
-            </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => add()}
+          className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+        >
+          <Plus size={14} /> Nova Raiz
+        </button>
       </div>
 
-     <form {...formProps} autoComplete="off">
-       {isGenerated 
-       ? (<div className="animate-in fade-in zoom-in duration-300">
-               <RecursiveLevel depth={0} maxDepth={targetDepth} prefix="projeto" />
-               <div className="mt-8 flex justify-end border-t border-gray-700 pt-6 sticky bottom-0 bg-gray-800/95 p-4 backdrop-blur-sm z-50">
-                   <button type="submit" className="py-3 px-8 rounded bg-green-600 hover:bg-green-500 text-white font-bold shadow-lg hover:shadow-green-500/20 transition-all transform hover:-translate-y-1"                   >
-                       Validar e Salvar Estrutura
-                   </button>
-               </div>
-           </div>) 
-           : (<div className="text-center py-20 border-2 border-dashed border-gray-700 rounded-lg text-gray-500">
-               <p>Clique em "Iniciar" para gerar a árvore de inputs.</p>
-           </div>)}
-     </form>
-   </div>);
+      <form {...formProps} className="space-y-6">
+        <div className="space-y-4">
+          {items.map((item, index) => (
+            <CategoryItem
+              key={item.id}
+              prefix={`taxonomy[${index}]`}
+              onDelete={() => remove(index)}
+            />
+          ))}
+        </div>
+
+        <div className="pt-6 border-t border-gray-100 dark:border-gray-700 flex justify-end">
+          <button
+            type="submit"
+            className="flex items-center gap-2 py-2.5 px-8 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-bold shadow-lg transition-transform active:scale-95"
+          >
+            <Save size={18} /> Salvar Estrutura
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 };
 
 export default NestedLevelForm;

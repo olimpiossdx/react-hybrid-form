@@ -1,155 +1,139 @@
-// 3. Cenário: Híbrido Simples (Atualizado com resetSection e Submit Parcial)
-
-import React from 'react';
-import Autocomplete, { type IOption } from '../../componentes/autocomplete';
+import React  from 'react';
 import showModal from '../../componentes/modal/hook';
+import { RefreshCw, Save, Edit3 } from 'lucide-react';
+import Autocomplete, { type IOption } from '../../componentes/autocomplete';
 import StarRating from '../../componentes/start-rating';
 import useForm from '../../hooks/use-form';
-import type { FormField, ValidationResult } from '../../hooks/use-form/props';
 
-interface IMyHybridForm {
-  rating: number | '';
-  comentario: string;
-  corFavorita: string;
+// DADOS MOCK
+const DADOS_INICIAIS = {
+    rating: 5,
+    corFavorita: 'azul',
+    comentario: 'Teste de Cancelamento'
 };
 
-const HybridFormSimple = ({ }) => {
+const CORES_OPTIONS: IOption[] = [
+  { value: "vermelho", label: "Vermelho" },
+  { value: "azul", label: "Azul Marinho" },
+  { value: "verde", label: "Verde" },
+];
 
-  const onSubmit = (data: IMyHybridForm) => {
+interface IHybridFormValues {
+    rating: number;
+    corFavorita: string;
+    comentario: string;
+}
+
+const HybridFormSimple = () => {
+  const [isEditing, setIsEditing] = React.useState(false);
+
+  const onSubmit = (data: IHybridFormValues) => {
     showModal({
-      title: 'Form Híbrido Salvo!',
-      content: () => (
-        <pre className="text-xs bg-black p-4 rounded text-green-400 overflow-auto">
-          {JSON.stringify(data, null, 2)}
-        </pre>
+      title: "Dados Salvos!",
+      size: 'sm',
+      content: (
+        <div className="space-y-2">
+            <p className="text-gray-300">O formulário híbrido processou os dados abaixo:</p>
+            <pre className="bg-black p-4 text-green-400 rounded text-xs overflow-auto border border-gray-700">
+                {JSON.stringify(data, null, 2)}
+            </pre>
+        </div>
       ),
-      closeOnBackdropClick: false, // Obriga interação
-      onClose: () => console.log('Fechou!'), // Callback
+      actions: (
+          <div className="flex justify-end">
+              <button onClick={() => setIsEditing(false)} className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded transition-colors">Fechar</button>
+          </div>
+      )
     });
-    console.log('data', data);
-    setEditingId(null);
-    originalEditDataRef.current = null;
+    setIsEditing(false);
   };
 
-  const { formProps, setValidators, getValue, resetSection } = useForm<IMyHybridForm>({ id: 'hybrid-form-simple', onSubmit: onSubmit });
+  // DX Aprimorada: Configuração no hook
+  const { formProps, resetSection } = useForm<IHybridFormValues>({
+      id: "hybrid-simple",
+      onSubmit
+  });
 
-  const [editingId, setEditingId] = React.useState<string | null>(null);
-  const isEditingAny = editingId !== null;
-  const originalEditDataRef = React.useRef<any>(null);
-
-  const validarComentario = React.useCallback((value: string, _: FormField | null, formValues: IMyHybridForm): ValidationResult => {
-    const valueRatingForm = Number(formValues.rating);
-
-    if (valueRatingForm > 0 && valueRatingForm <= 3 && !value)
-      return { message: 'O comentário é obrigatório...', type: 'error' };
-    if (value && value.length > 0 && value.length < 5)
-      return { message: 'Comentário curto.', type: 'error' };
-
-    return undefined;
-  }, []);
-
-  const validarCor = React.useCallback((value: any, _field: FormField | null, __: IMyHybridForm): ValidationResult => {
-    if (value === 'verde') {
-      return { message: 'Verde é uma ótima cor!', type: 'success' };
-    };
-
-    return undefined;
-  }, []);
-
-  React.useEffect(() => setValidators({ validarComentario, validarCor }), [setValidators, validarComentario, validarCor]);
-
-  const cores: IOption[] = [
-    { value: 'vermelho', label: 'Vermelho' },
-    { value: 'azul', label: 'Azul' },
-    { value: 'verde', label: 'Verde' },
-    { value: 'amarelo', label: 'Amarelo', disabled: true },
-    { value: 'preto', label: 'Preto' },
-    { value: 'branco', label: 'Branco' },
-  ];
-
-  const handleEdit = (id: string, prefix: string) => {
-    originalEditDataRef.current = getValue(prefix);
-    setEditingId(id);
-  };
-  const handleCancel = (_: string, prefix: string) => {
-    resetSection(prefix, originalEditDataRef.current);
-    originalEditDataRef.current = null;
-    setEditingId(null);
+  const handleEdit = () => {
+      setIsEditing(true);
+      // Simula carga de dados
+      // setTimeout garante que o DOM esteja pronto se houver remontagem
+      setTimeout(() => resetSection("", DADOS_INICIAIS), 50);
   };
 
-  const isEditingThis = editingId === 'hybridSimple';
-  const isEditingOther = isEditingAny && !isEditingThis;
-  const prefix = '';
+  const handleCancel = () => {
+      setIsEditing(false);
+      // VOLTA TUDO (Teste Crítico de Sincronia)
+      // O StarRating deve voltar para 5 estrelas visualmente
+      // O Autocomplete deve voltar para "Azul Marinho" visualmente
+      setTimeout(() => resetSection("", DADOS_INICIAIS), 50);
+  };
 
   return (
-    <div className='bg-gray-800 p-6 rounded-lg shadow-xl'>
-      <form {...formProps} noValidate>
-        <fieldset disabled={isEditingOther}>
-          <legend className='text-xl font-bold mb-4 text-cyan-400 flex justify-between items-center w-full'>
-            3. Híbrido (Rating + Autocomplete)
-            <div>
-              {!isEditingThis && (
-                <button
-                  type='button'
-                  onClick={() => handleEdit('hybridSimple', prefix)}
-                  disabled={isEditingAny}
-                  className={`py-1 px-3 rounded text-sm ${isEditingAny ? 'bg-gray-500' : 'bg-blue-600 hover:bg-blue-700'}`}>
-                  Editar
+    <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-colors max-w-2xl mx-auto">
+      <div className="flex justify-between items-center mb-6 border-b border-gray-200 dark:border-gray-700 pb-4">
+        <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-cyan-400">Ciclo de Vida</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Teste de Edição, Cancelamento e Reset.</p>
+        </div>
+        
+        <div className="flex gap-2">
+            {!isEditing ? (
+                <button 
+                    onClick={handleEdit} 
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-bold shadow-md"
+                >
+                    <Edit3 size={16} /> Editar
                 </button>
-              )}
-              {isEditingThis && (
-                <div className='flex gap-2'>
-                  <button
-                    type='button'
-                    onClick={() => handleCancel('hybridSimple', prefix)}
-                    className='py-1 px-3 rounded text-sm bg-gray-600 hover:bg-gray-700'
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type='submit'
-                    className='py-1 px-3 rounded text-sm bg-green-600 hover:bg-green-700'
-                  >
-                    Salvar
-                  </button>
-                </div>
-              )}
-            </div>
-          </legend>
+            ) : (
+                <button 
+                    onClick={handleCancel} 
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors text-sm font-bold"
+                >
+                    <RefreshCw size={16} /> Cancelar
+                </button>
+            )}
+        </div>
+      </div>
 
-          <StarRating
-            name='rating'
-            label='Avaliação (obrigatório)'
-            required
-            readOnly={!isEditingThis}
-            disabled={isEditingOther}
-          />
-          <Autocomplete
-            name='corFavorita'
-            label='Cor Favorita (obrigatório)'
-            options={cores}
-            required
-            validationKey='validarCor'
-            readOnly={!isEditingThis}
-            disabled={isEditingOther}
-            initialValue={getValue('corFavorita') || ''}
-          />
-          <div className='mb-4'>
-            <label className='block mb-1 text-gray-300' htmlFor='comentario'>
-              Comentário
-            </label>
-            <input
-              id='comentario'
-              name='comentario'
-              type='text'
-              className='form-input'
-              data-validation='validarComentario'
-              readOnly={!isEditingThis}
+      <form {...formProps} className="space-y-6">
+          <fieldset disabled={!isEditing} className="space-y-6 transition-opacity duration-300 disabled:opacity-60">
+            
+            <StarRating
+                name="rating"
+                label="Avaliação (Ao cancelar, volta p/ 5)"
+                required
+                className="mb-6"
             />
-          </div>
 
-          {/* Botão de submit geral REMOVIDO */}
-        </fieldset>
+            <Autocomplete
+                name="corFavorita"
+                label="Cor Favorita"
+                options={CORES_OPTIONS}
+                required
+                placeholder="Selecione uma cor..."
+            />
+
+            <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Comentário</label>
+                <input 
+                    name="comentario" 
+                    className="form-input" 
+                    placeholder="Digite algo..."
+                />
+            </div>
+
+            {isEditing && (
+                <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <button 
+                        type="submit" 
+                        className="flex items-center gap-2 px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg transition-transform active:scale-95"
+                    >
+                        <Save size={18} /> Salvar Alterações
+                    </button>
+                </div>
+            )}
+          </fieldset>
       </form>
     </div>
   );

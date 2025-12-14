@@ -1,9 +1,7 @@
-
-// --- Tipos para o Currículo ---
 export interface IEscolaridade {
   instituicao: string;
   curso: string;
-  ano: number; // number para facilitar input type="number"
+  ano: number;
 }
 
 export interface IExperiencia {
@@ -11,7 +9,6 @@ export interface IExperiencia {
   cargo: string;
   anoInicio: number;
   anoFim: number;
-  descricao?: string;
 }
 
 export interface IDadosAdicionais {
@@ -23,24 +20,11 @@ export interface ICurriculumFormValues {
   nome: string;
   email: string;
   resumo: string;
+  // Listas Dinâmicas
   escolaridades: IEscolaridade[];
   experiencias: IExperiencia[];
-  conhecimentos: string[]; // Checkbox Group (Array de strings)
-  adicionais: IDadosAdicionais;
+  // Grupo de Checkbox (Array de Strings)
+  conhecimentos: string[];
+  // Objeto Aninhado
+  dadosAdicionais: IDadosAdicionais;
 }
-
-export interface IActionButton {
-  sectionId: string;
-  prefix: string;
-  onCancel: () => void;
-  onEdit: () => void;
-  isOtherEditing: boolean;
-  isEditingThis: boolean;
-};
-
-
-export interface ISectionProps {
-  editingId: string | null;
-  handleCancel: (_: string, prefix: string) => void;
-  handleEdit: (id: string, prefix: string) => void
-};

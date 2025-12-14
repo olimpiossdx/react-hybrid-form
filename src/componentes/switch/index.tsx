@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 
 interface SwitchProps {
@@ -107,7 +106,7 @@ const Switch: React.FC<SwitchProps> = ({
   const currentSize = sizeConfig[size];
 
   return (
-    <div className={`flex items-center gap-3 mb-4 ${className} ${disabled ? 'opacity-50' : ''}`}>
+    <div className={`flex items-center gap-3 mb-4 ${className} ${disabled ? 'opacity-60' : ''}`}>
       
       {/* Container do Switch (Relativo para posicionamento) */}
       <div className={`relative inline-flex items-center cursor-pointer group ${currentSize.track}`}>
@@ -135,9 +134,17 @@ const Switch: React.FC<SwitchProps> = ({
         <div 
           className={`
             absolute top-0 left-0 w-full h-full rounded-full transition-colors duration-200 ease-in-out
-            ${isChecked ? 'bg-cyan-600' : 'bg-gray-600'}
-            peer-focus:ring-2 peer-focus:ring-cyan-400 peer-focus:ring-offset-2 peer-focus:ring-offset-gray-900
-            peer-invalid:ring-2 peer-invalid:ring-red-500/70 /* Feedback visual de erro no próprio switch */
+            /* Cores da Trilha: Cinza Claro (Light) / Escuro (Dark) quando desligado */
+            ${isChecked 
+                ? 'bg-cyan-600 dark:bg-cyan-500' 
+                : 'bg-gray-300 dark:bg-gray-600 group-hover:bg-gray-400 dark:group-hover:bg-gray-500'}
+            
+            /* Foco */
+            peer-focus:ring-2 peer-focus:ring-cyan-500 dark:peer-focus:ring-cyan-400 
+            peer-focus:ring-offset-2 peer-focus:ring-offset-white dark:peer-focus:ring-offset-gray-900
+            
+            /* Erro */
+            peer-invalid:ring-2 peer-invalid:ring-red-500/70
           `}
         ></div>
 
@@ -156,10 +163,15 @@ const Switch: React.FC<SwitchProps> = ({
       {label && (
         <label 
             htmlFor={name} 
-            className={`${currentSize.label} font-medium text-gray-300 select-none ${!disabled && !readOnly && 'cursor-pointer hover:text-white'}`}
+            className={`
+                ${currentSize.label} font-medium select-none transition-colors
+                /* Cores do Texto */
+                text-gray-700 dark:text-gray-300
+                ${!disabled && !readOnly ? 'cursor-pointer hover:text-gray-900 dark:hover:text-white' : ''}
+            `}
             // O clique no label dispara o input pelo htmlFor, nativamente
         >
-          {label} {required && <span className="text-red-400" title="Obrigatório">*</span>}
+          {label} {required && <span className="text-red-500 dark:text-red-400" title="Obrigatório">*</span>}
         </label>
       )}
 

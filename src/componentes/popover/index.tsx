@@ -1,12 +1,31 @@
-import React from 'react';
-import { createPortal } from 'react-dom';
-import type { IPopoverProps } from './props';
+import React, { useLayoutEffect, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
-const Popover: React.FC<IPopoverProps> = ({ isOpen, onClose, triggerRef, children, className = "", fullWidth = false }) => {
-  // Estado inicial null indica que ainda não calculamos a posição
-  const [coords, setCoords] = React.useState<{ top: number; left: number; minWidth: number } | null>(null);
-  const [isVisible, setIsVisible] = React.useState(false); // Controla a opacidade final
-  const popoverRef = React.useRef<HTMLDivElement>(null);
+interface PopoverProps {
+  isOpen: boolean;
+  onClose: () => void;
+  // Aceita qualquer tipo de Ref para flexibilidade (div, input, etc)
+  triggerRef: React.RefObject<any>;
+  children: React.ReactNode;
+  className?: string;
+  fullWidth?: boolean; // Se true, força min-width igual ao trigger
+}
+
+const Popover: React.FC<PopoverProps> = ({
+  isOpen,
+  onClose,
+  triggerRef,
+  children,
+  className = "",
+  fullWidth = false,
+}) => {
+  const [coords, setCoords] = useState<{
+    top: number;
+    left: number;
+    minWidth: number;
+  } | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   const updatePosition = () => {
     if (triggerRef.current && popoverRef.current && isOpen) {
@@ -18,46 +37,39 @@ const Popover: React.FC<IPopoverProps> = ({ isOpen, onClose, triggerRef, childre
       const scrollX = window.scrollX || window.pageXOffset;
       const scrollY = window.scrollY || window.pageYOffset;
 
-      // Configurações Padrão (Baixo - Esquerda)
-      let top = triggerRect.bottom + scrollY + 4; // 4px margem
+      // Posição Padrão: Baixo - Esquerda
+      let top = triggerRect.bottom + scrollY + 4;
       let left = triggerRect.left + scrollX;
 
-      // 1. COLISÃO VERTICAL (Cima ou Baixo?)
+      // 1. Detecção de Colisão Vertical (Flip para cima se não couber embaixo)
       const spaceBelow = viewportHeight - triggerRect.bottom;
-      const spaceAbove = triggerRect.top;
       const popoverHeight = popoverRect.height;
 
-      // Se não cabe embaixo E cabe em cima -> Joga pra Cima
-      if (spaceBelow < popoverHeight && spaceAbove > popoverHeight) {
+      if (spaceBelow < popoverHeight && triggerRect.top > popoverHeight) {
         top = triggerRect.top + scrollY - popoverHeight - 4;
       }
 
-      // 2. COLISÃO HORIZONTAL (Esquerda ou Direita?)
+      // 2. Detecção de Colisão Horizontal (Ajuste para esquerda)
       const popoverWidth = popoverRect.width;
 
-      // Se estourar a direita da tela -> Alinha pela direita do trigger
       if (left + popoverWidth > viewportWidth) {
-        // Tenta alinhar a borda direita do popover com a borda direita do trigger
-        left = (triggerRect.right + scrollX) - popoverWidth;
-
-        // Guarda de segurança: Se mesmo assim estourar a esquerda (tela muito pequena),
-        // fixa uma margem mínima na esquerda
+        // Tenta alinhar pela direita
+        left = triggerRect.right + scrollX - popoverWidth;
+        // Guarda de segurança
         if (left < 4) left = 4;
       }
 
       setCoords({
         top,
         left,
-        minWidth: fullWidth ? triggerRect.width : 0
+        minWidth: fullWidth ? triggerRect.width : 0,
       });
-
-      // Libera a visibilidade após o cálculo
       setIsVisible(true);
     }
   };
 
-  // useLayoutEffect roda ANTES da pintura do browser, evitando "pulos" visuais
-  React.useLayoutEffect(() => {
+  // useLayoutEffect: Roda antes da pintura para evitar FOUC (Flash of Unstyled Content)
+  useLayoutEffect(() => {
     if (isOpen) {
       updatePosition();
     } else {
@@ -66,19 +78,19 @@ const Popover: React.FC<IPopoverProps> = ({ isOpen, onClose, triggerRef, childre
     }
   }, [isOpen]);
 
-  // Listeners passivos para resize/scroll
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
-      window.addEventListener('resize', updatePosition);
-      window.addEventListener('scroll', updatePosition, { capture: true });
+      window.addEventListener("resize", updatePosition);
+      window.addEventListener("scroll", updatePosition, { capture: true });
     }
     return () => {
-      window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition, { capture: true });
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, { capture: true });
     };
   }, [isOpen]);
 
-  React.useEffect(() => {
+  // Click Outside
+  useEffect(() => {
     if (!isOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -89,28 +101,31 @@ const Popover: React.FC<IPopoverProps> = ({ isOpen, onClose, triggerRef, childre
       }
       onClose();
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   return createPortal(
-    <div ref={popoverRef}
-      // Usamos 'invisible' enquanto não temos coords para medir o tamanho real sem mostrar no lugar errado
+    <div
+      ref={popoverRef}
       className={`
-        absolute z-[9999] bg-gray-800 border border-gray-700 rounded-lg shadow-2xl 
+        absolute z-9999 rounded-lg shadow-2xl border
         transition-opacity duration-200 ease-out
-        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}
+        /* TEMA: Fundo Branco (Light) / Cinza (Dark) */
+        bg-white dark:bg-gray-800 
+        border-gray-200 dark:border-gray-700
+        
+        ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"}
         ${className}
       `}
       style={{
-        // Se coords for null (primeiro render), renderiza fora da tela ou no 0,0 apenas para medição
         top: coords?.top ?? 0,
         left: coords?.left ?? 0,
-        minWidth: coords?.minWidth && coords.minWidth > 0 ? coords.minWidth : undefined,
-        // Garante que a medição funcione mas o usuário não veja glitches
-        visibility: coords ? 'visible' : 'hidden'
+        minWidth:
+          coords?.minWidth && coords.minWidth > 0 ? coords.minWidth : undefined,
+        visibility: coords ? "visible" : "hidden", // Esconde enquanto calcula
       }}
     >
       {children}

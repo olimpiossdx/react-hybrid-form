@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { ToggleLeft, Bell, ShieldCheck, Settings } from "lucide-react";
 import showModal from "../../componentes/modal/hook";
 import Switch from "../../componentes/switch";
 import useForm from "../../hooks/use-form";
@@ -7,72 +8,77 @@ const DADOS_API = {
   modo_escuro: true,
   notificacoes: true,
   email_extra: "dev@empresa.com",
-  termos: true, // Campo obrigatório
+  termos: true,
   newsletter: false,
 };
 
-const TabSwitchExample = () => {
-  // Estado de UI (Ilha de Reatividade)
-  const [showEmail, setShowEmail] = React.useState(false);
-  const [_, setMode] = React.useState<"novo" | "editando">("novo");
+const SwitchExample: React.FC = () => {
+  const onSubmit = (data: any) => {
+    showModal({
+      title: "Preferências Salvas",
+      size: "sm",
+      content: (
+        <div className="space-y-3">
+          <p className="text-gray-600 dark:text-gray-300 text-sm">
+            Configurações atualizadas:
+          </p>
+          <pre className="text-xs bg-gray-100 dark:bg-black p-4 rounded text-green-600 dark:text-green-400 border border-gray-200 dark:border-gray-700">
+            {JSON.stringify(data, null, 2)}
+          </pre>
+        </div>
+      ),
+    });
+  };
 
-  // --- HANDLERS DE CICLO DE VIDA ---
+  const { formProps, resetSection } = useForm({
+    id: "switch-form",
+    onSubmit,
+  });
+
+  // UI State
+  const [showEmail, setShowEmail] = useState(false);
+  const [mode, setMode] = useState<"novo" | "editando">("novo");
 
   const handleLoadData = () => {
-    console.log("Carregando dados...");
     setMode("editando");
-
-    // 1. Sincronia Explícita da UI
     setShowEmail(DADOS_API.notificacoes);
-
-    // 2. Sincronia do DOM (Inputs)
-    setTimeout(() => {
-      resetSection("", DADOS_API);
-    }, 50);
+    setTimeout(() => resetSection("", DADOS_API), 50);
   };
 
   const handleReset = () => {
     setMode("novo");
     setShowEmail(false);
-    setTimeout(() => {
-      resetSection("", null);
-    }, 50);
+    setTimeout(() => resetSection("", null), 50);
   };
 
-  // --- HANDLER HÍBRIDO ---
-  const handleNotifChange = (checked: boolean) => {
-    setShowEmail(checked);
-  };
-
-  const onSubmit = (data: any) => {
-    showModal({
-      title: "Preferências Salvas",
-      content: () => (
-        <pre className="text-xs bg-black p-4 text-green-400">
-          {JSON.stringify(data, null, 2)}
-        </pre>
-      ),
-    });
-  };
-  const { formProps, resetSection } = useForm({id: "switch-form", onSubmit: onSubmit });
-
-  return (<div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700 max-w-2xl mx-auto">
-      <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
-        <h2 className="text-xl font-bold text-cyan-400">
-          Switch / Toggle v1.0
-        </h2>
+  return (
+    <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-colors max-w-2xl mx-auto">
+      <div className="flex justify-between items-center mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400">
+            <ToggleLeft size={24} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              Switch Toggle
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Controles booleanos com animação.
+            </p>
+          </div>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={handleLoadData}
             type="button"
-            className="px-3 py-1 text-xs bg-blue-900 text-blue-200 rounded hover:bg-blue-800 border border-blue-700"
+            className="px-3 py-1.5 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
           >
             Simular Edição
           </button>
           <button
             onClick={handleReset}
             type="button"
-            className="px-3 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 border border-gray-600"
+            className="px-3 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
             Resetar
           </button>
@@ -80,10 +86,10 @@ const TabSwitchExample = () => {
       </div>
 
       <form {...formProps}>
-        {/* BLOCO 1: CONFIGURAÇÃO SIMPLES */}
-        <div className="bg-gray-900/50 p-4 rounded border border-gray-700 mb-4">
-          <h3 className="text-xs text-gray-500 uppercase mb-3 font-bold">
-            Interface
+        {/* BLOCO 1 */}
+        <div className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-lg border border-gray-200 dark:border-gray-700 mb-6">
+          <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-4 flex items-center gap-2">
+            <Settings size={14} /> Interface
           </h3>
 
           <Switch
@@ -92,41 +98,45 @@ const TabSwitchExample = () => {
             defaultValue={false}
           />
 
-          <Switch name="compacto" label="Modo Compacto (Small)" size="sm" />
+          <Switch
+            name="compacto"
+            label="Modo Compacto (Small)"
+            size="sm"
+            className="mb-0"
+          />
         </div>
 
-        {/* BLOCO 2: REATIVIDADE (CONDICIONAL) */}
+        {/* BLOCO 2 */}
         <div
-          className={`p-4 rounded border transition-all duration-300 ${showEmail ? "bg-blue-900/10 border-blue-500/30" : "bg-gray-900/50 border-gray-700"}`}
+          className={`p-5 rounded-lg border transition-all duration-300 mb-6 ${showEmail ? "bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-500/30" : "bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700"}`}
         >
-          <h3 className="text-xs text-gray-500 uppercase mb-3 font-bold">
-            Comunicação
+          <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-4 flex items-center gap-2">
+            <Bell size={14} /> Notificações
           </h3>
 
           <Switch
             name="notificacoes"
             label="Receber alertas por e-mail"
-            onChange={handleNotifChange}
+            onChange={(checked) => setShowEmail(checked)}
           />
 
-          {/* Campo Condicional */}
           {showEmail && (
-            <div className="mt-2 pl-14 animate-in fade-in slide-in-from-top-2">
+            <div className="mt-4 pl-14 animate-in fade-in slide-in-from-top-2">
               <input
                 name="email_extra"
                 type="email"
-                required={showEmail} // Torna obrigatório se visível
+                required={showEmail}
                 placeholder="Digite seu e-mail principal..."
-                className="form-input w-full bg-gray-800 border-gray-600 text-white p-2 rounded text-sm focus:border-cyan-500 outline-none"
+                className="form-input"
               />
             </div>
           )}
         </div>
 
-        {/* BLOCO 3: VALIDAÇÃO (REQUIRED) */}
-        <div className="mt-4 bg-gray-900/50 p-4 rounded border border-gray-700">
-          <h3 className="text-xs text-gray-500 uppercase mb-3 font-bold">
-            Legal
+        {/* BLOCO 3 */}
+        <div className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-lg border border-gray-200 dark:border-gray-700 mb-8">
+          <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-4 flex items-center gap-2">
+            <ShieldCheck size={14} /> Legal
           </h3>
 
           <Switch
@@ -135,21 +145,22 @@ const TabSwitchExample = () => {
             required
             className="mb-1"
           />
-          <p className="text-[10px] text-gray-500 pl-14">
-            * Tente salvar sem marcar para ver o balão de erro no switch.
+          <p className="text-[10px] text-gray-500 dark:text-gray-500 pl-14">
+            * Tente salvar sem marcar para ver o balão de erro.
           </p>
         </div>
 
-        <div className="flex justify-end border-t border-gray-700 pt-4 mt-6">
+        <div className="flex justify-end border-t border-gray-100 dark:border-gray-700 pt-6">
           <button
             type="submit"
-            className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white font-bold rounded shadow-lg transition-transform active:scale-95"
+            className="px-6 py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg shadow-lg transition-transform active:scale-95"
           >
             Salvar Preferências
           </button>
         </div>
       </form>
-    </div>);
+    </div>
+  );
 };
 
-export default TabSwitchExample;
+export default SwitchExample;

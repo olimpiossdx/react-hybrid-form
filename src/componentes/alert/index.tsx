@@ -6,43 +6,43 @@ export type AlertVariant = 'info' | 'success' | 'warning' | 'error' | 'neutral';
 export interface AlertProps {
   variant?: AlertVariant;
   title?: string;
-  children?: React.ReactNode; // Conteúdo rico
-  icon?: React.ReactNode;     // Ícone opcional (substitui o padrão)
-  onClose?: () => void;       // Torna o alerta "fechável"
+  children?: React.ReactNode; 
+  icon?: React.ReactNode;     
+  onClose?: () => void;       
   className?: string;
 }
 
 const variants = {
   info: {
-    container: 'bg-blue-900/20 border-blue-800 text-blue-200',
-    iconColor: 'text-blue-400',
+    container: 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200',
+    iconColor: 'text-blue-500 dark:text-blue-400',
     DefaultIcon: Info
   },
   success: {
-    container: 'bg-green-900/20 border-green-800 text-green-200',
-    iconColor: 'text-green-400',
+    container: 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200',
+    iconColor: 'text-green-500 dark:text-green-400',
     DefaultIcon: CheckCircle
   },
   warning: {
-    container: 'bg-yellow-900/20 border-yellow-800 text-yellow-200',
-    iconColor: 'text-yellow-400',
+    container: 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200',
+    iconColor: 'text-yellow-500 dark:text-yellow-400',
     DefaultIcon: AlertTriangle
   },
   error: {
-    container: 'bg-red-900/20 border-red-800 text-red-200',
-    iconColor: 'text-red-400',
+    container: 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200',
+    iconColor: 'text-red-500 dark:text-red-400',
     DefaultIcon: AlertCircle
   },
   neutral: {
-    container: 'bg-gray-800 border-gray-700 text-gray-300',
-    iconColor: 'text-gray-400',
+    container: 'bg-gray-50 border-gray-200 text-gray-800 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300',
+    iconColor: 'text-gray-500 dark:text-gray-400',
     DefaultIcon: Info
   }
 };
 
 /**
  * Componente de Alerta Contextual.
- * Otimizado com React.memo para evitar re-renders desnecessários em formulários densos.
+ * Suporta temas (Light/Dark) e variantes semânticas.
  */
 const Alert: React.FC<AlertProps> = memo(({ 
   variant = 'neutral', 
@@ -60,7 +60,7 @@ const Alert: React.FC<AlertProps> = memo(({
       role="alert"
       className={`
         flex items-start gap-3 p-4 rounded-lg border-l-4 border 
-        animate-in fade-in slide-in-from-top-2 duration-300
+        animate-in fade-in slide-in-from-top-2 duration-300 shadow-sm
         ${style.container} 
         ${className}
       `}
@@ -79,7 +79,11 @@ const Alert: React.FC<AlertProps> = memo(({
       {onClose && (
         <button 
           onClick={onClose} 
-          className={`shrink-0 -mt-1 -mr-1 p-1 rounded hover:bg-black/20 transition-colors ${style.iconColor}`}
+          className={`
+            shrink-0 -mt-1 -mr-1 p-1.5 rounded-md transition-colors
+            hover:bg-black/5 dark:hover:bg-white/10
+            ${style.iconColor}
+          `}
           aria-label="Fechar alerta"
         >
           <X size={16} />

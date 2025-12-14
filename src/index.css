@@ -1,160 +1,128 @@
 @import "tailwindcss";
 
-.form-input {
-  width: 100%;
-  background-color: #374151;
-  border: 1px solid #4B5563;
-  border-radius: 0.375rem;
-  padding: 0.5rem 0.75rem;
-  color: white;
-  transition: background-color .2s, border-color .2s, color .2s;
-  position: relative;
-  z-index: 1;
-}
+/* Configuração da Variante Dark Mode (Tailwind v4) */
+@variant dark (&:where(.dark, .dark *));
 
-.form-input:focus {
-  outline: none;
-  border-color: #06b6d4;
-  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.5);
-  z-index: 2;
-  background-color: #4B5563;
-  /* Escurece um pouco no foco para edição */
-}
+@layer components {
 
-.form-input.is-touched:valid {
-  border-color: #10B981;
-}
+  /* INPUTS PADRÃO (Adaptáveis)
+    Correção: Definimos transition-property manualmente ou usamos transition-colors
+    para evitar que 'background-position' seja animado.
+  */
+  .form-input {
+    @apply w-full rounded-md border px-3 py-2 outline-none;
 
-.form-input.is-touched:invalid {
-  border-color: #EF4444;
-}
+    /* Transição restrita para evitar o bug do ícone deslizando */
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, box-shadow;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
 
-select.form-input {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 0.5rem center;
-  background-repeat: no-repeat;
-  background-size: 1.5em 1.5em;
-  padding-right: 2.5rem;
-}
+    /* Light Mode (Padrão) */
+    @apply bg-white border-gray-300 text-gray-900 placeholder-gray-400;
 
-/* --- ESTILOS PARA readOnly/disabled (MODO VISUALIZAÇÃO) --- */
-.form-input[readOnly],
-textarea.form-input[readOnly] {
-  background-color: transparent !important;
-  border-color: transparent !important;
-  padding-left: 0.1rem !important;
-  padding-right: 0.1rem !important;
-  /* Menor padding */
-  color: #D1D5DB !important;
-  cursor: default;
-  box-shadow: none !important;
-  resize: none;
-  min-height: 24px;
-  height: auto;
-  line-height: 1.5;
-}
+    /* Dark Mode */
+    @apply dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-500;
 
-/* Estilo para select desabilitado (agora o fieldset pai o desabilita) */
-select.form-input:disabled {
-  background-color: transparent !important;
-  border-color: transparent !important;
-  padding-left: 0.1rem !important;
-  padding-right: 0.1rem !important;
-  color: #D1D5DB !important;
-  cursor: default;
-  box-shadow: none !important;
-  background-image: none !important;
-  opacity: 1 !important;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  min-height: 24px;
-  height: auto;
-  line-height: 1.5;
-}
+    position: relative;
+    z-index: 1;
+  }
 
-input[type="checkbox"]:disabled,
-input[type="radio"]:disabled {
-  opacity: 1;
-  /* Opacidade controlada pelo fieldset */
-}
+  .form-input:focus {
+    @apply ring-2 ring-cyan-500/50 border-cyan-500 z-10;
+    @apply dark:bg-gray-700;
+  }
 
-label:has(input[type="checkbox"]:disabled),
-label:has(input[type="radio"]:disabled) {
-  cursor: default;
-}
+  /* Estados de Validação (Feedback Visual) */
+  .form-input.is-touched:valid {
+    @apply border-green-500 focus:ring-green-500/50 focus:border-green-500;
+  }
 
-input[type="month"][readOnly],
-input[type="date"][readOnly] {
-  color: #D1D5DB !important;
-  background-color: transparent !important;
-  border-color: transparent !important;
-  padding-left: 0.1rem !important;
-  box-shadow: none !important;
-  min-height: 24px;
-  height: auto;
-  line-height: 1.5;
-}
+  .form-input.is-touched:invalid {
+    @apply border-red-500 focus:ring-red-500/50 focus:border-red-500;
+    /* Ícone de erro SVG inline */
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ef4444'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    /* Posição fixa à direita */
+    background-position: right 0.75rem center;
+    background-size: 1.25rem;
+    padding-right: 2.5rem;
+  }
 
-input[type="month"][readOnly]::-webkit-calendar-picker-indicator,
-input[type="date"][readOnly]::-webkit-calendar-picker-indicator {
-  display: none;
-}
+  /* SELECT Nativo */
+  select.form-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+  }
 
+  /* ESTADOS ESPECIAIS (Disabled / ReadOnly) */
+  .form-input:disabled,
+  .form-input[readonly],
+  textarea.form-input[readOnly] {
+    @apply opacity-60 cursor-not-allowed shadow-none;
+    @apply bg-gray-100 border-gray-200 text-gray-500;
+    @apply dark:bg-gray-900/50 dark:border-gray-700 dark:text-gray-400;
+    resize: none;
+  }
 
-/* StarRating */
-input[name^="rating"]:invalid.is-touched~.star-display {
-  outline: 2px solid #EF4444;
-  border-radius: 0.375rem;
-}
+  input[type="month"][readOnly]::-webkit-calendar-picker-indicator,
+  input[type="date"][readOnly]::-webkit-calendar-picker-indicator {
+    display: none;
+  }
 
-.star-display:focus,
-.star-display:focus-within {
-  outline: 2px solid #06b6d4;
-  border-radius: 0.375rem;
-}
+  /* STAR RATING */
+  input[name^="rating"]:invalid.is-touched~.star-display {
+    @apply ring-2 ring-red-500 rounded-md;
+  }
 
-/* Autocomplete */
-.autocomplete-suggestions {
-  position: absolute;
-  z-index: 10;
-  width: 100%;
-  background-color: #374151;
-  border: 1px solid #4B5563;
-  border-top: none;
-  border-radius: 0 0 0.375rem 0.375rem;
-  margin-top: -1px;
-  max-height: 10rem;
-  overflow-y: auto;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
+  .star-display:focus,
+  .star-display:focus-within {
+    @apply ring-2 ring-cyan-500 rounded-md;
+  }
 
-.autocomplete-suggestion-item {
-  padding: 0.5rem 1rem;
-  color: #D1D5DB;
-  cursor: pointer;
-}
+  /* AUTOCOMPLETE */
+  .autocomplete-suggestions {
+    @apply absolute w-full z-50 rounded-b-md border shadow-lg -mt-px max-h-60 overflow-y-auto;
+    @apply bg-white border-gray-300;
+    @apply dark:bg-gray-800 dark:border-gray-600;
+  }
 
-.autocomplete-suggestion-item:hover {
-  background-color: #4B5563;
-}
+  .autocomplete-suggestion-item {
+    @apply px-4 py-2 cursor-pointer transition-colors;
+    @apply text-gray-700 hover:bg-gray-100;
+    @apply dark:text-gray-200 dark:hover:bg-gray-700;
+  }
 
-.autocomplete-suggestion-item[aria-disabled="true"] {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background-color: transparent !important;
-}
+  .autocomplete-suggestion-item[aria-disabled="true"] {
+    @apply opacity-50 cursor-not-allowed bg-transparent;
+  }
 
-/* Estilos para estado desabilitado (edição contextual) */
-fieldset:disabled {
-  opacity: 0.6;
-  /* Controla toda a opacidade da seção */
-  pointer-events: none;
-  /* Desabilita cliques em tudo dentro */
-}
+  /* FIELDSET */
+  fieldset:disabled {
+    @apply opacity-60 pointer-events-none;
+  }
 
-/* Re-habilita ponteiros em botões para mostrar 'not-allowed' */
-fieldset:disabled button {
-  pointer-events: auto;
+  fieldset:disabled button {
+    @apply pointer-events-auto;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-gray-500;
+  }
 }
