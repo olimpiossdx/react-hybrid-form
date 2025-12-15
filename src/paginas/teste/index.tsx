@@ -24,6 +24,7 @@ import ListPatternsExample from './list-patterns';
 import TabVirtualList from './tab-virtualize';
 import TabMaskExample from './tab-mask';
 import { ThemeToggle } from '../../componentes/theme';
+import FileExample from './file-input';
 
 // Foca no nova tab/formulário-ativo
 const Homologacao: React.FC = () => {
@@ -55,6 +56,7 @@ const Homologacao: React.FC = () => {
     tabEventBusForm: <ListPatternsExample />,
     tabVirtualList: <TabVirtualList />,
     tabMaskExample: <TabMaskExample />,
+    inputfile: <FileExample />,
   };
 
   return (
@@ -102,6 +104,7 @@ const Homologacao: React.FC = () => {
           <TabButton tabId='dateRangeExample' label='Date Range' isActive={activeTab === 'dateRangeExample'} onClick={setActiveTab} />
           <TabButton tabId='tabMaskExample' label='Masks' isActive={activeTab === 'tabMaskExample'} onClick={setActiveTab} />
           <TabButton tabId='nestedLevelForm' label='Fractal' isActive={activeTab === 'nestedLevelForm'} onClick={setActiveTab} />
+          <TabButton tabId='inputfile' label='Input file' isActive={activeTab === 'inputfile'} onClick={setActiveTab} />
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
