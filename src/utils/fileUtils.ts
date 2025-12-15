@@ -72,21 +72,26 @@ export interface FileListRules {
  * Útil para validação customizada (setValidators) ou cruzada.
  */
 export const validateFileList = (
-  files: File[] | FileList | null | undefined, 
-  rules: FileListRules
+  files: FileList | null | undefined, 
+  rules: FileListRules,
+  field?: HTMLElement | null // Permite receber o elemento do DOM para checar atributos
 ): string | null => {
   const fileArray = files ? Array.from(files) : [];
 
+  // Checa se o campo possui a flag de "arquivos existentes" (Server-side)
+  // Isso permite que o validador passe mesmo se o input file estiver vazio (0 novos arquivos)
+  const hasExisting = field?.getAttribute('data-has-existing') === 'true';
+
   // 1. Required
-  if (rules.required && fileArray.length === 0) {
+  if (rules.required && fileArray.length === 0 && !hasExisting) {
     return "Este campo é obrigatório.";
   }
 
   // Se não tem arquivos e não é obrigatório, retorna sucesso
-  if (fileArray.length === 0) return null;
+  if (fileArray.length === 0 && !hasExisting) return null;
 
   // 2. Quantidade Mínima
-  if (rules.minFiles && fileArray.length < rules.minFiles) {
+  if (rules.minFiles && fileArray.length < rules.minFiles && !hasExisting) {
     return `Selecione pelo menos ${rules.minFiles} arquivo(s).`;
   }
 
@@ -113,14 +118,11 @@ export const unmaskValue = (value: string, type?: string): string => {
   if (type === 'currency') {
       const raw = value.replace(/\D/g, '');
       if (!raw) return '';
-      // Insere o ponto decimal manualmente antes dos últimos 2 dígitos
       const padded = raw.padStart(3, '0');
       const integer = padded.slice(0, -2);
       const decimal = padded.slice(-2);
-      // Remove zeros à esquerda do inteiro para ficar limpo (ex: 001.23 -> 1.23)
       return `${BigInt(integer)}.${decimal}`;
   }
   
-  // Padrão: remove tudo que não é alfanumérico
   return value.replace(/[^a-zA-Z0-9]/g, '');
 };

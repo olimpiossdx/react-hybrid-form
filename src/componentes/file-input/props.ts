@@ -1,6 +1,5 @@
 import type { ExistingFile } from "../../utils/fileUtils";
 
-
 export interface IFileInputProps {
   name: string;
   label?: string;
@@ -11,5 +10,5 @@ export interface IFileInputProps {
   required?: boolean;
   disabled?: boolean;
   className?: string;
-  "data-validation"?: string; // Tipagem para o useForm
+  "data-validation"?: string;
 }

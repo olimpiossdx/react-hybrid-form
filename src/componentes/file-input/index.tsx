@@ -1,10 +1,9 @@
-import React  from 'react';
-import { UploadCloud, X, File } from 'lucide-react';
-import { formatBytes, validateFile, type ExistingFile } from '../../utils/fileUtils';
-import { toast } from '../toast';
-import type { IFileInputProps } from './props';
-import { FileItem } from './file-item';
-
+import React from "react";
+import { UploadCloud, X, File, ImageIcon } from "lucide-react";
+import { formatBytes, validateFile, type ExistingFile } from "../../utils/fileUtils";
+import type { IFileInputProps } from "./props";
+import { toast } from "../toast";
+import { FileItem } from "./file-item";
 
 const FileInput: React.FC<IFileInputProps> = ({
   name, label, multiple, accept, maxSize, initialFiles = [], required, disabled, className = "", ...rest
@@ -15,14 +14,11 @@ const FileInput: React.FC<IFileInputProps> = ({
   
   const inputRef = React.useRef<HTMLInputElement>(null);
   
-  // Ref para guardar a última versão processada das props (evita loop)
+  // Controle de estabilidade para props (evita loop)
   const prevInitialFilesRef = React.useRef<string>(JSON.stringify(initialFiles));
 
-  // Sincronia de Props Inteligente (Deep Compare Simplificado)
   React.useEffect(() => {
     const currentString = JSON.stringify(initialFiles);
-    
-    // Só atualiza o estado se o CONTEÚDO dos arquivos mudou, ignorando referências
     if (prevInitialFilesRef.current !== currentString) {
         setServerFiles(initialFiles);
         prevInitialFilesRef.current = currentString;
@@ -34,7 +30,8 @@ const FileInput: React.FC<IFileInputProps> = ({
     const dt = new DataTransfer();
     files.forEach(f => dt.items.add(f));
     inputRef.current.files = dt.files;
-    // Sem dispatchEvent para evitar loops
+    // Não disparamos evento 'change' manual aqui para evitar loops. 
+    // O React reage ao estado visual. O useForm lerá o input no submit.
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,7 +39,6 @@ const FileInput: React.FC<IFileInputProps> = ({
     if (!e.target.files) return;
 
     const rawFiles = Array.from(e.target.files);
-    // Ignora reset vazio se já temos arquivos novos (proteção contra cancelamento do dialog)
     if (rawFiles.length === 0 && newFiles.length > 0) return; 
 
     const validFiles: File[] = [];
@@ -79,6 +75,11 @@ const FileInput: React.FC<IFileInputProps> = ({
   const hasFiles = newFiles.length > 0 || serverFiles.length > 0;
   const isSinglePreview = !multiple && hasFiles;
 
+  // Lógica "Native First":
+  // Se já temos arquivos (seja do server ou novos), removemos o 'required' nativo
+  // para que o browser não bloqueie o submit dizendo "Selecione um arquivo".
+  const isNativelyRequired = required && !hasFiles;
+
   return (
     <div className={`w-full ${className}`}>
       {label && (
@@ -105,8 +106,14 @@ const FileInput: React.FC<IFileInputProps> = ({
             onChange={handleFileChange}
             multiple={multiple}
             accept={accept}
-            required={required && !hasFiles} 
             disabled={disabled}
+            
+            // 1. Controle Nativo: Só bloqueia se estiver vazio de verdade
+            required={isNativelyRequired}
+            
+            // 2. Dica para o Validador JS: Avisa que existem arquivos visuais
+            data-has-existing={hasFiles.toString()}
+            
             {...rest}
         />
 
@@ -114,7 +121,10 @@ const FileInput: React.FC<IFileInputProps> = ({
             <div className="flex items-center justify-between w-full p-4 bg-cyan-50 dark:bg-cyan-900/20">
                 <div className="flex items-center gap-3 overflow-hidden">
                     <div className="p-2 bg-white dark:bg-gray-700 rounded-lg shrink-0">
-                        <File className="text-cyan-600 dark:text-cyan-400" size={24} />
+                        {(newFiles[0]?.type.startsWith('image/') || (serverFiles[0]?.name.match(/\.(jpg|jpeg|png|gif)$/i))) 
+                            ? <ImageIcon className="text-cyan-600 dark:text-cyan-400" size={24} />
+                            : <File className="text-gray-500" size={24} />
+                        }
                     </div>
                     <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">

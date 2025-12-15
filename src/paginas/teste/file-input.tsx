@@ -47,29 +47,27 @@ const FileExample: React.FC = () => {
     });
   };
 
-  const { formProps, handleSubmit, resetSection, setValidators } =
-    useForm("file-form");
+  const { formProps, handleSubmit, resetSection, setValidators } = useForm("file-form");
 
   React.useEffect(() => {
     setValidators({
-      // CORREÇÃO: O helper retorna string | null, mas o validador espera string | undefined.
-      // Convertemos null para undefined com o operador || undefined.
-      validarAvatar: (val: FileList) =>
-        validateFileList(val, { required: true }) || undefined,
-      validarGaleria: (val: FileList) =>
-        validateFileList(val, {
-          minFiles: 2,
-          maxFiles: 5,
-          maxTotalSize: 10 * 1024 * 1024,
-        }) || undefined,
+            // CORREÇÃO: Passamos o 'field' (3º argumento) para a função de utilidade.
+            // O 'field' contém o atributo 'data-has-existing' que o componente FileInput escreveu.
+            validarAvatar: (val: FileList, field: FormField | null) => 
+                validateFileList(val, { required: true }, field) || undefined,
+            
+            validarGaleria: (val: FileList, field: FormField | null) => 
+                validateFileList(val, { minFiles: 2, maxFiles: 5, maxTotalSize: 10 * 1024 * 1024 }, field) || undefined,
 
-      validarProva: (val: FileList, _: FormField | null, formValues: any) => {
-        if (formValues.has_proof && (!val || val.length === 0)) {
-          return { message: "Anexo obrigatório.", type: "error" };
-        }
-        return undefined;
-      },
-    });
+            validarProva: (val: FileList, field: FormField | null, formValues: any) => {
+                const hasExisting = field?.getAttribute('data-has-existing') === 'true';
+                
+                if (formValues.has_proof && !hasExisting && (!val || val.length === 0)) {
+                    return { message: "Anexo obrigatório.", type: "error" };
+                }
+                return undefined;
+            }
+        });
   }, [setValidators]);
 
   const handleLoadData = () => {
