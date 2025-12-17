@@ -1,135 +1,207 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 
 interface VirtualizerProps {
   count: number;
   estimateSize: (index: number) => number;
   overscan?: number;
-  horizontal?: boolean; // Preparado para futuro, por enquanto assume vertical
+  // Aceita qualquer tipo de Ref para flexibilidade (div, ul, tbody)
+  scrollRef: React.RefObject<any>;
 }
 
-export const useVirtualizer = ({ 
-  count, 
-  estimateSize, 
-  overscan = 5
+export const useVirtualizer = ({
+  count,
+  estimateSize,
+  scrollRef,
+  overscan = 5,
 }: VirtualizerProps) => {
   const [scrollTop, setScrollTop] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
-  const scrollElementRef = useRef<HTMLElement | null>(null);
-  const isScrolling = useRef(false);
 
-  // --- CALLBACK REF (Gerenciamento de Ciclo de Vida do DOM) ---
-  // Substitui a necessidade de passar ref de fora ou usar useState no pai
-  const registerContainer = useCallback((node: HTMLElement | null) => {
-    // Limpeza do anterior
-    if (scrollElementRef.current) {
-       // Se tivermos listeners manuais para limpar, faríamos aqui.
-       // Como usamos ResizeObserver, desconectamos abaixo.
-    }
-    
-    scrollElementRef.current = node;
+  // Cache de medidas: { índice: altura }
+  const measurements = useRef<Record<number, number>>({});
 
-    if (node) {
-        // Inicializa medições assim que monta
-        setContainerHeight(node.clientHeight);
-        
-        // Configura Observer de Resize
-        const ro = new ResizeObserver(entries => {
-            for (const entry of entries) {
-                if (entry.contentRect.height > 0) {
-                    setContainerHeight(entry.contentRect.height);
-                }
-            }
-        });
-        ro.observe(node);
+  // Versionamento para forçar atualização apenas quando necessário
+  const [measurementVersion, setMeasurementVersion] = useState(0);
 
-        // Configura Listener de Scroll
-        const onScroll = () => {
-            if (!isScrolling.current) {
-                isScrolling.current = true;
-                requestAnimationFrame(() => {
-                    if (scrollElementRef.current) {
-                        setScrollTop(scrollElementRef.current.scrollTop);
-                    }
-                    isScrolling.current = false;
-                });
-            }
-        };
-        node.addEventListener('scroll', onScroll, { passive: true });
+  const resizeObserver = useRef<ResizeObserver | null>(null);
 
-        // Cleanup function anexada ao nó (truque para limpar listeners ao desmontar)
-        (node as any).__cleanup = () => {
-            ro.disconnect();
-            node.removeEventListener('scroll', onScroll);
-        };
-    } else {
-        // Se node é null, verifica se tinha cleanup
-        // (Nota: Em React moderno o ref callback null é chamado antes de desmontar)
-    }
-  }, []);
-
-  // Cleanup effect
+  // --- 1. SETUP DE EVENTOS ---
   useEffect(() => {
-      return () => {
-          if (scrollElementRef.current && (scrollElementRef.current as any).__cleanup) {
-              (scrollElementRef.current as any).__cleanup();
+    const element = scrollRef.current;
+    if (!element) return;
+
+    // A. Observer do Container (Altura da Janela)
+    const containerRo = new ResizeObserver((entries) => {
+      const height = entries[0].contentRect.height;
+      if (height > 0) setContainerHeight(height);
+    });
+    containerRo.observe(element);
+
+    // B. Observer dos Itens (Altura das Linhas)
+    resizeObserver.current = new ResizeObserver((entries) => {
+      let hasChanges = false;
+      entries.forEach((entry) => {
+        if (entry.target instanceof HTMLElement) {
+          const index = Number(entry.target.getAttribute("data-index"));
+          // Tenta pegar a altura com bordas (borderBox), fallback para contentRect
+          const height =
+            entry.borderBoxSize?.[0]?.blockSize ?? entry.contentRect.height;
+
+          // CORREÇÃO CRÍTICA: Ignorar altura 0.
+          // Isso evita que itens sejam calculados como "invisíveis", o que faria o scroll
+          // pular centenas de itens de uma vez.
+          if (
+            height > 0 &&
+            !isNaN(index) &&
+            measurements.current[index] !== height
+          ) {
+            measurements.current[index] = height;
+            hasChanges = true;
           }
-      };
-  }, []);
+        }
+      });
 
+      // Só dispara re-render se houve mudança real de tamanho e válida
+      if (hasChanges) {
+        // Otimização: Batch update no próximo frame para evitar gargalo
+        requestAnimationFrame(() => {
+          setMeasurementVersion((v) => v + 1);
+        });
+      }
+    });
 
-  // --- CÁLCULOS ---
-  const totalHeight = count * estimateSize(0);
-  const effectiveHeight = containerHeight || 500; 
-  const visibleCount = Math.ceil(effectiveHeight / estimateSize(0));
-  const startIndexRaw = Math.floor(scrollTop / estimateSize(0));
-  
+    // C. Scroll Handler (Nativo e Rápido)
+    const handleScroll = () => {
+      // Atualiza o estado do scroll diretamente
+      setScrollTop(element.scrollTop);
+    };
+
+    element.addEventListener("scroll", handleScroll, { passive: true });
+
+    // Leitura inicial
+    setContainerHeight(element.clientHeight);
+
+    return () => {
+      containerRo.disconnect();
+      resizeObserver.current?.disconnect();
+      element.removeEventListener("scroll", handleScroll);
+    };
+  }, [scrollRef]);
+
+  // --- 2. CÁLCULO INTELIGENTE ---
+
+  const { totalHeight, offsets } = useMemo(() => {
+    const offsets: number[] = [];
+    let currentOffset = 0;
+
+    for (let i = 0; i < count; i++) {
+      offsets[i] = currentOffset;
+      // Usa medida real se existir e for válida, senão usa estimativa
+      const size = measurements.current[i] || estimateSize(i);
+      currentOffset += size;
+    }
+
+    return { totalHeight: currentOffset, offsets };
+  }, [count, estimateSize, measurementVersion]);
+
+  // --- 3. JANELA VISÍVEL (BUSCA BINÁRIA) ---
+
+  const findStartIndex = () => {
+    let low = 0;
+    let high = count - 1;
+
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      const offset = offsets[mid];
+
+      if (offset < scrollTop) {
+        low = mid + 1;
+      } else if (offset > scrollTop) {
+        high = mid - 1;
+      } else {
+        return mid;
+      }
+    }
+    return Math.max(0, low - 1);
+  };
+
+  const startIndexRaw = findStartIndex();
+  const effectiveHeight = containerHeight || 500;
+
+  let endIndexRaw = startIndexRaw;
+  let currentBottom = offsets[startIndexRaw];
+
+  while (endIndexRaw < count && currentBottom < scrollTop + effectiveHeight) {
+    const size = measurements.current[endIndexRaw] || estimateSize(endIndexRaw);
+    currentBottom += size;
+    endIndexRaw++;
+  }
+
   const startIndex = Math.max(0, startIndexRaw - overscan);
-  const endIndex = Math.min(count - 1, startIndexRaw + visibleCount + overscan);
+  const endIndex = Math.min(count - 1, endIndexRaw + overscan);
 
   const virtualItems = useMemo(() => {
     const items = [];
     for (let i = startIndex; i <= endIndex; i++) {
-      const size = estimateSize(i);
-      const start = i * size;
-      
+      const size = measurements.current[i] || estimateSize(i);
       items.push({
         index: i,
-        // Props prontas para espalhar na div do item
+        start: offsets[i],
+        size: size,
         props: {
-            style: {
-                position: 'absolute' as const,
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: `${size}px`,
-                transform: `translateY(${start}px)`
-            }
-        }
+          style: {
+            position: "absolute" as const,
+            top: 0,
+            left: 0,
+            width: "100%",
+            transform: `translateY(${offsets[i]}px)`,
+          },
+          "data-index": i,
+        },
       });
     }
     return items;
-  }, [startIndex, endIndex, estimateSize]);
+  }, [startIndex, endIndex, offsets, estimateSize, measurementVersion]);
 
-  // --- API DE RETORNO (DX FOCUSED) ---
+  // --- API ---
 
-  const scrollToIndex = useCallback((index: number) => {
-      if (scrollElementRef.current) {
-          const offset = index * estimateSize(0);
-          scrollElementRef.current.scrollTo({ top: offset, behavior: 'smooth' });
+  const measureElement = useCallback((node: HTMLElement | null) => {
+    if (node) {
+      resizeObserver.current?.observe(node);
+    }
+  }, []);
+
+  const scrollToIndex = useCallback(
+    (index: number) => {
+      if (scrollRef.current) {
+        const offset = offsets[index] ?? 0;
+        scrollRef.current.scrollTo({ top: offset, behavior: "smooth" });
       }
-  }, [estimateSize]);
+    },
+    [offsets]
+  );
 
-  return { 
-      virtualItems,
-      scrollToIndex,
-      // Props para o elemento pai (quem tem scroll)
-      containerProps: {
-          ref: registerContainer,
-          style: { overflowY: 'auto' as const, height: '100%', width: '100%' }
+  return {
+    virtualItems,
+    totalHeight,
+    scrollToIndex,
+    measureElement,
+    containerProps: {
+      style: {
+        overflowY: "auto" as const,
+        height: "100%",
+        width: "100%",
+        position: "relative" as const,
+        contain: "strict",
       },
-      // Props para o elemento wrapper interno (fantasma)
-      wrapperProps: {
-          style: { height: `${totalHeight}px`, position: 'relative' as const, width: '100%' }
-      }
+    },
+    wrapperProps: {
+      style: {
+        height: `${totalHeight}px`,
+        position: "relative" as const,
+        width: "100%",
+      },
+    },
+    containerHeight,
   };
 };
