@@ -48,8 +48,6 @@ export const useVirtualizer = ({
             entry.borderBoxSize?.[0]?.blockSize ?? entry.contentRect.height;
 
           // CORREÇÃO CRÍTICA: Ignorar altura 0.
-          // Isso evita que itens sejam calculados como "invisíveis", o que faria o scroll
-          // pular centenas de itens de uma vez.
           if (
             height > 0 &&
             !isNaN(index) &&
@@ -63,7 +61,6 @@ export const useVirtualizer = ({
 
       // Só dispara re-render se houve mudança real de tamanho e válida
       if (hasChanges) {
-        // Otimização: Batch update no próximo frame para evitar gargalo
         requestAnimationFrame(() => {
           setMeasurementVersion((v) => v + 1);
         });
@@ -96,7 +93,6 @@ export const useVirtualizer = ({
 
     for (let i = 0; i < count; i++) {
       offsets[i] = currentOffset;
-      // Usa medida real se existir e for válida, senão usa estimativa
       const size = measurements.current[i] || estimateSize(i);
       currentOffset += size;
     }
@@ -104,7 +100,7 @@ export const useVirtualizer = ({
     return { totalHeight: currentOffset, offsets };
   }, [count, estimateSize, measurementVersion]);
 
-  // --- 3. JANELA VISÍVEL (BUSCA BINÁRIA) ---
+  // --- 3. JANELA VISÍVEL (BUSCA BINÁRIA OTIMIZADA) ---
 
   const findStartIndex = () => {
     let low = 0;
@@ -131,6 +127,7 @@ export const useVirtualizer = ({
   let endIndexRaw = startIndexRaw;
   let currentBottom = offsets[startIndexRaw];
 
+  // Loop curto apenas para encontrar o fim da página visível
   while (endIndexRaw < count && currentBottom < scrollTop + effectiveHeight) {
     const size = measurements.current[endIndexRaw] || estimateSize(endIndexRaw);
     currentBottom += size;

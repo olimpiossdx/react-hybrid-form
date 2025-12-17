@@ -16,7 +16,7 @@ interface IBigDataItem {
   details?: string;
 }
 
-const TOTAL_ITEMS = 10000;
+const TOTAL_ITEMS = 500000;
 
 const VirtualListExample = () => {
   const { formProps, handleSubmit, resetSection } = useForm("virtual-form");
