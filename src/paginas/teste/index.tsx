@@ -26,12 +26,13 @@ import TabMaskExample from './tab-mask';
 import { ThemeToggle } from '../../componentes/theme';
 import FileExample from './file-input';
 import TabValidationComplexExample from './tab-validation-complex';
+import TabWizardTabsExample from './tab-wizard-tabs';
 
 // Foca no nova tab/formulário-ativo
 const Homologacao: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState('curriculum');
-  
-   // Mapeamento: ID da Aba -> Componente
+
+  // Mapeamento: ID da Aba -> Componente
   // Nota: Não passamos props pois os componentes usam hooks internos (useForm, useModal, etc)
   const scenarios: Record<string, React.ReactNode> = {
     login: <LoginForm />,
@@ -59,12 +60,13 @@ const Homologacao: React.FC = () => {
     tabMaskExample: <TabMaskExample />,
     inputfile: <FileExample />,
     tabValidationComplexExample: <TabValidationComplexExample />,
+    tabWizardTabsExample: <TabWizardTabsExample />,
   };
 
   return (
- <div className='min-h-screen p-2 sm:p-4 font-sans transition-colors duration-300 bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-white'>
+    <div className='min-h-screen p-2 sm:p-4 font-sans transition-colors duration-300 bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-white'>
       <div className='max-w-7xl mx-auto'>
-        
+
         {/* HEADER com Toggle */}
         <header className='mb-8 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-gray-200 dark:border-gray-700 pb-6'>
           <div className="text-center md:text-left">
@@ -73,20 +75,20 @@ const Homologacao: React.FC = () => {
             </h1>
             <p className='text-gray-500 dark:text-gray-400 mt-2'>Ambiente de Homologação</p>
           </div>
-          
+
           <div className="flex items-center gap-4">
-             <ThemeToggle />
+            <ThemeToggle />
           </div>
         </header>
 
         {/* NAVEGAÇÃO: Card branco no light, cinza no dark */}
         <div className='flex justify-center flex-wrap gap-2 mb-6 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-colors'>
-          
+
           {/* Grupo 1: Core */}
           <TabButton tabId='login' label='Login (Nativo)' isActive={activeTab === 'login'} onClick={setActiveTab} />
           <TabButton tabId='registration' label='Registro' isActive={activeTab === 'registration'} onClick={setActiveTab} />
           <TabButton tabId='hybrid' label='Híbrido' isActive={activeTab === 'hybrid'} onClick={setActiveTab} />
-          
+
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
           {/* Grupo 2: Listas & Dados */}
@@ -107,6 +109,7 @@ const Homologacao: React.FC = () => {
           <TabButton tabId='tabMaskExample' label='Masks' isActive={activeTab === 'tabMaskExample'} onClick={setActiveTab} />
           <TabButton tabId='nestedLevelForm' label='Fractal' isActive={activeTab === 'nestedLevelForm'} onClick={setActiveTab} />
           <TabButton tabId='inputfile' label='Input file' isActive={activeTab === 'inputfile'} onClick={setActiveTab} />
+          <TabButton tabId='tabWizardTabsExample' label='Wizard tabs' isActive={activeTab === 'tabWizardTabsExample'} onClick={setActiveTab} />
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
@@ -117,14 +120,14 @@ const Homologacao: React.FC = () => {
           <TabButton tabId='validationFeedbackExample' label='Validação UX' isActive={activeTab === 'validationFeedbackExample'} onClick={setActiveTab} />
           <TabButton tabId='tabValidationComplexExample' label='Validação api validator' isActive={activeTab === 'tabValidationComplexExample'} onClick={setActiveTab} />
           <TabButton tabId='registrationComplexExample' label='Validação Mista' isActive={activeTab === 'registrationComplexExample'} onClick={setActiveTab} />
-          
+
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
           {/* Grupo 5: Infraestrutura */}
           <TabButton tabId='tabServiceExample' label='HTTP Service' isActive={activeTab === 'tabServiceExample'} onClick={setActiveTab} />
           <TabButton tabId='tabEmployeeDashboard' label='Dashboard' isActive={activeTab === 'tabEmployeeDashboard'} onClick={setActiveTab} />
           <TabButton tabId='tabGraphExample' label='Event Bus' isActive={activeTab === 'tabGraphExample'} onClick={setActiveTab} />
-          
+
         </div>
 
         {/* ÁREA DE RENDERIZAÇÃO */}

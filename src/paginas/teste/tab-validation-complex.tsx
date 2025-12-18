@@ -8,7 +8,7 @@ import useMask from "../../hooks/use-mask";
 
 const TabValidationComplexExample = () => {
   const cnpjMask = useMask('cnpj');
-  
+
   // ... setup onSubmit ...
   const onSubmit = (data: any) => {
     showModal({
@@ -17,10 +17,7 @@ const TabValidationComplexExample = () => {
     });
   };
 
-  const { formProps, setValidators } = useForm({
-    id: "complex-validation",
-    onSubmit,
-  });
+  const { formProps, setValidators } = useForm({ id: "complex-validation", onSubmit });
 
   React.useEffect(() => {
     // USO DA NOVA SINTAXE LIMPA
@@ -40,7 +37,7 @@ const TabValidationComplexExample = () => {
 
       // Condicional (Cruzada Lógica)
       cnpj: when(
-        (values) => values.temEmpresa === true,
+        (values) => values.temEmpresa,
         required("CNPJ é obrigatório para empresas")
       ),
 
