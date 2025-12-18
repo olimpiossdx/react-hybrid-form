@@ -2,17 +2,13 @@ import React from "react";
 import { showModal } from "../../componentes/modal";
 import StarRating from "../../componentes/start-rating";
 import useForm from "../../hooks/use-form";
-import {
-  pipe,
-  required,
-  minLength,
-  isEmail,
-  equalsTo,
-  when,
-} from "../../utils/validate";
+import { pipe, required, minLength, isEmail, equalsTo, when } from "../../utils/validate";
 import { MessageSquare, Lock, Building2, Mail, ShieldCheck, Star, User } from "lucide-react";
+import useMask from "../../hooks/use-mask";
 
 const TabValidationComplexExample = () => {
+  const cnpjMask = useMask('cnpj');
+  
   // ... setup onSubmit ...
   const onSubmit = (data: any) => {
     showModal({
@@ -161,6 +157,7 @@ const TabValidationComplexExample = () => {
               data-validation="cnpj"
               className="form-input"
               placeholder="00.000.000/0000-00"
+              {...cnpjMask}
             />
             <p className="text-[10px] text-gray-400 mt-1">
               * Obrigatório apenas se o checkbox acima estiver marcado.
