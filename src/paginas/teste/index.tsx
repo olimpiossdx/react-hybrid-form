@@ -25,6 +25,7 @@ import TabVirtualList from './tab-virtualize';
 import TabMaskExample from './tab-mask';
 import { ThemeToggle } from '../../componentes/theme';
 import FileExample from './file-input';
+import TabValidationComplexExample from './tab-validation-complex';
 
 // Foca no nova tab/formulário-ativo
 const Homologacao: React.FC = () => {
@@ -57,6 +58,7 @@ const Homologacao: React.FC = () => {
     tabVirtualList: <TabVirtualList />,
     tabMaskExample: <TabMaskExample />,
     inputfile: <FileExample />,
+    tabValidationComplexExample: <TabValidationComplexExample />,
   };
 
   return (
@@ -113,6 +115,7 @@ const Homologacao: React.FC = () => {
           <TabButton tabId='toastContainerExample' label='Toasts' isActive={activeTab === 'toastContainerExample'} onClick={setActiveTab} />
           <TabButton tabId='tabAlertExample' label='Alerts' isActive={activeTab === 'tabAlertExample'} onClick={setActiveTab} />
           <TabButton tabId='validationFeedbackExample' label='Validação UX' isActive={activeTab === 'validationFeedbackExample'} onClick={setActiveTab} />
+          <TabButton tabId='tabValidationComplexExample' label='Validação api validator' isActive={activeTab === 'tabValidationComplexExample'} onClick={setActiveTab} />
           <TabButton tabId='registrationComplexExample' label='Validação Mista' isActive={activeTab === 'registrationComplexExample'} onClick={setActiveTab} />
           
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
