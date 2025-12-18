@@ -10,6 +10,7 @@ import {
   equalsTo,
   when,
 } from "../../utils/validate";
+import { MessageSquare, Lock, Building2, Mail, ShieldCheck, Star, User } from "lucide-react";
 
 const TabValidationComplexExample = () => {
   // ... setup onSubmit ...
@@ -72,136 +73,156 @@ const TabValidationComplexExample = () => {
   }, [setValidators]);
 
   return (
-    <form
-      {...formProps}
-      className="space-y-6 p-6 bg-gray-800 rounded-lg shadow-lg border border-gray-700"
-    >
-      <div className="border-b border-gray-700 pb-4 mb-4">
-        <h3 className="text-xl font-bold text-white">
-          Cadastro com Regras Dinâmicas
+    <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-colors mx-auto">
+      <div className="border-b border-gray-100 dark:border-gray-700 pb-4 mb-6">
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <ShieldCheck className="text-purple-600 dark:text-purple-400" />
+          Regras Dinâmicas
         </h3>
-        <p className="text-xs text-gray-400">
-          Exemplo de validação condicional e cruzada.
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Exemplo de validação condicional (<code>when</code>) e composição (
+          <code>pipe</code>).
         </p>
       </div>
 
-      {/* BLOCO 1: DADOS BÁSICOS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs font-bold text-gray-500 uppercase">
-            Nome
-          </label>
-          <input
-            name="nome"
-            data-validation="nome"
-            className="form-input mt-1"
-          />
+      <form {...formProps} className="space-y-8">
+        {/* BLOCO 1: DADOS BÁSICOS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 flex items-center gap-1">
+              <User size={12} /> Nome
+            </label>
+            <input
+              name="nome"
+              data-validation="nome"
+              className="form-input"
+              placeholder="Seu nome"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 flex items-center gap-1">
+              <Mail size={12} /> Email
+            </label>
+            <input
+              name="email"
+              data-validation="email"
+              className="form-input"
+              placeholder="seu@email.com"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 flex items-center gap-1">
+              <Lock size={12} /> Senha
+            </label>
+            <input
+              name="senha"
+              data-validation="senha"
+              type="password"
+              className="form-input"
+              placeholder="••••••"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 flex items-center gap-1">
+              <Lock size={12} /> Confirmar
+            </label>
+            <input
+              name="confirmarSenha"
+              data-validation="confirmarSenha"
+              type="password"
+              className="form-input"
+              placeholder="••••••"
+            />
+          </div>
         </div>
 
-        <div>
-          <label className="text-xs font-bold text-gray-500 uppercase">
-            Email
-          </label>
-          <input
-            name="email"
-            data-validation="email"
-            className="form-input mt-1"
-          />
+        {/* BLOCO 2: CONDICIONAL SIMPLES */}
+        <div className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-3">
+            <input
+              name="temEmpresa"
+              type="checkbox"
+              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500 cursor-pointer"
+            />
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Represento uma Empresa
+            </label>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 flex items-center gap-1">
+              <Building2 size={12} /> CNPJ (Condicional)
+            </label>
+            <input
+              name="cnpj"
+              data-validation="cnpj"
+              className="form-input"
+              placeholder="00.000.000/0000-00"
+            />
+            <p className="text-[10px] text-gray-400 mt-1">
+              * Obrigatório apenas se o checkbox acima estiver marcado.
+            </p>
+          </div>
         </div>
 
-        <div>
-          <label className="text-xs font-bold text-gray-500 uppercase">
-            Senha
-          </label>
-          <input
-            name="senha"
-            data-validation="senha"
-            type="password"
-            className="form-input mt-1"
-          />
+        {/* BLOCO 3: CONDICIONAL COMPLEXA (Rating) */}
+        <div className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-lg border border-gray-200 dark:border-gray-700">
+          <h4 className="text-sm font-bold text-cyan-600 dark:text-cyan-400 mb-4 uppercase flex items-center gap-2">
+            <Star size={16} /> Pesquisa de Satisfação
+          </h4>
+
+          <div className="mb-4">
+            <StarRating
+              name="rating"
+              label="Sua Nota"
+              required
+              validationKey="rating"
+              className="mb-0"
+              starClassName="w-8 h-8 text-gray-300 dark:text-gray-600"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 flex items-center gap-1">
+              <MessageSquare size={12} /> Comentário
+            </label>
+            <textarea
+              name="comentario"
+              data-validation="comentario"
+              className="form-input h-24 resize-none"
+              placeholder="Conte-nos mais..."
+            />
+            <div className="mt-2 p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 text-[10px] text-gray-500 dark:text-gray-400">
+              <p>
+                <strong>Regra Dinâmica:</strong>
+              </p>
+              <ul className="list-disc pl-3 mt-1 space-y-0.5">
+                <li>
+                  Nota 1-2: Comentário <strong>Obrigatório</strong> (min 10
+                  chars).
+                </li>
+                <li>
+                  Nota 3-5: Comentário <strong>Opcional</strong> (min 5 chars se
+                  preenchido).
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
 
-        <div>
-          <label className="text-xs font-bold text-gray-500 uppercase">
-            Confirmar
-          </label>
-          <input
-            name="confirmarSenha"
-            data-validation="confirmarSenha"
-            type="password"
-            className="form-input mt-1"
-          />
+        <div className="flex justify-end pt-4 border-t border-gray-100 dark:border-gray-700">
+          <button
+            type="submit"
+            className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg shadow-lg transition-transform active:scale-95"
+          >
+            Validar Tudo
+          </button>
         </div>
-      </div>
-
-      {/* BLOCO 2: CONDICIONAL SIMPLES */}
-      <div className="bg-gray-900/50 p-4 rounded border border-gray-700">
-        <div className="flex items-center gap-2 mb-2">
-          <input
-            name="temEmpresa"
-            type="checkbox"
-            className="accent-cyan-500 w-4 h-4"
-          />
-          <label className="text-sm text-gray-300">
-            Represento uma Empresa
-          </label>
-        </div>
-
-        <div>
-          <label className="text-xs font-bold text-gray-500 uppercase">
-            CNPJ (Se marcado acima)
-          </label>
-          <input
-            name="cnpj"
-            data-validation="cnpj"
-            className="form-input mt-1"
-            placeholder="00.000.000/0000-00"
-          />
-        </div>
-      </div>
-
-      {/* BLOCO 3: CONDICIONAL COMPLEXA (Rating) */}
-      <div className="bg-gray-900/50 p-4 rounded border border-gray-700">
-        <h4 className="text-sm font-bold text-cyan-400 mb-4 uppercase">
-          Pesquisa de Satisfação
-        </h4>
-
-        <div className="mb-4">
-          <StarRating
-            name="rating"
-            label="Sua Nota"
-            required
-            validationKey="rating"
-            className="mb-0"
-          />
-        </div>
-
-        <div>
-          <label className="text-xs font-bold text-gray-500 uppercase">
-            Comentário
-          </label>
-          <textarea
-            name="comentario"
-            data-validation="comentario"
-            className="form-input mt-1 h-24 resize-none"
-            placeholder="Conte-nos mais..."
-          />
-          <p className="text-[10px] text-gray-500 mt-1">
-            * Nota 1-2: Obrigatório (min 10 chars).
-            <br />* Nota 3-5: Opcional (min 5 chars se preenchido).
-          </p>
-        </div>
-      </div>
-
-      <div className="flex justify-end pt-2">
-        <button
-          type="submit"
-          className="px-8 py-2 bg-green-600 hover:bg-green-500 text-white font-bold rounded shadow-lg transition-transform active:scale-95"
-        >
-          Validar Tudo
-        </button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 };
 
