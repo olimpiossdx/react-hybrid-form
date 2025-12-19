@@ -27,6 +27,7 @@ import { ThemeToggle } from '../../componentes/theme';
 import FileExample from './file-input';
 import TabValidationComplexExample from './tab-validation-complex';
 import TabWizardTabsExample from './tab-wizard-tabs';
+import TabDataTableExample from './tab-data-table';
 
 // Foca no nova tab/formulário-ativo
 const Homologacao: React.FC = () => {
@@ -61,6 +62,7 @@ const Homologacao: React.FC = () => {
     inputfile: <FileExample />,
     tabValidationComplexExample: <TabValidationComplexExample />,
     tabWizardTabsExample: <TabWizardTabsExample />,
+    tabDataTableExample: <TabDataTableExample />,
   };
 
   return (
@@ -110,6 +112,7 @@ const Homologacao: React.FC = () => {
           <TabButton tabId='nestedLevelForm' label='Fractal' isActive={activeTab === 'nestedLevelForm'} onClick={setActiveTab} />
           <TabButton tabId='inputfile' label='Input file' isActive={activeTab === 'inputfile'} onClick={setActiveTab} />
           <TabButton tabId='tabWizardTabsExample' label='Wizard tabs' isActive={activeTab === 'tabWizardTabsExample'} onClick={setActiveTab} />
+          <TabButton tabId='tabDataTableExample' label='Gestão de Usuários (data-table)' isActive={activeTab === 'tabDataTableExample'} onClick={setActiveTab} />
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
