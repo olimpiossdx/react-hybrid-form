@@ -28,6 +28,8 @@ import FileExample from './file-input';
 import TabValidationComplexExample from './tab-validation-complex';
 import TabWizardTabsExample from './tab-wizard-tabs';
 import TabDataTableExample from './tab-data-table';
+import TabTableScrollCRUD from './tab-table-scroll-crud';
+import TabTableStackCRUD from './tab-table-stack-crud';
 
 // Foca no nova tab/formulário-ativo
 const Homologacao: React.FC = () => {
@@ -63,6 +65,8 @@ const Homologacao: React.FC = () => {
     tabValidationComplexExample: <TabValidationComplexExample />,
     tabWizardTabsExample: <TabWizardTabsExample />,
     tabDataTableExample: <TabDataTableExample />,
+    tabTableScroll: <TabTableScrollCRUD />,
+    tabTableStack: <TabTableStackCRUD />,
   };
 
   return (
@@ -113,6 +117,8 @@ const Homologacao: React.FC = () => {
           <TabButton tabId='inputfile' label='Input file' isActive={activeTab === 'inputfile'} onClick={setActiveTab} />
           <TabButton tabId='tabWizardTabsExample' label='Wizard tabs' isActive={activeTab === 'tabWizardTabsExample'} onClick={setActiveTab} />
           <TabButton tabId='tabDataTableExample' label='Gestão de Usuários (data-table)' isActive={activeTab === 'tabDataTableExample'} onClick={setActiveTab} />
+          <TabButton tabId='tabTableScroll' label="Table (Inline)" isActive={activeTab === 'tabTableScroll'} onClick={setActiveTab} />
+          <TabButton tabId='tabTableStack' label="Table (Mobile Card)" isActive={activeTab === 'tabTableStack'} onClick={setActiveTab} />
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
