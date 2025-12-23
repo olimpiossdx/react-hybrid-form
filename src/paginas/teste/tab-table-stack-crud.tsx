@@ -9,6 +9,7 @@ import useForm from '../../hooks/use-form';
 import useTable, { type TableColumn } from '../../hooks/use-table';
 import { DataTable } from '../../componentes/data-table';
 
+
 interface User {
   id: string;
   name: string;
@@ -22,6 +23,7 @@ const ROLES_OPTIONS = [
   { label: 'Viewer', value: 'Viewer' }
 ];
 
+// --- FORMULÁRIO DO MODAL ---
 const EditUserForm = ({ user, onSave, onClose }: { user: User, onSave: (data: any) => void, onClose?: () => void }) => {
   const { formProps, resetSection } = useForm({
     id: "edit-user-modal",
@@ -32,14 +34,10 @@ const EditUserForm = ({ user, onSave, onClose }: { user: User, onSave: (data: an
   });
 
   React.useEffect(() => {
-    // Delay seguro para garantir que o modal montou e o input do Autocomplete está pronto
-    setTimeout(() => {
-      resetSection("", {
-        ...user,
-        // Garante que o Autocomplete receba o objeto { label, value } para pré-seleção visual correta
-        role: { label: user.role, value: user.role }
-      });
-    }, 50);
+    resetSection("", {
+      ...user,
+      role: { label: user.role, value: user.role }
+    });
   }, [user, resetSection]);
 
   return (
@@ -56,7 +54,6 @@ const EditUserForm = ({ user, onSave, onClose }: { user: User, onSave: (data: an
           options={ROLES_OPTIONS}
           required
           className="mb-0"
-          // Fallback visual inicial
           defaultValue={user.role}
         />
       </div>
@@ -73,7 +70,7 @@ const EditUserForm = ({ user, onSave, onClose }: { user: User, onSave: (data: an
   );
 };
 
-const TableStackCRUD = () => {
+const TabTableStackCRUD = () => {
   const { items, update } = useList<User>([
     { id: 'u1', name: 'Ana Silva', role: 'Admin', active: true },
     { id: 'u2', name: 'Carlos Souza', role: 'Editor', active: false },
@@ -91,12 +88,13 @@ const TableStackCRUD = () => {
   const table = useTable({ data: [], columns, responsiveMode: 'stack' });
 
   const handleSave = (structuralId: string, updatedData: Partial<User>) => {
+    // Atualiza a memória (que reflete na tabela)
     update(structuralId, updatedData);
     toast.success("Usuário atualizado com sucesso!");
   };
 
   const handleEdit = (user: User, structuralId: string) => {
-    // Clona o usuário para garantir nova referência e disparar o useEffect do formulário
+    // Clona para garantir atualização
     const userData = { ...user };
 
     showModal({
@@ -113,7 +111,7 @@ const TableStackCRUD = () => {
   };
 
   return (
-    <div className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 h-[600px] overflow-y-auto transition-colors custom-scrollbar">
+    <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 h-[600px] overflow-y-auto transition-colors custom-scrollbar">
 
       <div className="mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
@@ -126,6 +124,7 @@ const TableStackCRUD = () => {
       </div>
 
       <DataTable.Root instance={table}>
+        {/* O Header já é oculto automaticamente no mobile pelo CSS do Root */}
         <DataTable.Header>
           {table.columns.map(col => <DataTable.HeadCell key={col.id}>{col.header}</DataTable.HeadCell>)}
         </DataTable.Header>
@@ -134,37 +133,49 @@ const TableStackCRUD = () => {
           {items.map((item) => (
             <DataTable.Row key={item.id}>
 
-              <DataTable.Cell columnIndex={0} className="md:w-auto w-full flex items-center justify-between md:justify-start md:block">
-                <span className="md:hidden text-xs font-bold text-gray-500 uppercase">Usuário</span>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300 flex items-center justify-center font-bold text-sm shadow-sm border border-cyan-200 dark:border-cyan-800">
-                    {item.data.name.charAt(0)}
+              {/* Célula 1 */}
+              <DataTable.Cell columnIndex={0}>
+                <div className="flex items-center justify-between md:justify-start w-full">
+                  {/* Label Mobile */}
+                  <span className="md:hidden text-xs font-bold text-gray-500 uppercase mr-4">Usuário</span>
+
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300 flex items-center justify-center font-bold text-sm shadow-sm border border-cyan-200 dark:border-cyan-800">
+                      {item.data.name.charAt(0)}
+                    </div>
+                    <span className="font-bold text-gray-900 dark:text-white">{item.data.name}</span>
                   </div>
-                  <span className="font-bold text-gray-900 dark:text-white">{item.data.name}</span>
                 </div>
               </DataTable.Cell>
 
-              <DataTable.Cell columnIndex={1} className="md:w-auto w-full flex items-center justify-between md:justify-start md:block mt-2 md:mt-0">
-                <span className="md:hidden text-xs font-bold text-gray-500 uppercase">Permissão</span>
-                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                  <Shield size={14} className="text-purple-500" />
-                  {item.data.role}
+              {/* Célula 2 */}
+              <DataTable.Cell columnIndex={1}>
+                <div className="flex items-center justify-between md:justify-start w-full">
+                  <span className="md:hidden text-xs font-bold text-gray-500 uppercase mr-4">Permissão</span>
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                    <Shield size={14} className="text-purple-500" />
+                    {item.data.role}
+                  </div>
                 </div>
               </DataTable.Cell>
 
-              <DataTable.Cell columnIndex={2} className="md:w-auto w-full flex items-center justify-between md:justify-start md:block mt-2 md:mt-0">
-                <span className="md:hidden text-xs font-bold text-gray-500 uppercase">Status</span>
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${item.data.active ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'}`}>
-                  <Activity size={12} />
-                  {item.data.active ? 'Ativo' : 'Inativo'}
-                </span>
+              {/* Célula 3 */}
+              <DataTable.Cell columnIndex={2}>
+                <div className="flex items-center justify-between md:justify-start w-full">
+                  <span className="md:hidden text-xs font-bold text-gray-500 uppercase mr-4">Status</span>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${item.data.active ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'}`}>
+                    <Activity size={12} />
+                    {item.data.active ? 'Ativo' : 'Inativo'}
+                  </span>
+                </div>
               </DataTable.Cell>
 
-              <DataTable.Cell columnIndex={3} className="md:w-auto w-full flex justify-end md:justify-center mt-3 md:mt-0 pt-3 md:pt-0 border-t md:border-t-0 border-gray-200 dark:border-gray-700">
-                <div className="flex justify-end md:justify-center w-full">
+              {/* Célula 4 */}
+              <DataTable.Cell columnIndex={3}>
+                <div className="flex justify-end md:justify-center w-full pt-2 md:pt-0 mt-2 md:mt-0 border-t md:border-0 border-gray-100 dark:border-gray-800">
                   <button
                     onClick={() => handleEdit(item.data, item.id)}
-                    className="flex items-center gap-2 px-3 py-1.5 md:p-2 bg-white md:bg-transparent dark:bg-gray-800 md:dark:bg-transparent border md:border-none border-gray-300 dark:border-gray-600 rounded-md md:rounded-full transition-colors text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 shadow-sm md:shadow-none"
+                    className="flex items-center gap-2 px-3 py-1.5 md:p-2 bg-gray-50 md:bg-transparent dark:bg-gray-800 md:dark:bg-transparent border md:border-none border-gray-200 dark:border-gray-700 rounded-md md:rounded-full transition-colors text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 shadow-sm md:shadow-none"
                     title="Editar"
                   >
                     <span className="md:hidden text-xs font-bold">Editar</span>
@@ -180,4 +191,4 @@ const TableStackCRUD = () => {
   );
 };
 
-export default TableStackCRUD;
+export default TabTableStackCRUD;

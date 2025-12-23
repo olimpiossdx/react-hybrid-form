@@ -46,8 +46,7 @@ const TabDataTable = () => {
     return result;
   }, [items, searchTerm, sortState]);
 
-  // 3. FORMULÁRIO
-  const { formProps, handleSubmit } = useForm("bulk-edit-form");
+
 
   // 4. VIRTUALIZAÇÃO (Hook Genérico)
   // O hook gerencia a ref do container automaticamente
@@ -90,6 +89,9 @@ const TabDataTable = () => {
       content: <pre className="text-xs bg-gray-100 dark:bg-black p-4 rounded text-green-600 dark:text-green-400 overflow-auto max-h-60 border border-gray-200 dark:border-gray-800 font-mono">{JSON.stringify(data, null, 2)}</pre>
     });
   };
+
+  // 3. FORMULÁRIO
+  const { formProps } = useForm({ id: "bulk-edit-form", onSubmit });
 
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 h-[750px] flex flex-col transition-colors">

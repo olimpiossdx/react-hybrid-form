@@ -67,7 +67,7 @@ const Homologacao: React.FC = () => {
     tabWizard: <TabWizard />,
     tabDataTableExample: <TabDataTableExample />,
     tabTableScroll: <TabTableScrollCRUD />,
-    tabTableStack: <TabTableStackCRUD />,
+    tabTableStackCRUD: <TabTableStackCRUD />,
     TabTableCollapse: <TabTableCollapse />,
   };
 
@@ -120,7 +120,7 @@ const Homologacao: React.FC = () => {
           <TabButton tabId='tabWizard' label='Wizard tabs' isActive={activeTab === 'tabWizard'} onClick={setActiveTab} />
           <TabButton tabId='tabDataTableExample' label='Gestão de Usuários (data-table)' isActive={activeTab === 'tabDataTableExample'} onClick={setActiveTab} />
           <TabButton tabId='tabTableScroll' label="Table (Inline)" isActive={activeTab === 'tabTableScroll'} onClick={setActiveTab} />
-          <TabButton tabId='tabTableStack' label="Table (Mobile Card)" isActive={activeTab === 'tabTableStack'} onClick={setActiveTab} />
+          <TabButton tabId='tabTableStackCRUD' label="Table (Mobile Card)" isActive={activeTab === 'tabTableStackCRUD'} onClick={setActiveTab} />
           <TabButton tabId='TabTableCollapse' label="Table (Mobile collapse)" isActive={activeTab === 'TabTableCollapse'} onClick={setActiveTab} />
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>

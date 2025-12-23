@@ -1,4 +1,4 @@
-import React, { createContext, useContext, forwardRef } from 'react';
+import React, { createContext, forwardRef } from 'react';
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
 
 const TableContext = createContext<{
