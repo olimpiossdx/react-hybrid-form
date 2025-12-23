@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Calendar, FileText } from 'lucide-react';
-import useList from '../../hooks/list';
-import { showModal } from '../../componentes/modal';
+import React from 'react';
 import { DataTable } from '../../componentes/data-table';
+import useList from '../../hooks/list';
+import { ChevronDown, ChevronRight, Calendar, FileText } from 'lucide-react';
+import { showModal } from '../../componentes/modal';
 
 
 // --- MOCK DATA ---
@@ -16,20 +16,22 @@ const DATA = [
 
 const TabTableCollapse = () => {
   const { items } = useList(DATA);
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set());
 
   const toggleRow = (id: string) => {
-    const next = new Set(expandedRows);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setExpandedRows(next);
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   const handleDetails = (item: any) => {
     showModal({
       title: `Fatura ${item.id}`,
       size: 'sm',
-      content: <div className="p-4 text-gray-300">{item.details}</div>
+      content: <div className="p-4 text-gray-600 dark:text-gray-300">{item.details}</div>
     });
   };
 
@@ -46,113 +48,135 @@ const TabTableCollapse = () => {
         </p>
       </div>
 
-      {/* GRID TEMPLATE: 
-            - 40px: Seta Expansão
-            - 100px: ID
-            - 1fr: Cliente (Flexível)
-            - 120px: Data (Hidden mobile)
-            - 100px: Status (Hidden mobile)
-            - 120px: Valor (Alinhado à direita)
-        */}
-      <DataTable.Root columns="40px 100px 1fr 120px 100px 120px" className="flex-1">
+      {/* CONTAINER DE SCROLL */}
+      <DataTable.Container>
+        <DataTable.Root>
 
-        <DataTable.Header>
-          <DataTable.HeadCell></DataTable.HeadCell>
-          <DataTable.HeadCell>ID</DataTable.HeadCell>
-          <DataTable.HeadCell>Cliente</DataTable.HeadCell>
-          <DataTable.HeadCell className="hidden md:block">Data</DataTable.HeadCell>
-          <DataTable.HeadCell className="hidden md:block">Status</DataTable.HeadCell>
-          <DataTable.HeadCell align="right">Valor</DataTable.HeadCell>
-        </DataTable.Header>
+          {/* DEFINIÇÃO DE LARGURAS (Nativo) - Comentários removidos para evitar erro de hidratação */}
+          <DataTable.ColGroup>
+            <DataTable.Col style={{ width: '40px' }} />
+            <DataTable.Col style={{ width: '100px' }} />
+            <DataTable.Col />
+            <DataTable.Col className="hidden md:table-column" style={{ width: '120px' }} />
+            <DataTable.Col className="hidden md:table-column" style={{ width: '100px' }} />
+            <DataTable.Col style={{ width: '120px' }} />
+          </DataTable.ColGroup>
 
-        <DataTable.Body>
-          {items.map(item => {
-            const isExpanded = expandedRows.has(item.id);
-            const statusColors: any = {
-              'Pago': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-              'Pendente': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-              'Atrasado': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-            };
+          <DataTable.Header>
+            <DataTable.HeadCell></DataTable.HeadCell>
+            <DataTable.HeadCell>ID</DataTable.HeadCell>
+            <DataTable.HeadCell>Cliente</DataTable.HeadCell>
+            <DataTable.HeadCell className="hidden md:table-cell">Data</DataTable.HeadCell>
+            <DataTable.HeadCell className="hidden md:table-cell">Status</DataTable.HeadCell>
+            <DataTable.HeadCell align="right">Valor</DataTable.HeadCell>
+          </DataTable.Header>
 
-            return (
-              <React.Fragment key={item.id}>
-                {/* LINHA PRINCIPAL */}
-                <DataTable.Row
-                  className={`border-l-4 transition-all ${isExpanded ? 'border-l-cyan-500 bg-gray-50 dark:bg-gray-900/30' : 'border-l-transparent'}`}
-                  onClick={() => toggleRow(item.id)} // Clica na linha toda para expandir
-                >
-                  <DataTable.Cell>
-                    <button className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400">
-                      {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                    </button>
-                  </DataTable.Cell>
+          <DataTable.Body>
+            {items.map(item => {
+              const isExpanded = expandedRows.has(item.id);
+              const statusColors: any = {
+                'Pago': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800',
+                'Pendente': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
+                'Atrasado': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800'
+              };
 
-                  <DataTable.Cell>
-                    <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{item.data.id}</span>
-                  </DataTable.Cell>
+              return (
+                <React.Fragment key={item.id}>
+                  {/* LINHA PRINCIPAL */}
+                  <DataTable.Row
+                    className={`transition-all ${isExpanded ? 'bg-gray-50 dark:bg-gray-900/40' : ''}`}
+                    onClick={() => toggleRow(item.id)}
+                  >
+                    <DataTable.Cell>
+                      <button className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition-colors">
+                        {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                      </button>
+                    </DataTable.Cell>
 
-                  <DataTable.Cell>
-                    <span className="font-bold text-gray-900 dark:text-white">{item.data.client}</span>
-                  </DataTable.Cell>
+                    <DataTable.Cell>
+                      <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{item.data.id}</span>
+                    </DataTable.Cell>
 
-                  {/* Colunas que somem no mobile (hidden md:block) */}
-                  <DataTable.Cell className="hidden md:block">
-                    {item.data.date}
-                  </DataTable.Cell>
+                    <DataTable.Cell>
+                      <span className="font-bold text-gray-900 dark:text-white">{item.data.client}</span>
+                    </DataTable.Cell>
 
-                  <DataTable.Cell className="hidden md:block">
-                    <span className={`text-[10px] px-2 py-0.5 rounded border border-transparent ${statusColors[item.data.status]}`}>
-                      {item.data.status}
-                    </span>
-                  </DataTable.Cell>
+                    {/* Colunas ocultas no mobile */}
+                    <DataTable.Cell className="hidden md:table-cell">
+                      {item.data.date}
+                    </DataTable.Cell>
 
-                  <DataTable.Cell align="right" className="font-mono font-medium text-gray-900 dark:text-white">
-                    R$ {item.data.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </DataTable.Cell>
-                </DataTable.Row>
+                    <DataTable.Cell className="hidden md:table-cell">
+                      <span className={`text-[10px] px-2 py-0.5 rounded border ${statusColors[item.data.status]}`}>
+                        {item.data.status}
+                      </span>
+                    </DataTable.Cell>
 
-                {/* LINHA DE DETALHE (EXPANSÃO) */}
-                {isExpanded && (
-                  <div className="col-span-full p-4 bg-gray-50 dark:bg-black/20 border-b border-gray-200 dark:border-gray-800 text-sm animate-in slide-in-from-top-2">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <DataTable.Cell align="right">
+                      <span className="font-mono font-medium text-gray-900 dark:text-white">
+                        R$ {item.data.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </DataTable.Cell>
+                  </DataTable.Row>
 
-                      {/* Informações que foram ocultadas no mobile */}
-                      <div className="md:hidden space-y-3">
-                        <div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Data de Emissão</p>
-                          <p className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                            <Calendar size={14} className="text-cyan-500" /> {item.data.date}
-                          </p>
+                  {/* LINHA DE DETALHE (EXPANSÃO) */}
+                  {isExpanded && (
+                    <DataTable.Row className="bg-gray-50 dark:bg-gray-900/20 hover:bg-gray-50 dark:hover:bg-gray-900/20">
+                      <DataTable.Cell colSpan={6} className="p-0">
+                        <div className="p-4 pl-12 text-sm animate-in slide-in-from-top-2 fade-in">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                            {/* Informações que foram ocultadas no mobile */}
+                            <div className="md:hidden space-y-3 p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
+                              <div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Data de Emissão</p>
+                                <p className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                  <Calendar size={14} className="text-cyan-500" /> {item.data.date}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Status Atual</p>
+                                <span className={`text-xs px-2 py-1 rounded inline-block border ${statusColors[item.data.status]}`}>
+                                  {item.data.status}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Detalhes Extras */}
+                            <div className="md:col-span-2">
+                              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Descrição do Serviço</p>
+                              <div className="text-gray-700 dark:text-gray-300 leading-relaxed border-l-2 border-gray-300 dark:border-gray-600 pl-3 py-1">
+                                {item.data.details}
+                              </div>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDetails(item.data); }}
+                                className="mt-3 text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 font-bold"
+                              >
+                                <FileText size={12} /> Ver Fatura Original
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Status Atual</p>
-                          <span className={`text-xs px-2 py-1 rounded inline-block ${statusColors[item.data.status]}`}>
-                            {item.data.status}
-                          </span>
-                        </div>
-                      </div>
+                      </DataTable.Cell>
+                    </DataTable.Row>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </DataTable.Body>
 
-                      {/* Detalhes Extras (Visível sempre que expandir) */}
-                      <div className="md:col-span-2">
-                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Descrição do Serviço</p>
-                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed border-l-2 border-gray-300 dark:border-gray-600 pl-3">
-                          {item.data.details}
-                        </p>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDetails(item.data); }}
-                          className="mt-3 text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1"
-                        >
-                          <FileText size={12} /> Ver Fatura Original
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </React.Fragment>
-            );
-          })}
-        </DataTable.Body>
-      </DataTable.Root>
+          <DataTable.Footer>
+            <DataTable.Row>
+              <DataTable.Cell colSpan={3}>Total</DataTable.Cell>
+              <DataTable.Cell className="hidden md:table-cell" colSpan={2}></DataTable.Cell>
+              <DataTable.Cell align="right">
+                R$ {items.reduce((acc, curr) => acc + curr.data.amount, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </DataTable.Cell>
+            </DataTable.Row>
+          </DataTable.Footer>
+
+        </DataTable.Root>
+      </DataTable.Container>
     </div>
   );
 };

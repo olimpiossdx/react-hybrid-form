@@ -1,210 +1,173 @@
 import React, { createContext, useContext, forwardRef } from 'react';
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
 
-// Contexto de Configuração
 const TableContext = createContext<{
-  columns: string;
-  minWidth?: string;
   responsiveMode?: 'scroll' | 'stack' | 'collapse';
 }>({
-  columns: '1fr',
-  minWidth: '100%',
   responsiveMode: 'scroll'
 });
 
-interface RootProps extends React.HTMLAttributes<HTMLDivElement> {
-  columns?: string;
+interface RootProps extends React.TableHTMLAttributes<HTMLTableElement> {
   instance?: {
-    columns: Array<{ width?: string | number; id: string }>;
     responsiveMode?: 'scroll' | 'stack' | 'collapse';
     [key: string]: any;
   };
-  minWidth?: string;
   children: React.ReactNode;
 }
 
 // 1. ROOT
-export const TableRoot: React.FC<RootProps> = ({
-  columns, instance, minWidth = '100%', children, className = "", ...props
-}) => {
-
-  const resolveGridTemplate = () => {
-    if (columns) return columns;
-    if (instance?.columns) {
-      return instance.columns.map(col => {
-        if (!col.width) return '1fr';
-        return typeof col.width === 'number' ? `${col.width}px` : col.width;
-      }).join(' ');
-    }
-    return '1fr';
-  };
-
-  const gridColumns = resolveGridTemplate();
+export const TableRoot = forwardRef<HTMLTableElement, RootProps>(({
+  instance, children, className = "", ...props
+}, ref) => {
   const responsiveMode = instance?.responsiveMode || 'scroll';
 
   return (
-    <TableContext.Provider value={{ columns: gridColumns, minWidth, responsiveMode }}>
-      <div
+    <TableContext.Provider value={{ responsiveMode }}>
+      <table
+        ref={ref}
         role="table"
-        // Injeta a variável CSS globalmente para este escopo
-        style={{ '--table-cols': gridColumns } as React.CSSProperties}
-        className={`
-            flex flex-col bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden 
-            ${className}
-        `}
+        className={`w-full text-sm text-left border-collapse ${className}`}
         {...props}
       >
         {children}
-      </div>
+      </table>
     </TableContext.Provider>
   );
-};
+});
+TableRoot.displayName = "Table.Root";
 
-// 2. CONTAINER
+// 2. CONTAINER (Wrapper de Scroll)
 export const TableContainer = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ children, className = "", ...props }, ref) => (
   <div
     ref={ref}
-    className={`overflow-auto relative flex-1 custom-scrollbar ${className}`}
+    className={`w-full overflow-auto relative custom-scrollbar bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm ${className}`}
     {...props}
   >
     {children}
   </div>
 ));
-TableContainer.displayName = "TableContainer";
+TableContainer.displayName = "Table.Container";
 
-// 3. HEADER
-export const TableHeader: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { minWidth, responsiveMode } = useContext(TableContext);
+// 3. CAPTION
+export const TableCaption = ({ children, className = "", ...props }: React.HTMLAttributes<HTMLTableCaptionElement>) => (
+  <caption className={`p-4 text-lg font-semibold text-left text-gray-900 dark:text-white bg-white dark:bg-gray-800 caption-top border-b border-gray-200 dark:border-gray-700 ${className}`} {...props}>
+    {children}
+  </caption>
+);
 
-  // No modo stack, o cabeçalho some em telas pequenas porque os labels vão para dentro dos cards
-  const responsiveClass = responsiveMode === 'stack' ? 'hidden md:block' : '';
+// 4. COLGROUP
+export const TableColGroup = ({ children }: { children: React.ReactNode }) => (
+  <colgroup>{children}</colgroup>
+);
 
+export const TableCol = (props: React.ColHTMLAttributes<HTMLTableColElement>) => (
+  <col {...props} />
+);
+
+// 5. HEADER (CORREÇÃO: Adicionado <tr> interno)
+export const TableHeader = ({ children, className = "", ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => {
   return (
-    <div
-      role="rowgroup"
-      className={`sticky top-0 z-20 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 ${responsiveClass}`}
-      style={{ minWidth }}
+    <thead
+      className={`
+        text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-900/90 dark:text-gray-400 
+        sticky top-0 z-10 shadow-sm
+        ${className}
+      `}
+      {...props}
     >
-      {/* Sempre Grid no Header */}
-      <div role="row" className="grid items-center gap-4 px-4 py-3" style={{ gridTemplateColumns: 'var(--table-cols)' }}>
-        {children}
-      </div>
-    </div>
+      <tr>{children}</tr>
+    </thead>
   );
 };
 
-// 4. HEAD CELL
-interface HeadCellProps {
-  children: React.ReactNode;
-  className?: string;
-  align?: 'left' | 'center' | 'right';
+// 6. HEAD CELL
+interface HeadCellProps extends React.ThHTMLAttributes<HTMLTableCellElement> {
   sortable?: boolean;
   direction?: 'asc' | 'desc' | null;
   onSort?: () => void;
 }
 
-export const TableHeadCell: React.FC<HeadCellProps> = ({ children, className = "", align = 'left', sortable, direction, onSort }) => (
-  <div
-    role="columnheader"
+export const TableHeadCell: React.FC<HeadCellProps> = ({
+  children, className = "", align = 'left', sortable, direction, onSort, ...props
+}) => (
+  <th
+    scope="col"
     onClick={sortable ? onSort : undefined}
     className={`
-        flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 select-none
-        ${align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start'}
-        ${sortable ? 'cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 transition-colors' : ''}
-        ${className}
-    `}
-  >
-    {children}
-    {sortable && (
-      <span className="text-gray-400">
-        {direction === 'asc' ? <ArrowUp size={14} /> : direction === 'desc' ? <ArrowDown size={14} /> : <ChevronsUpDown size={14} />}
-      </span>
-    )}
-  </div>
-);
-
-// 5. BODY
-export const TableBody = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ children, className = "", ...props }, ref) => {
-  const { minWidth } = useContext(TableContext);
-  return (
-    <div
-      ref={ref}
-      role="rowgroup"
-      className={`flex-1 overflow-y-auto custom-scrollbar relative ${className}`}
-      {...props}
-    >
-      <div style={{ minWidth, height: '100%' }}>
-        {children}
-      </div>
-    </div>
-  );
-});
-TableBody.displayName = "TableBody";
-
-// 6. ROW (Onde a mágica da responsividade acontece)
-export const TableRow: React.FC<React.HTMLAttributes<HTMLDivElement> & { onClick?: () => void }> = ({ children, className = "", onClick, style, ...props }) => {
-  const { responsiveMode } = useContext(TableContext);
-
-  let layoutClasses = "";
-
-  if (responsiveMode === 'stack') {
-    // Mobile: Flex Column (Card) com bordas e espaçamento
-    // Desktop (md): Grid (Tabela) limpa
-    layoutClasses = `
-        flex flex-col p-4 mb-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30
-        md:grid md:p-0 md:mb-0 md:rounded-none md:border-0 md:border-b md:bg-transparent md:dark:bg-transparent md:items-center md:gap-4 md:px-4 md:min-h-[57px]
-      `;
-  } else {
-    // Padrão Scroll: Sempre Grid
-    layoutClasses = "grid items-center gap-4 px-4 border-b border-gray-100 dark:border-gray-800 min-h-[57px]";
-  }
-
-  // Interatividade
-  const interactiveClasses = onClick
-    ? 'cursor-pointer active:bg-gray-100 dark:active:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors'
-    : 'hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors';
-
-  return (
-    <div
-      role="row"
-      onClick={onClick}
-      style={{
-        ...style,
-        // APLICAÇÃO DE GRID UNIVERSAL:
-        // No mobile (flex), essa propriedade é ignorada pelo browser.
-        // No desktop (grid), ela define as colunas corretamente.
-        gridTemplateColumns: 'var(--table-cols)'
-      }}
-      className={`
-        last:border-0 
-        ${layoutClasses}
-        ${interactiveClasses}
-        ${className}
-      `}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-};
-
-// 7. CELL
-export const TableCell: React.FC<{ children: React.ReactNode; className?: string; align?: 'left' | 'center' | 'right'; columnIndex?: number }> = ({
-  children, className = "", align = 'left', columnIndex
-}) => (
-  <div
-    role="cell"
-    data-column-index={columnIndex}
-    className={`
-        text-sm text-gray-700 dark:text-gray-200 truncate 
-        w-full md:w-auto 
+        px-6 py-3 font-bold whitespace-nowrap
         text-${align} 
-        /* No modo stack mobile, itens podem precisar de margem ou ajuste flex, mas deixamos genérico aqui */
+        ${sortable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group' : ''}
         ${className}
     `}
+    {...props}
   >
-    {children}
-  </div>
+    <div className={`flex items-center gap-1 ${align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start'}`}>
+      {children}
+      {sortable && (
+        <span className="text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200">
+          {direction === 'asc' ? <ArrowUp size={14} /> : direction === 'desc' ? <ArrowDown size={14} /> : <ChevronsUpDown size={14} />}
+        </span>
+      )}
+    </div>
+  </th>
 );
 
-export const DataTable = { Root: TableRoot, Container: TableContainer, Header: TableHeader, HeadCell: TableHeadCell, Body: TableBody, Row: TableRow, Cell: TableCell };
+// 7. BODY
+export const TableBody = forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(({ children, className = "", ...props }, ref) => (
+  <tbody ref={ref} className={`divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800 ${className}`} {...props}>
+    {children}
+  </tbody>
+));
+TableBody.displayName = "Table.Body";
+
+// 8. ROW
+interface RowProps extends React.HTMLAttributes<HTMLTableRowElement> {
+  onClick?: () => void;
+}
+
+export const TableRow: React.FC<RowProps> = ({ children, className = "", onClick, ...props }) => (
+  <tr
+    onClick={onClick}
+    className={`
+      hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors
+      ${onClick ? 'cursor-pointer active:bg-gray-100 dark:active:bg-gray-700' : ''} 
+      ${className}
+    `}
+    {...props}
+  >
+    {children}
+  </tr>
+);
+
+// 9. CELL
+export const TableCell: React.FC<React.TdHTMLAttributes<HTMLTableCellElement> & { columnIndex?: number; label?: string }> = ({
+  children, className = "", align = 'left', columnIndex, label, ...props
+}) => (
+  <td
+    className={`px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-200 text-${align} ${className}`}
+    {...props}
+  >
+    {children}
+  </td>
+);
+
+// 10. FOOTER
+export const TableFooter = ({ children, className = "", ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
+  <tfoot className={`bg-gray-50 dark:bg-gray-900 border-t-2 border-gray-200 dark:border-gray-700 font-semibold text-gray-900 dark:text-white ${className}`} {...props}>
+    {children}
+  </tfoot>
+);
+
+export const DataTable = {
+  Container: TableContainer,
+  Root: TableRoot,
+  Caption: TableCaption,
+  ColGroup: TableColGroup,
+  Col: TableCol,
+  Header: TableHeader,
+  HeadCell: TableHeadCell,
+  Body: TableBody,
+  Row: TableRow,
+  Cell: TableCell,
+  Footer: TableFooter
+};

@@ -26,11 +26,11 @@ import TabMaskExample from './tab-mask';
 import { ThemeToggle } from '../../componentes/theme';
 import FileExample from './file-input';
 import TabValidationComplexExample from './tab-validation-complex';
-import TabWizardTabsExample from './tab-wizard-tabs';
 import TabDataTableExample from './tab-data-table';
 import TabTableScrollCRUD from './tab-table-scroll-crud';
 import TabTableStackCRUD from './tab-table-stack-crud';
 import TabTableCollapse from './tab-table-collapse';
+import TabWizard from './tab-wizard-tabs';
 
 // Foca no nova tab/formulário-ativo
 const Homologacao: React.FC = () => {
@@ -64,7 +64,7 @@ const Homologacao: React.FC = () => {
     tabMaskExample: <TabMaskExample />,
     inputfile: <FileExample />,
     tabValidationComplexExample: <TabValidationComplexExample />,
-    tabWizardTabsExample: <TabWizardTabsExample />,
+    tabWizard: <TabWizard />,
     tabDataTableExample: <TabDataTableExample />,
     tabTableScroll: <TabTableScrollCRUD />,
     tabTableStack: <TabTableStackCRUD />,
@@ -73,7 +73,7 @@ const Homologacao: React.FC = () => {
 
   return (
     <div className='min-h-screen p-2 sm:p-4 font-sans transition-colors duration-300 bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-white'>
-      <div className='max-w-7xl mx-auto'>
+      <div className='max-w-8xl mx-auto'>
 
         {/* HEADER com Toggle */}
         <header className='mb-8 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-gray-200 dark:border-gray-700 pb-6'>
@@ -103,7 +103,7 @@ const Homologacao: React.FC = () => {
           <TabButton tabId='nestedList' label='Listas' isActive={activeTab === 'nestedList'} onClick={setActiveTab} />
           <TabButton tabId='curriculum' label='Currículo' isActive={activeTab === 'curriculum'} onClick={setActiveTab} />
           <TabButton tabId='budgetProjectForm' label='Orçamento' isActive={activeTab === 'budgetProjectForm'} onClick={setActiveTab} />
-          <TabButton tabId='tabVirtualList' label='Virtual List (10k)' isActive={activeTab === 'tabVirtualList'} onClick={setActiveTab} />
+          <TabButton tabId='tabVirtualList' label='Virtual List (500k)' isActive={activeTab === 'tabVirtualList'} onClick={setActiveTab} />
           <TabButton tabId='tabEventBusForm' label='List Patterns' isActive={activeTab === 'tabEventBusForm'} onClick={setActiveTab} />
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
@@ -117,7 +117,7 @@ const Homologacao: React.FC = () => {
           <TabButton tabId='tabMaskExample' label='Masks' isActive={activeTab === 'tabMaskExample'} onClick={setActiveTab} />
           <TabButton tabId='nestedLevelForm' label='Fractal' isActive={activeTab === 'nestedLevelForm'} onClick={setActiveTab} />
           <TabButton tabId='inputfile' label='Input file' isActive={activeTab === 'inputfile'} onClick={setActiveTab} />
-          <TabButton tabId='tabWizardTabsExample' label='Wizard tabs' isActive={activeTab === 'tabWizardTabsExample'} onClick={setActiveTab} />
+          <TabButton tabId='tabWizard' label='Wizard tabs' isActive={activeTab === 'tabWizard'} onClick={setActiveTab} />
           <TabButton tabId='tabDataTableExample' label='Gestão de Usuários (data-table)' isActive={activeTab === 'tabDataTableExample'} onClick={setActiveTab} />
           <TabButton tabId='tabTableScroll' label="Table (Inline)" isActive={activeTab === 'tabTableScroll'} onClick={setActiveTab} />
           <TabButton tabId='tabTableStack' label="Table (Mobile Card)" isActive={activeTab === 'tabTableStack'} onClick={setActiveTab} />

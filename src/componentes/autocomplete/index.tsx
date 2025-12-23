@@ -311,42 +311,40 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
         )}
         {filteredSuggestions.length > 0
           ? filteredSuggestions.map((suggestion, index) => (
-              <li
-                key={suggestion.value}
-                role="option"
-                aria-selected={selectedValue === suggestion.value}
-                className={`
+            <li
+              key={suggestion.value}
+              role="option"
+              aria-selected={selectedValue === suggestion.value}
+              className={`
                     px-4 py-2.5 text-sm cursor-pointer transition-colors border-b border-gray-100 dark:border-gray-700/50 last:border-0
-                    ${
-                      index === activeIndex
-                        ? "bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-100"
-                        : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    }
-                    ${
-                      selectedValue === suggestion.value
-                        ? "font-bold bg-gray-100 dark:bg-gray-700"
-                        : ""
-                    }
+                    ${index === activeIndex
+                  ? "bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-100"
+                  : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                }
+                    ${selectedValue === suggestion.value
+                  ? "font-bold bg-gray-100 dark:bg-gray-700"
+                  : ""
+                }
                     ${!renderOption ? "" : ""}
                 `}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSelectOption(suggestion);
-                }}
-              >
-                {renderOption
-                  ? renderOption(suggestion)
-                  : getOptionLabel(suggestion)}
-              </li>
-            ))
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSelectOption(suggestion);
+              }}
+            >
+              {renderOption
+                ? renderOption(suggestion)
+                : getOptionLabel(suggestion)}
+            </li>
+          ))
           : !isBusy &&
-            !errorMessage && (
-              <li className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 text-center">
-                {onSearch && !inputValue
-                  ? "Digite para pesquisar..."
-                  : "Nenhum resultado encontrado."}
-              </li>
-            )}
+          !errorMessage && (
+            <li className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 text-center">
+              {onSearch && !inputValue
+                ? "Digite para pesquisar..."
+                : "Nenhum resultado encontrado."}
+            </li>
+          )}
         {isLoadingMore && (
           <li className="px-4 py-2 text-xs text-center text-blue-600 dark:text-blue-400 border-t border-gray-100 dark:border-gray-700">
             Carregando mais...
@@ -362,7 +360,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
 
   return (
     <div
-      className={`relative mb-4 ${className}`}
+      className={`${className}`}
       ref={containerRef}
       onBlur={handleBlur}
     >
