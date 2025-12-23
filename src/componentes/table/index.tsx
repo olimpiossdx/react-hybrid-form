@@ -1,111 +1,127 @@
-import React, { createContext, useContext } from 'react';
-import type { TableColumn, ResponsiveMode } from '../../hooks/use-table';
+import React, { forwardRef } from 'react';
 
-// Contexto para passar configurações da tabela para as linhas/células
-const TableContext = createContext<{
-  columns: TableColumn<any>[];
-  responsiveMode: ResponsiveMode;
-}>({ columns: [], responsiveMode: 'scroll' });
-
-// --- ROOT ---
-interface TableRootProps {
-  instance: any; // Retorno do useTable
+// --- 1. CONTAINER (Wrapper de Scroll) ---
+// Responsável pelo scroll (X e Y) e pelo isolamento do contexto de layout.
+// Aceita ref para conectar com virtualizadores.
+interface ContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  className?: string;
 }
 
-export const Root: React.FC<TableRootProps> = ({ instance, children, className = "" }) => {
-  const { responsiveMode } = instance;
-
-  // Classes para modo Stack (Mobile Cards)
-  // No mobile, a tabela vira flex/block. No desktop (md), volta a ser table.
-  const stackClasses = responsiveMode === 'stack'
-    ? "[&_table]:block md:[&_table]:table [&_thead]:hidden md:[&_thead]:table-header-group [&_tr]:block md:[&_tr]:table-row [&_tr]:mb-4 md:[&_tr]:mb-0 [&_tr]:border [&_tr]:rounded-lg md:[&_tr]:border-b-0 [&_td]:flex md:[&_td]:table-cell [&_td]:justify-between [&_td]:px-4 [&_td]:py-2 [&_td]:text-right md:[&_td]:text-left [&_td::before]:content-[attr(data-label)] [&_td::before]:font-bold [&_td::before]:text-gray-500 [&_td::before]:mr-4 md:[&_td::before]:hidden"
-    : "";
-
-  return (
-    <TableContext.Provider value={{ columns: instance.columns, responsiveMode }}>
-      <div className={`w-full overflow-x-auto ${stackClasses} ${className}`}>
-        <table className="w-full text-sm text-left border-collapse">
-          {children}
-        </table>
-      </div>
-    </TableContext.Provider>
-  );
-};
-
-// --- SEMÂNTICA HTML ---
-export const Caption = ({ children }: { children: React.ReactNode }) => (
-  <caption className="p-4 text-lg font-semibold text-left text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+export const Container = forwardRef<HTMLDivElement, ContainerProps>(({ children, className = "", ...props }, ref) => (
+  <div
+    ref={ref}
+    className={`w-full overflow-auto relative custom-scrollbar bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 ${className}`}
+    {...props}
+  >
     {children}
-  </caption>
-);
+  </div>
+));
+Container.displayName = "Table.Container";
 
-export const ColGroup = () => {
-  const { columns } = useContext(TableContext);
-  return (
-    <colgroup>
-      {columns.map(col => (
-        <col key={col.id} style={{ width: col.width }} />
-      ))}
-    </colgroup>
-  );
-};
+// --- 2. ROOT (A Tabela em si) ---
+export const Root = forwardRef<HTMLTableElement, React.TableHTMLAttributes<HTMLTableElement>>(({ children, className = "", ...props }, ref) => (
+  <table
+    ref={ref}
+    className={`w-full text-sm text-left text-gray-500 dark:text-gray-400 border-collapse ${className}`}
+    {...props}
+  >
+    {children}
+  </table>
+));
+Root.displayName = "Table.Root";
 
-export const Header = ({ children }: { children: React.ReactNode }) => (
-  <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-    <tr>{children}</tr>
+// --- 3. SEÇÕES SEMÂNTICAS ---
+
+export const Header = ({ children, className = "", ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
+  <thead
+    className={`
+      text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-900/50 dark:text-gray-400 
+      sticky top-0 z-10 shadow-sm
+      ${className}
+    `}
+    {...props}
+  >
+    {children}
   </thead>
 );
 
-export const HeadCell = ({ children, onClick }: { children: React.ReactNode, onClick?: () => void }) => (
-  <th scope="col" className="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors" onClick={onClick}>
-    {children}
-  </th>
-);
-
-export const Body = ({ children }: { children: React.ReactNode }) => (
-  <tbody className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+export const Body = forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(({ children, className = "", ...props }, ref) => (
+  <tbody ref={ref} className={`divide-y divide-gray-200 dark:divide-gray-700 ${className}`} {...props}>
     {children}
   </tbody>
-);
+));
+Body.displayName = "Table.Body";
 
-export const Footer = ({ children }: { children: React.ReactNode }) => (
-  <tfoot className="bg-gray-50 dark:bg-gray-700 font-bold text-gray-900 dark:text-white">
+export const Footer = ({ children, className = "", ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
+  <tfoot className={`bg-gray-50 dark:bg-gray-800 border-t-2 border-gray-200 dark:border-gray-700 ${className}`} {...props}>
     {children}
   </tfoot>
 );
 
-// --- LINHA INTELIGENTE ---
-export const Row = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <tr className={`hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b dark:border-gray-700 ${className}`}>
+// --- 4. COLUNAS E LINHAS ---
+
+export const ColGroup = ({ children }: { children: React.ReactNode }) => (
+  <colgroup>{children}</colgroup>
+);
+
+export const Col = (props: React.ColHTMLAttributes<HTMLTableColElement>) => (
+  <col {...props} />
+);
+
+export const Row = ({ children, className = "", ...props }: React.HTMLAttributes<HTMLTableRowElement>) => (
+  <tr
+    className={`
+      bg-white dark:bg-gray-800 
+      hover:bg-gray-50 dark:hover:bg-gray-700/50 
+      transition-colors duration-150
+      ${className}
+    `}
+    {...props}
+  >
     {children}
   </tr>
 );
 
-// --- CÉLULA INTELIGENTE (Auto Label) ---
-interface CellProps {
-  children?: React.ReactNode;
-  columnIndex?: number; // Para saber qual label usar no modo stack
-  className?: string;
-}
+// --- 5. CÉLULAS ---
 
-export const Cell = ({ children, columnIndex, className = "" }: CellProps) => {
-  const { columns, responsiveMode } = useContext(TableContext);
+export const HeadCell = ({ children, className = "", align = 'left', ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) => (
+  <th
+    scope="col"
+    className={`px-6 py-3 font-bold whitespace-nowrap text-${align} ${className}`}
+    {...props}
+  >
+    {children}
+  </th>
+);
 
-  // Se estivermos em modo stack, precisamos injetar o label da coluna para o CSS ::before pegar
-  const label = (responsiveMode === 'stack' && columnIndex !== undefined && !columns[columnIndex]?.hideLabelOnStack)
-    ? columns[columnIndex]?.header
-    : undefined;
+export const Cell = ({ children, className = "", align = 'left', ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) => (
+  <td
+    className={`px-6 py-4 whitespace-nowrap text-${align} ${className}`}
+    {...props}
+  >
+    {children}
+  </td>
+);
 
-  return (
-    <td
-      data-label={label} // O CSS usa isso: content: attr(data-label)
-      className={`px-6 py-4 ${className}`}
-    >
-      {children}
-    </td>
-  );
+// --- 6. HELPERS VISUAIS (Opcionais) ---
+
+export const Caption = ({ children, className = "" }: React.HTMLAttributes<HTMLTableCaptionElement>) => (
+  <caption className={`p-4 text-lg font-semibold text-left text-gray-900 dark:text-white bg-white dark:bg-gray-800 caption-top ${className}`}>
+    {children}
+  </caption>
+);
+
+// Namespace de Exportação
+export const Table = {
+  Container,
+  Root,
+  Header,
+  Body,
+  Footer,
+  ColGroup,
+  Col,
+  Row,
+  HeadCell,
+  Cell,
+  Caption
 };
-
-export const Table = { Root, Caption, ColGroup, Header, HeadCell, Body, Row, Cell, Footer };

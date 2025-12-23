@@ -30,6 +30,7 @@ import TabWizardTabsExample from './tab-wizard-tabs';
 import TabDataTableExample from './tab-data-table';
 import TabTableScrollCRUD from './tab-table-scroll-crud';
 import TabTableStackCRUD from './tab-table-stack-crud';
+import TabTableCollapse from './tab-table-collapse';
 
 // Foca no nova tab/formulário-ativo
 const Homologacao: React.FC = () => {
@@ -67,6 +68,7 @@ const Homologacao: React.FC = () => {
     tabDataTableExample: <TabDataTableExample />,
     tabTableScroll: <TabTableScrollCRUD />,
     tabTableStack: <TabTableStackCRUD />,
+    TabTableCollapse: <TabTableCollapse />,
   };
 
   return (
@@ -119,6 +121,7 @@ const Homologacao: React.FC = () => {
           <TabButton tabId='tabDataTableExample' label='Gestão de Usuários (data-table)' isActive={activeTab === 'tabDataTableExample'} onClick={setActiveTab} />
           <TabButton tabId='tabTableScroll' label="Table (Inline)" isActive={activeTab === 'tabTableScroll'} onClick={setActiveTab} />
           <TabButton tabId='tabTableStack' label="Table (Mobile Card)" isActive={activeTab === 'tabTableStack'} onClick={setActiveTab} />
+          <TabButton tabId='TabTableCollapse' label="Table (Mobile collapse)" isActive={activeTab === 'TabTableCollapse'} onClick={setActiveTab} />
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
