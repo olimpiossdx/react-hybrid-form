@@ -31,6 +31,7 @@ import TabTableScrollCRUD from './tab-scroll-crud';
 import TabTableStackCRUD from './tab-table-stack-crud';
 import TabTableCollapse from './tab-table-collapse';
 import TabWizard from './tab-wizard-tabs';
+import TabPagination from './tab-pagination';
 
 // Foca no nova tab/formulário-ativo
 const Homologacao: React.FC = () => {
@@ -68,7 +69,8 @@ const Homologacao: React.FC = () => {
     tabDataTableExample: <TabDataTableExample />,
     tabTableScroll: <TabTableScrollCRUD />,
     tabTableStackCRUD: <TabTableStackCRUD />,
-    TabTableCollapse: <TabTableCollapse />,
+    tabTableCollapse: <TabTableCollapse />,
+    tabPagination: <TabPagination />,
   };
 
   return (
@@ -121,7 +123,8 @@ const Homologacao: React.FC = () => {
           <TabButton tabId='tabDataTableExample' label='Gestão de Usuários (data-table)' isActive={activeTab === 'tabDataTableExample'} onClick={setActiveTab} />
           <TabButton tabId='tabTableScroll' label="Table (Inline)" isActive={activeTab === 'tabTableScroll'} onClick={setActiveTab} />
           <TabButton tabId='tabTableStackCRUD' label="Table (Mobile Card)" isActive={activeTab === 'tabTableStackCRUD'} onClick={setActiveTab} />
-          <TabButton tabId='TabTableCollapse' label="Table (Mobile collapse)" isActive={activeTab === 'TabTableCollapse'} onClick={setActiveTab} />
+          <TabButton tabId='tabTableCollapse' label="Table (Mobile collapse)" isActive={activeTab === 'tabTableCollapse'} onClick={setActiveTab} />
+          <TabButton tabId='tabPagination' label="Paginação" isActive={activeTab === 'tabPagination'} onClick={setActiveTab} />
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 

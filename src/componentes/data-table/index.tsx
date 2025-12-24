@@ -1,5 +1,6 @@
 import React, { createContext,  forwardRef } from 'react';
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
+import Pagination from '../pagination';
 
 // Contexto para compartilhar configurações entre componentes da tabela
 const TableContext = createContext<{ 
@@ -8,7 +9,7 @@ const TableContext = createContext<{
   responsiveMode: 'scroll' 
 });
 
-interface RootProps extends React.TableHTMLAttributes<HTMLTableElement> {
+interface RootProps extends React.HTMLAttributes<HTMLDivElement> {
   instance?: {
     responsiveMode?: 'scroll' | 'stack' | 'collapse';
     [key: string]: any;
@@ -16,15 +17,48 @@ interface RootProps extends React.TableHTMLAttributes<HTMLTableElement> {
   children: React.ReactNode;
 }
 
-// 1. ROOT (A Tabela em si)
-export const TableRoot = forwardRef<HTMLTableElement, RootProps>(({ 
+// 1. ROOT (Wrapper Principal + Contexto)
+// Renderiza uma DIV para encapsular a tabela e a paginação/toolbar.
+export const TableRoot = forwardRef<HTMLDivElement, RootProps>(({ 
   instance, children, className = "", ...props 
 }, ref) => {
-  
   const responsiveMode = instance?.responsiveMode || 'scroll';
   
-  // Classes para modo Stack (Mobile Cards)
-  // Transforma a tabela em blocos no mobile
+  return (
+    <TableContext.Provider value={{ responsiveMode }}>
+      <div 
+        ref={ref}
+        role="region"
+        aria-label="Tabela de Dados"
+        className={`flex flex-col bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden ${className}`}
+        {...props}
+      >
+        {children}
+      </div>
+    </TableContext.Provider>
+  );
+});
+TableRoot.displayName = "Table.Root";
+
+// 2. CONTAINER (Wrapper de Scroll)
+// Responsável pelo scroll (X e Y). Deve envolver a <Table>.
+export const TableContainer = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ children, className = "", ...props }, ref) => (
+  <div 
+    ref={ref}
+    className={`w-full overflow-auto relative custom-scrollbar ${className}`}
+    {...props}
+  >
+    {children}
+  </div>
+));
+TableContainer.displayName = "Table.Container";
+
+// 3. TABLE (A Tag Tabela Real - Obrigatória)
+// Deve ser filha direta de Container ou Root.
+export const TableMain = forwardRef<HTMLTableElement, React.TableHTMLAttributes<HTMLTableElement>>(({ children, className = "", ...props }, ref) => {
+  const { responsiveMode } = React.useContext(TableContext);
+
+  // Classes para transformar a tabela em Cards no mobile (Modo Stack)
   const stackClasses = responsiveMode === 'stack' 
     ? `
       md:table 
@@ -42,75 +76,80 @@ export const TableRoot = forwardRef<HTMLTableElement, RootProps>(({
     : "table";
 
   return (
-    <TableContext.Provider value={{ responsiveMode }}>
-      <table 
-        ref={ref}
-        role="table" 
-        className={`
-            w-full text-sm text-left border-collapse 
-            ${stackClasses}
-            ${className}
-        `}
-        {...props}
-      >
-        {children}
-      </table>
-    </TableContext.Provider>
+    <table 
+      ref={ref}
+      className={`w-full text-sm text-left border-collapse ${stackClasses} ${className}`}
+      {...props}
+    >
+      {children}
+    </table>
   );
 });
-TableRoot.displayName = "Table.Root";
+TableMain.displayName = "Table.Main";
 
-// 2. CONTAINER (Wrapper de Scroll)
-export const TableContainer = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ children, className = "", ...props }, ref) => (
-  <div 
+// 4. HEADER (THEAD)
+// Deve ser filho de <Table>.
+export const TableHeader = ({ children, className = "", ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
+  <thead 
+    className={`
+      text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-900/50 dark:text-gray-400 
+      sticky top-0 z-10 shadow-sm
+      ${className}
+    `} 
+    {...props}
+  >
+    <tr>{children}</tr>
+  </thead>
+);
+
+// 5. BODY (TBODY)
+// Deve ser filho de <Table>. Aceita ref para virtualização.
+export const TableBody = forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(({ children, className = "", ...props }, ref) => (
+  <tbody 
     ref={ref}
-    className={`w-full overflow-auto relative custom-scrollbar bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm ${className}`}
+    className={`divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800 ${className}`}
     {...props}
   >
     {children}
-  </div>
+  </tbody>
 ));
-TableContainer.displayName = "Table.Container";
+TableBody.displayName = "Table.Body";
 
-// 3. CAPTION
+// 6. CAPTION
 export const TableCaption = ({ children, className = "", ...props }: React.HTMLAttributes<HTMLTableCaptionElement>) => (
   <caption className={`p-4 text-lg font-semibold text-left text-gray-900 dark:text-white bg-white dark:bg-gray-800 caption-top border-b border-gray-200 dark:border-gray-700 ${className}`} {...props}>
     {children}
   </caption>
 );
 
-// 4. COLGROUP & COL
-export const TableColGroup = ({ children }: { children: React.ReactNode }) => (
-  <colgroup>{children}</colgroup>
+// 7. COLGROUP & COL
+export const TableColGroup = ({ children }: { children: React.ReactNode }) => <colgroup>{children}</colgroup>;
+export const TableCol = (props: React.ColHTMLAttributes<HTMLTableColElement>) => <col {...props} />;
+
+// 8. ROW (TR)
+interface RowProps extends React.HTMLAttributes<HTMLTableRowElement> {
+  onClick?: () => void;
+}
+export const TableRow: React.FC<RowProps> = ({ children, className = "", onClick, ...props }) => (
+  <tr 
+    onClick={onClick}
+    className={`
+      hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors duration-150
+      ${onClick ? 'cursor-pointer active:bg-gray-100 dark:active:bg-gray-700' : ''} 
+      ${className}
+    `}
+    {...props}
+  >
+    {children}
+  </tr>
 );
 
-export const TableCol = (props: React.ColHTMLAttributes<HTMLTableColElement>) => (
-  <col {...props} />
-);
-
-// 5. HEADER (THEAD)
-export const TableHeader = ({ children, className = "", ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => {
-  return (
-    <thead 
-      className={`
-        text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-900/50 dark:text-gray-400 
-        sticky top-0 z-10 shadow-sm
-        ${className}
-      `} 
-      {...props}
-    >
-      <tr>{children}</tr>
-    </thead>
-  );
-};
-
-// 6. HEAD CELL (TH)
+// 9. HEAD CELL (TH)
 interface HeadCellProps extends React.ThHTMLAttributes<HTMLTableCellElement> {
   sortable?: boolean;
   direction?: 'asc' | 'desc' | null;
   onSort?: () => void;
 }
-
 export const TableHeadCell: React.FC<HeadCellProps> = ({ 
   children, className = "", align = 'left', sortable, direction, onSort, ...props 
 }) => (
@@ -118,7 +157,7 @@ export const TableHeadCell: React.FC<HeadCellProps> = ({
     scope="col" 
     onClick={sortable ? onSort : undefined}
     className={`
-        px-6 py-3 font-bold whitespace-nowrap
+        px-6 py-3 font-bold whitespace-nowrap bg-gray-50 dark:bg-gray-900/90
         text-${align} 
         ${sortable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group' : ''}
         ${className}
@@ -136,38 +175,7 @@ export const TableHeadCell: React.FC<HeadCellProps> = ({
   </th>
 );
 
-// 7. BODY (TBODY)
-export const TableBody = forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(({ children, className = "", ...props }, ref) => (
-  <tbody 
-    ref={ref}
-    className={`divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800 ${className}`}
-    {...props}
-  >
-    {children}
-  </tbody>
-));
-TableBody.displayName = "Table.Body";
-
-// 8. ROW (TR)
-interface RowProps extends React.HTMLAttributes<HTMLTableRowElement> {
-  onClick?: () => void;
-}
-
-export const TableRow: React.FC<RowProps> = ({ children, className = "", onClick, ...props }) => (
-  <tr 
-    onClick={onClick}
-    className={`
-      hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors
-      ${onClick ? 'cursor-pointer active:bg-gray-100 dark:active:bg-gray-700' : ''} 
-      ${className}
-    `}
-    {...props}
-  >
-    {children}
-  </tr>
-);
-
-// 9. CELL (TD)
+// 10. CELL (TD)
 export const TableCell: React.FC<React.TdHTMLAttributes<HTMLTableCellElement> & { columnIndex?: number; label?: string }> = ({ 
     children, className = "", align = 'left', columnIndex, label, ...props 
 }) => (
@@ -184,26 +192,50 @@ export const TableCell: React.FC<React.TdHTMLAttributes<HTMLTableCellElement> & 
   </td>
 );
 
-// 10. FOOTER (TFOOT)
+// 11. FOOTER (TFOOT)
 export const TableFooter = ({ children, className = "", ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
-  <tfoot 
-    className={`bg-gray-50 dark:bg-gray-900 border-t-2 border-gray-200 dark:border-gray-700 font-semibold text-gray-900 dark:text-white ${className}`}
-    {...props}
-  >
+  <tfoot className={`bg-gray-50 dark:bg-gray-900 border-t-2 border-gray-200 dark:border-gray-700 font-semibold text-gray-900 dark:text-white ${className}`} {...props}>
     {children}
   </tfoot>
 );
 
+// 12. PAGINATION WRAPPER
+interface TablePaginationProps {
+  instance: any;
+  mode?: 'range' | 'simple' | 'extended';
+  className?: string;
+}
+export const TablePagination: React.FC<TablePaginationProps> = ({ instance, mode, className }) => {
+  // Safe check
+  if (!instance?.pagination) return null;
+  
+  const { pagination: { pageIndex, setPageIndex, pageSize, setPageSize }, totalRows } = instance;
+  return (
+    <Pagination 
+      currentPage={pageIndex} 
+      totalCount={totalRows} 
+      pageSize={pageSize} 
+      onPageChange={setPageIndex} 
+      onPageSizeChange={setPageSize} 
+      mode={mode} 
+      className={`border-t border-gray-200 dark:border-gray-700 ${className}`} 
+    />
+  );
+};
+
+// EXPORTAÇÃO FINAL
 export const DataTable = { 
-    Container: TableContainer,
     Root: TableRoot, 
-    Caption: TableCaption,
-    ColGroup: TableColGroup,
-    Col: TableCol,
+    Container: TableContainer,
+    Table: TableMain, // Essencial para HTML válido
     Header: TableHeader, 
     HeadCell: TableHeadCell,
     Body: TableBody, 
     Row: TableRow, 
     Cell: TableCell,
-    Footer: TableFooter
+    Footer: TableFooter,
+    Caption: TableCaption,
+    ColGroup: TableColGroup,
+    Col: TableCol,
+    Pagination: TablePagination
 };
