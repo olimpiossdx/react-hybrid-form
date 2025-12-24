@@ -27,7 +27,7 @@ import { ThemeToggle } from '../../componentes/theme';
 import FileExample from './file-input';
 import TabValidationComplexExample from './tab-validation-complex';
 import TabDataTableExample from './tab-data-table';
-import TabTableScrollCRUD from './tab-table-scroll-crud';
+import TabTableScrollCRUD from './tab-scroll-crud';
 import TabTableStackCRUD from './tab-table-stack-crud';
 import TabTableCollapse from './tab-table-collapse';
 import TabWizard from './tab-wizard-tabs';

@@ -1,18 +1,18 @@
-import React, { useState, useMemo } from "react";
+import React from "react";
 import { Check, X, Edit2, Trash2, Package } from "lucide-react";
-import { DataTable } from "../../componentes/data-table";
-import { showModal } from "../../componentes/modal";
-import { toast } from "../../componentes/toast";
-import useList from "../../hooks/list";
-import useForm from "../../hooks/use-form";
-import useTable, { type TableColumn } from "../../hooks/use-table";
+import { DataTable } from "../../../componentes/data-table";
+import { showModal } from "../../../componentes/modal";
+import { toast } from "../../../componentes/toast";
+import useList from "../../../hooks/list";
+import useForm from "../../../hooks/use-form";
+import useTable, { type TableColumn } from "../../../hooks/use-table";
 
 interface IProduct {
   id?: string;
   name: string;
   price: number;
   stock: number;
-};
+}
 
 const TabTableScrollCRUD = () => {
   // Mock Data Estável
@@ -23,10 +23,10 @@ const TabTableScrollCRUD = () => {
   ];
 
   // 1. Dados (useList gera IDs únicos automaticamente se não vierem no dado)
-  const initialData = useMemo(() => generateInitialData(), []);
+  const initialData = React.useMemo(() => generateInitialData(), []);
   const { items, remove, add, update } = useList<IProduct>(initialData);
 
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = React.useState<string | null>(null);
 
   const columns: TableColumn<IProduct>[] = [
     { id: "name", header: "Produto", width: "40%" },
@@ -36,7 +36,7 @@ const TabTableScrollCRUD = () => {
   ];
 
   // Mapeia os dados do useList para a estrutura da tabela
-  const tableData = useMemo(
+  const tableData = React.useMemo(
     () => items.map((i) => ({ ...i.data, id: i.id })),
     [items]
   );
@@ -48,7 +48,7 @@ const TabTableScrollCRUD = () => {
   });
 
   const onSubmit = (data: { items: IProduct[] }) => {
-    // 1. Encontra o índice real na lista estrutural (State)
+    // 1. Encontra o índice real do item sendo editado na lista
     const index = items.findIndex((i) => i.id === editingId);
 
     if (index === -1) {
@@ -56,48 +56,61 @@ const TabTableScrollCRUD = () => {
       return;
     }
 
-    // 2. Acessa o dado do formulário usando o índice (DOM Data)
-    // Como apenas a linha em edição tem inputs renderizados, o array 'data.items'
-    // terá um "buraco" (sparse array) ou apenas o índice correspondente preenchido.
+    // 2. Acessa o dado do formulário usando o índice
+    // O useForm retorna um array onde apenas o índice editado tem dados
     const itemData = data.items?.[index];
 
-    if (!itemData) {
-      toast.error("Nenhum dado capturado para salvar.");
-      return;
-    };
+    if (itemData) {
+      // 3. Atualiza a memória (Persistência)
+      update(editingId!, {
+        name: itemData.name,
+        price: Number(itemData.price),
+        stock: Number(itemData.stock),
+      });
 
-    // 3. Atualiza a memória
-    update(editingId!, {
-      name: itemData.name,
-      price: Number(itemData.price),
-      stock: Number(itemData.stock),
-    });
+      showModal({
+        title: "Sucesso",
+        size: "sm",
+        content: (
+          <div className="text-gray-600 dark:text-gray-300">
+            Produto <strong>{itemData.name}</strong> atualizado.
+          </div>
+        ),
+        actions: ({ onClose }: any) => (
+          <button
+            onClick={onClose}
+            className="bg-green-600 text-white px-4 py-2 rounded font-bold"
+          >
+            OK
+          </button>
+        ),
+      });
+    }
 
-    showModal({
-      title: "Alterações Salvas",
-      size: "sm",
-      content: (
-        <div className="text-gray-600 dark:text-gray-300">
-          O produto foi atualizado com sucesso.
-        </div>
-      ),
-      actions: ({ onClose }: any) => (
-        <button
-          onClick={onClose}
-          className="bg-green-600 text-white px-4 py-2 rounded font-bold"
-        >
-          OK
-        </button>
-      ),
-    });
     setEditingId(null);
   };
 
   const { formProps, handleSubmit } = useForm({ id: "inline-crud", onSubmit });
 
-  const handleAdd = (_: React.MouseEvent) => {
+  const handleAdd = (e: React.MouseEvent) => {
+    e.preventDefault(); // Previne submit
+    e.stopPropagation();
     add({ name: "", price: 0, stock: 0 });
     toast.info("Novo item adicionado. Clique no lápis para editar.");
+  };
+
+  // Handlers seguros para evitar propagação de eventos
+  const handleEditClick = (_: React.MouseEvent, id: string) => {
+    setEditingId(id);
+  };
+
+  const handleDeleteClick = (_: React.MouseEvent, id: string) => {
+    remove(id);
+    toast.error("Item removido.");
+  };
+
+  const handleCancelClick = (_: React.MouseEvent) => {
+    setEditingId(null);
   };
 
   return (
@@ -195,9 +208,9 @@ const TabTableScrollCRUD = () => {
                     <div className="flex gap-2">
                       {isEditing ? (
                         <>
-                          {/* CORREÇÃO 1: Adicionado key="save" para diferenciar no DOM */}
+                          {/* Botão Salvar: Único submit do form */}
                           <button
-                            key="save"
+                            key='save'
                             type="submit"
                             className="p-1.5 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded hover:bg-green-200 dark:hover:bg-green-900/50 border border-green-200 dark:border-green-800 transition-colors"
                             title="Salvar"
@@ -206,9 +219,8 @@ const TabTableScrollCRUD = () => {
                           </button>
 
                           <button
-                            key="cancel"
                             type="button"
-                            onClick={() => setEditingId(null)}
+                            onClick={handleCancelClick}
                             className="p-1.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-colors"
                             title="Cancelar"
                           >
@@ -218,11 +230,8 @@ const TabTableScrollCRUD = () => {
                       ) : (
                         <>
                           <button
-                            key="edit"
                             type="button"
-                            onClick={(_) => {
-                              setEditingId(item.id);
-                            }}
+                            onClick={(e) => handleEditClick(e, item.id)}
                             className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
                             title="Editar"
                           >
@@ -230,13 +239,8 @@ const TabTableScrollCRUD = () => {
                           </button>
 
                           <button
-                            key="delete"
                             type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              remove(item.id);
-                            }}
+                            onClick={(e) => handleDeleteClick(e, item.id)}
                             className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                             title="Excluir"
                           >
