@@ -9,16 +9,15 @@ import useList from "../../hooks/list";
 import useForm from "../../hooks/use-form";
 import { useVirtualizer } from "../../hooks/virtualize";
 
-const generateUsers = (qtd: number) =>
-  Array.from({ length: qtd }, (_, i) => ({
-    id: String(i + 1),
-    name: `Funcionário ${i + 1}`,
-    email: `func.${i + 1}@empresa.com`,
-    role: i % 3 === 0 ? "Admin" : "User",
-    active: i % 5 !== 0,
-  }));
-
 const TabDataTable = () => {
+  const generateUsers = (qtd: number) =>
+    Array.from({ length: qtd }, (_, i) => ({
+      id: String(i + 1),
+      name: `Funcionário ${i + 1}`,
+      email: `func.${i + 1}@empresa.com`,
+      role: i % 3 === 0 ? "Admin" : "User",
+      active: i % 5 !== 0,
+    }));
   const initialData = useMemo(() => generateUsers(1000), []);
   const { items, remove } = useList(initialData);
 
