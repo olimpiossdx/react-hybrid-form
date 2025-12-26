@@ -8,12 +8,12 @@ import {
 } from '../../utils/date';
 import { Calendar, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 
-export interface DatePreset {
+export interface IDatePreset {
   label: string;
   getValue: () => [Date, Date];
 }
 
-interface DateRangeProps {
+interface IDateRangeProps {
   startDateName: string;
   endDateName: string;
   label?: string;
@@ -23,14 +23,15 @@ interface DateRangeProps {
   months?: 1 | 2;
   showPresets?: boolean;
   matchInputWidth?: boolean;
-  presets?: DatePreset[];
+  presets?: IDatePreset[];
   required?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
   className?: string;
+  size?: 'sm' | 'md' | 'lg'; // Nova prop de tamanho
 }
 
-const DEFAULT_PRESETS: DatePreset[] = [
+const DEFAULT_PRESETS: IDatePreset[] = [
   { label: 'Hoje', getValue: () => [getToday(), getToday()] },
   { label: 'Ontem', getValue: () => [addDays(getToday(), -1), addDays(getToday(), -1)] },
   { label: 'Últimos 7 Dias', getValue: () => [addDays(getToday(), -7), getToday()] },
@@ -41,10 +42,10 @@ const DEFAULT_PRESETS: DatePreset[] = [
   }},
 ];
 
-const DateRangePicker: React.FC<DateRangeProps> = ({
+const DateRangePicker: React.FC<IDateRangeProps> = ({
   startDateName, endDateName, label, required, disabled, readOnly, excludeWeekends,
   minDate, maxDate, showPresets = true, months = 1, matchInputWidth = false,
-  presets = DEFAULT_PRESETS, className = ""
+  presets = DEFAULT_PRESETS, className = "", size = 'md'
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(getToday());
@@ -63,6 +64,33 @@ const DateRangePicker: React.FC<DateRangeProps> = ({
   const visualEndRef = useRef<HTMLInputElement>(null);
 
   const effectiveDisabled = disabled || readOnly;
+
+  // Configuração de Estilos por Tamanho
+  const sizeStyles = {
+    sm: {
+      container: 'rounded-md',
+      input: 'text-xs py-1.5 px-2 min-w-[4.5rem]',
+      iconSize: 14,
+      arrowSize: 12,
+      buttonPadding: 'p-1.5'
+    },
+    md: {
+      container: 'rounded-lg',
+      input: 'text-sm p-2.5 min-w-[5.5rem]',
+      iconSize: 18,
+      arrowSize: 14,
+      buttonPadding: 'p-2.5'
+    },
+    lg: {
+      container: 'rounded-xl',
+      input: 'text-base p-3.5 min-w-[7rem]',
+      iconSize: 22,
+      arrowSize: 16,
+      buttonPadding: 'p-3.5'
+    }
+  };
+
+  const currentStyle = sizeStyles[size];
 
   useEffect(() => {
       if (document.activeElement !== visualStartRef.current) setStartText(toDisplayDate(start));
@@ -193,7 +221,7 @@ const DateRangePicker: React.FC<DateRangeProps> = ({
     }
   };
 
-  const handlePresetClick = (preset: DatePreset) => {
+  const handlePresetClick = (preset: IDatePreset) => {
      const [s, e] = preset.getValue();
      applyRange(s, e);
      setViewDate(s);
@@ -203,7 +231,7 @@ const DateRangePicker: React.FC<DateRangeProps> = ({
   return (
     <div className={`relative mb-4 ${className}`} ref={containerRef}>
       {label && (
-         <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+         <label className={`block mb-1 font-medium text-gray-700 dark:text-gray-300 ${size === 'sm' ? 'text-xs' : 'text-sm'}`}>
             {label} {required && <span className="text-red-500 dark:text-red-400">*</span>}
          </label>
       )}
@@ -211,8 +239,9 @@ const DateRangePicker: React.FC<DateRangeProps> = ({
       {/* INPUT VISUAL */}
       <div 
         className={`
-            flex items-center bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors focus-within:ring-2 focus-within:ring-cyan-500 focus-within:border-transparent overflow-hidden
+            flex items-center bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 transition-colors focus-within:ring-2 focus-within:ring-cyan-500 focus-within:border-transparent overflow-hidden
             ${effectiveDisabled ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-800' : ''}
+            ${currentStyle.container}
         `}
       >
         <input 
@@ -223,11 +252,13 @@ const DateRangePicker: React.FC<DateRangeProps> = ({
             onKeyDown={(e) => handleVisualKeyDown(e, true)}
             onFocus={() => !effectiveDisabled && !readOnly && setIsOpen(true)}
             placeholder="Início"
-            className="flex-1 min-w-22 bg-transparent text-sm text-gray-900 dark:text-white p-2.5 outline-none text-center placeholder-gray-400 dark:placeholder-gray-500"
+            className={`flex-1 bg-transparent text-gray-900 dark:text-white outline-none text-center placeholder-gray-400 dark:placeholder-gray-500 ${currentStyle.input}`}
             readOnly={readOnly}
             disabled={disabled}
         />
-        <span className="text-gray-400 dark:text-gray-500 shrink-0 px-1"><ArrowRight size={14}/></span>
+        <span className="text-gray-400 dark:text-gray-500 shrink-0 px-1">
+            <ArrowRight size={currentStyle.arrowSize}/>
+        </span>
         <input 
             ref={visualEndRef}
             value={endText}
@@ -236,17 +267,17 @@ const DateRangePicker: React.FC<DateRangeProps> = ({
             onKeyDown={(e) => handleVisualKeyDown(e, false)}
             onFocus={() => !effectiveDisabled && !readOnly && setIsOpen(true)}
             placeholder="Fim"
-            className="flex-1 min-w-22 bg-transparent text-sm text-gray-900 dark:text-white p-2.5 outline-none text-center placeholder-gray-400 dark:placeholder-gray-500"
+            className={`flex-1 bg-transparent text-gray-900 dark:text-white outline-none text-center placeholder-gray-400 dark:placeholder-gray-500 ${currentStyle.input}`}
             readOnly={readOnly}
             disabled={disabled}
         />
         <button 
             type="button"
             onClick={() => !effectiveDisabled && setIsOpen(!isOpen)}
-            className="p-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-white focus:outline-none shrink-0"
+            className={`${currentStyle.buttonPadding} text-gray-400 hover:text-gray-600 dark:hover:text-white focus:outline-none shrink-0`}
             tabIndex={-1}
         >
-            <Calendar size={18} />
+            <Calendar size={currentStyle.iconSize} />
         </button>
       </div>
 
