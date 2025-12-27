@@ -1,27 +1,28 @@
-import React  from 'react';
-import showModal from '../../componentes/modal/hook';
-import { RefreshCw, Save, Edit3 } from 'lucide-react';
+import React from 'react';
+import { Edit3, RefreshCw, Save } from 'lucide-react';
+
 import Autocomplete, { type IOption } from '../../componentes/autocomplete';
+import showModal from '../../componentes/modal/hook';
 import StarRating from '../../componentes/start-rating';
 import useForm from '../../hooks/use-form';
 
 // DADOS MOCK
 const DADOS_INICIAIS = {
-    rating: 5,
-    corFavorita: 'azul',
-    comentario: 'Teste de Cancelamento'
+  rating: 5,
+  corFavorita: 'azul',
+  comentario: 'Teste de Cancelamento',
 };
 
 const CORES_OPTIONS: IOption[] = [
-  { value: "vermelho", label: "Vermelho" },
-  { value: "azul", label: "Azul Marinho" },
-  { value: "verde", label: "Verde" },
+  { value: 'vermelho', label: 'Vermelho' },
+  { value: 'azul', label: 'Azul Marinho' },
+  { value: 'verde', label: 'Verde' },
 ];
 
 interface IHybridFormValues {
-    rating: number;
-    corFavorita: string;
-    comentario: string;
+  rating: number;
+  corFavorita: string;
+  comentario: string;
 }
 
 const HybridFormSimple = () => {
@@ -29,111 +30,96 @@ const HybridFormSimple = () => {
 
   const onSubmit = (data: IHybridFormValues) => {
     showModal({
-      title: "Dados Salvos!",
+      title: 'Dados Salvos!',
       size: 'sm',
       content: (
         <div className="space-y-2">
-            <p className="text-gray-300">O formulário híbrido processou os dados abaixo:</p>
-            <pre className="bg-black p-4 text-green-400 rounded text-xs overflow-auto border border-gray-700">
-                {JSON.stringify(data, null, 2)}
-            </pre>
+          <p className="text-gray-300">O formulário híbrido processou os dados abaixo:</p>
+          <pre className="bg-black p-4 text-green-400 rounded text-xs overflow-auto border border-gray-700">
+            {JSON.stringify(data, null, 2)}
+          </pre>
         </div>
       ),
       actions: (
-          <div className="flex justify-end">
-              <button onClick={() => setIsEditing(false)} className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded transition-colors">Fechar</button>
-          </div>
-      )
+        <div className="flex justify-end">
+          <button
+            onClick={() => setIsEditing(false)}
+            className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded transition-colors">
+            Fechar
+          </button>
+        </div>
+      ),
     });
     setIsEditing(false);
   };
 
   // DX Aprimorada: Configuração no hook
   const { formProps, resetSection } = useForm<IHybridFormValues>({
-      id: "hybrid-simple",
-      onSubmit
+    id: 'hybrid-simple',
+    onSubmit,
   });
 
   const handleEdit = () => {
-      setIsEditing(true);
-      // Simula carga de dados
-      // setTimeout garante que o DOM esteja pronto se houver remontagem
-      setTimeout(() => resetSection("", DADOS_INICIAIS), 50);
+    setIsEditing(true);
+    // Simula carga de dados
+    // setTimeout garante que o DOM esteja pronto se houver remontagem
+    setTimeout(() => resetSection('', DADOS_INICIAIS), 50);
   };
 
   const handleCancel = () => {
-      setIsEditing(false);
-      // VOLTA TUDO (Teste Crítico de Sincronia)
-      // O StarRating deve voltar para 5 estrelas visualmente
-      // O Autocomplete deve voltar para "Azul Marinho" visualmente
-      setTimeout(() => resetSection("", DADOS_INICIAIS), 50);
+    setIsEditing(false);
+    // VOLTA TUDO (Teste Crítico de Sincronia)
+    // O StarRating deve voltar para 5 estrelas visualmente
+    // O Autocomplete deve voltar para "Azul Marinho" visualmente
+    setTimeout(() => resetSection('', DADOS_INICIAIS), 50);
   };
 
   return (
     <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-colors max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-6 border-b border-gray-200 dark:border-gray-700 pb-4">
         <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-cyan-400">Ciclo de Vida</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Teste de Edição, Cancelamento e Reset.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-cyan-400">Ciclo de Vida</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Teste de Edição, Cancelamento e Reset.</p>
         </div>
-        
+
         <div className="flex gap-2">
-            {!isEditing ? (
-                <button 
-                    onClick={handleEdit} 
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-bold shadow-md"
-                >
-                    <Edit3 size={16} /> Editar
-                </button>
-            ) : (
-                <button 
-                    onClick={handleCancel} 
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors text-sm font-bold"
-                >
-                    <RefreshCw size={16} /> Cancelar
-                </button>
-            )}
+          {!isEditing ? (
+            <button
+              onClick={handleEdit}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-bold shadow-md">
+              <Edit3 size={16} /> Editar
+            </button>
+          ) : (
+            <button
+              onClick={handleCancel}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors text-sm font-bold">
+              <RefreshCw size={16} /> Cancelar
+            </button>
+          )}
         </div>
       </div>
 
       <form {...formProps} className="space-y-6">
-          <fieldset disabled={!isEditing} className="space-y-6 transition-opacity duration-300 disabled:opacity-60">
-            
-            <StarRating
-                name="rating"
-                label="Avaliação (Ao cancelar, volta p/ 5)"
-                required
-                className="mb-6"
-            />
+        <fieldset disabled={!isEditing} className="space-y-6 transition-opacity duration-300 disabled:opacity-60">
+          <StarRating name="rating" label="Avaliação (Ao cancelar, volta p/ 5)" required className="mb-6" />
 
-            <Autocomplete
-                name="corFavorita"
-                label="Cor Favorita"
-                options={CORES_OPTIONS}
-                required
-                placeholder="Selecione uma cor..."
-            />
+          <Autocomplete name="corFavorita" label="Cor Favorita" options={CORES_OPTIONS} required placeholder="Selecione uma cor..." />
 
-            <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Comentário</label>
-                <input 
-                    name="comentario" 
-                    className="form-input" 
-                    placeholder="Digite algo..."
-                />
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Comentário</label>
+            <input name="comentario" className="form-input" placeholder="Digite algo..." />
+          </div>
+
+          {isEditing && (
+            <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
+              <button
+                type="submit"
+                className="flex items-center gap-2 px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg transition-transform active:scale-95">
+                <Save size={18} /> Salvar Alterações
+              </button>
             </div>
-
-            {isEditing && (
-                <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <button 
-                        type="submit" 
-                        className="flex items-center gap-2 px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg transition-transform active:scale-95"
-                    >
-                        <Save size={18} /> Salvar Alterações
-                    </button>
-                </div>
-            )}
-          </fieldset>
+          )}
+        </fieldset>
       </form>
     </div>
   );

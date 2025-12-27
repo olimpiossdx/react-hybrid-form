@@ -1,5 +1,6 @@
+import React from 'react';
 import { createRoot } from 'react-dom/client';
-import React from 'react'; 
+
 import ToastContainer from './container';
 import { toastManager } from './manager';
 import type { IToastOptions, ToastType } from './types';
@@ -7,10 +8,10 @@ import type { IToastOptions, ToastType } from './types';
 const CONTAINER_ID = 'hybrid-toast-portal';
 
 const ensureContainerExists = () => {
-  if (document.getElementById(CONTAINER_ID)){
-     return;
-  };
-  
+  if (document.getElementById(CONTAINER_ID)) {
+    return;
+  }
+
   const container = document.createElement('div');
   container.id = CONTAINER_ID;
   document.body.appendChild(container);
@@ -21,7 +22,7 @@ const ensureContainerExists = () => {
 const dispatch = (type: ToastType, message: string, options?: IToastOptions) => {
   ensureContainerExists();
   const id = crypto.randomUUID();
-  
+
   toastManager.add({
     id,
     type,
@@ -32,7 +33,7 @@ const dispatch = (type: ToastType, message: string, options?: IToastOptions) => 
     position: options?.position,
     icon: options?.icon,
     size: options?.size,
-    createdAt: Date.now()
+    createdAt: Date.now(),
   });
 };
 

@@ -5,7 +5,13 @@ export interface GraphEventMap {
   'filter:apply': { category: string; term: string };
   'mouse:move': { x: number; y: number };
   'tree:search': { term: string };
-  'service:select': { id: string; name: string; type: string; status: string; region: string };
+  'service:select': {
+    id: string;
+    name: string;
+    type: string;
+    status: string;
+    region: string;
+  };
   'shopping:add': { item: string; timestamp: number };
 
   // NOVO EVENTO: Mudança de Tema

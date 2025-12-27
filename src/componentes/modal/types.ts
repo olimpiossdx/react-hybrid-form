@@ -25,7 +25,7 @@ export interface IModalOptions<H = any, C = any, A = any> {
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full' | 'custom';
   closeOnBackdropClick?: boolean;
   styleConfig?: React.CSSProperties | any; // Flexibilidade para estilos inline
-  
+
   // LIFECYCLE
   onClose?: () => void;
 }

@@ -14,9 +14,7 @@ interface IUsePaginationRangeProps {
   currentPage: number;
 }
 
-export const usePaginationRange:React.FC<IUsePaginationRangeProps> = ({
-  totalCount,  pageSize,  siblingCount = 1,  currentPage
-}) => {
+export const usePaginationRange: React.FC<IUsePaginationRangeProps> = ({ totalCount, pageSize, siblingCount = 1, currentPage }) => {
   const paginationRange = React.useMemo(() => {
     const totalPageCount = Math.ceil(totalCount / pageSize);
 
@@ -39,24 +37,24 @@ export const usePaginationRange:React.FC<IUsePaginationRangeProps> = ({
 
     // Caso 2: Sem dots a esquerda, dots a direita
     if (!shouldShowLeftDots && shouldShowRightDots) {
-      let leftItemCount = 3 + 2 * siblingCount;
-      let leftRange = range(1, leftItemCount);
+      const leftItemCount = 3 + 2 * siblingCount;
+      const leftRange = range(1, leftItemCount);
       return [...leftRange, DOTS, totalPageCount];
     }
 
     // Caso 3: Dots a esquerda, sem dots a direita
     if (shouldShowLeftDots && !shouldShowRightDots) {
-      let rightItemCount = 3 + 2 * siblingCount;
-      let rightRange = range(totalPageCount - rightItemCount + 1, totalPageCount);
+      const rightItemCount = 3 + 2 * siblingCount;
+      const rightRange = range(totalPageCount - rightItemCount + 1, totalPageCount);
       return [firstPageIndex, DOTS, ...rightRange];
     }
 
     // Caso 4: Dots em ambos os lados
     if (shouldShowLeftDots && shouldShowRightDots) {
-      let middleRange = range(leftSiblingIndex, rightSiblingIndex);
+      const middleRange = range(leftSiblingIndex, rightSiblingIndex);
       return [firstPageIndex, DOTS, ...middleRange, DOTS, lastPageIndex];
     }
-    
+
     return [];
   }, [totalCount, pageSize, siblingCount, currentPage]);
 

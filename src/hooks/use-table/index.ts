@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from 'react';
 
-export type ResponsiveMode = "scroll" | "stack" | "collapse";
+export type ResponsiveMode = 'scroll' | 'stack' | 'collapse';
 
 export interface TableColumn<T> {
   id: string;
@@ -24,19 +24,12 @@ interface UseTableProps<T> {
   };
 }
 
-export const useTable = <T>({
-  data,
-  columns,
-  responsiveMode = "scroll",
-  pagination,
-}: UseTableProps<T>) => {
+export const useTable = <T>({ data, columns, responsiveMode = 'scroll', pagination }: UseTableProps<T>) => {
   const [sortState, setSortState] = useState<{
     key: string;
-    dir: "asc" | "desc";
+    dir: 'asc' | 'desc';
   } | null>(null);
-  const [expandedRows, setExpandedRows] = useState<Set<string | number>>(
-    new Set()
-  );
+  const [expandedRows, setExpandedRows] = useState<Set<string | number>>(new Set());
 
   // Estado de Paginação
   const [pageIndex, setPageIndex] = useState(1);
@@ -44,19 +37,25 @@ export const useTable = <T>({
 
   // 1. Ordenação
   const sortedData = useMemo(() => {
-    if (!sortState || !sortState.key) return data;
+    if (!sortState || !sortState.key) {
+      return data;
+    }
     return [...data].sort((a: any, b: any) => {
-      if (a[sortState.key] < b[sortState.key])
-        return sortState.dir === "asc" ? -1 : 1;
-      if (a[sortState.key] > b[sortState.key])
-        return sortState.dir === "asc" ? 1 : -1;
+      if (a[sortState.key] < b[sortState.key]) {
+        return sortState.dir === 'asc' ? -1 : 1;
+      }
+      if (a[sortState.key] > b[sortState.key]) {
+        return sortState.dir === 'asc' ? 1 : -1;
+      }
       return 0;
     });
   }, [data, sortState]);
 
   // 2. Paginação (Client-Side Slice)
   const paginatedData = useMemo(() => {
-    if (pagination?.manual) return sortedData; // API já retorna paginado
+    if (pagination?.manual) {
+      return sortedData;
+    } // API já retorna paginado
     const start = (pageIndex - 1) * pageSize;
     return sortedData.slice(start, start + pageSize);
   }, [sortedData, pageIndex, pageSize, pagination?.manual]);
@@ -67,8 +66,11 @@ export const useTable = <T>({
   const toggleRowExpand = (id: string | number) => {
     setExpandedRows((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };

@@ -8,18 +8,18 @@ export type ToastPosition = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-
 export interface IToastOptions {
   title?: string;
   duration?: number; // Default: 4000ms
-  
+
   // Configuração Visual
-  position?: ToastPosition; 
+  position?: ToastPosition;
   icon?: React.ReactNode;
   size?: 'normal' | 'large';
-  
+
   // Ação
   action?: {
     label: string;
     onClick: () => void;
   };
-};
+}
 
 // Objeto Interno Completo (Estado do Manager)
 export interface IToast extends IToastOptions {
@@ -27,8 +27,8 @@ export interface IToast extends IToastOptions {
   type: ToastType;
   message: string; // A mensagem torna-se obrigatória apenas no objeto final construído
   createdAt: number;
-};
+}
 
 export interface IToastItem {
-  toast: IToast
-};
+  toast: IToast;
+}

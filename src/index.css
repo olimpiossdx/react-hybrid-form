@@ -1,10 +1,9 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Configuração da Variante Dark Mode (Tailwind v4) */
 @variant dark (&:where(.dark, .dark *));
 
 @layer components {
-
   /* INPUTS PADRÃO (Adaptáveis)
     Correção: Definimos transition-property manualmente ou usamos transition-colors
     para evitar que 'background-position' seja animado.
@@ -68,13 +67,13 @@
     resize: none;
   }
 
-  input[type="month"][readOnly]::-webkit-calendar-picker-indicator,
-  input[type="date"][readOnly]::-webkit-calendar-picker-indicator {
+  input[type='month'][readOnly]::-webkit-calendar-picker-indicator,
+  input[type='date'][readOnly]::-webkit-calendar-picker-indicator {
     display: none;
   }
 
   /* STAR RATING */
-  input[name^="rating"]:invalid.is-touched~.star-display {
+  input[name^='rating']:invalid.is-touched ~ .star-display {
     @apply ring-2 ring-red-500 rounded-md;
   }
 
@@ -96,7 +95,7 @@
     @apply dark:text-gray-200 dark:hover:bg-gray-700;
   }
 
-  .autocomplete-suggestion-item[aria-disabled="true"] {
+  .autocomplete-suggestion-item[aria-disabled='true'] {
     @apply opacity-50 cursor-not-allowed bg-transparent;
   }
 

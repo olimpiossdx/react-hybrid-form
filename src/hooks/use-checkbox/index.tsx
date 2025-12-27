@@ -13,10 +13,10 @@ export const useIndeterminate = () => {
   const updateParentVisualState = React.useCallback(() => {
     if (!parentRef.current || !containerRef.current) {
       return;
-    };
+    }
 
     const children = Array.from(containerRef.current.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'));
-    const checkedCount = children.filter(c => c.checked).length;
+    const checkedCount = children.filter((c) => c.checked).length;
 
     if (checkedCount === 0) {
       // Nenhum marcado: Pai desmarcado
@@ -30,7 +30,7 @@ export const useIndeterminate = () => {
       // Misto: Pai Indeterminado (-)
       parentRef.current.checked = false;
       parentRef.current.indeterminate = true;
-    };
+    }
   }, []);
 
   // 2. Função chamada quando o PAI é clicado
@@ -38,12 +38,12 @@ export const useIndeterminate = () => {
   const toggleAll = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (!containerRef.current) {
       return;
-    };
+    }
 
     const isChecked = e.target.checked;
     const children = containerRef.current.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
 
-    children.forEach(child => {
+    children.forEach((child) => {
       child.checked = isChecked;
       // Dispara evento para notificar o DOM e validações
       child.dispatchEvent(new Event('change', { bubbles: true }));

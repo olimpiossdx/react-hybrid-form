@@ -1,8 +1,9 @@
-import React, { useEffect } from "react";
-import { UserPlus, User, Briefcase, Layers, FileText } from "lucide-react";
-import Autocomplete from "../../componentes/autocomplete";
-import showModal from "../../componentes/modal/hook";
-import useForm from "../../hooks/use-form";
+import React, { useEffect } from 'react';
+import { Briefcase, FileText, Layers, User, UserPlus } from 'lucide-react';
+
+import Autocomplete from '../../componentes/autocomplete';
+import showModal from '../../componentes/modal/hook';
+import useForm from '../../hooks/use-form';
 
 // Estilos locais para feedback de erro (borda vermelha + mensagem)
 // Atualizado com suporte a Dark Mode
@@ -52,16 +53,16 @@ interface IModalOptions {
 }
 
 const CARGOS = [
-  { value: "dev", label: "Desenvolvedor" },
-  { value: "design", label: "Designer" },
-  { value: "pm", label: "Product Manager" },
+  { value: 'dev', label: 'Desenvolvedor' },
+  { value: 'design', label: 'Designer' },
+  { value: 'pm', label: 'Product Manager' },
 ];
 
 const RegistrationComplexExample = () => {
   const onSubmit = (data: any) => {
     showModal({
-      title: "Cadastro Realizado!",
-      size: "sm",
+      title: 'Cadastro Realizado!',
+      size: 'sm',
       content: (
         <div className="space-y-3">
           <div className="flex items-center gap-3 text-green-600 dark:text-green-400">
@@ -77,7 +78,7 @@ const RegistrationComplexExample = () => {
   };
 
   const { formProps, setValidators } = useForm({
-    id: "complex-reg-form",
+    id: 'complex-reg-form',
     onSubmit,
   });
 
@@ -85,23 +86,32 @@ const RegistrationComplexExample = () => {
   useEffect(() => {
     setValidators({
       validarNome: (val: any) => {
-        if (!val) return { message: "Nome é obrigatório.", type: "error" };
-        if (String(val).split(" ").length < 2)
-          return { message: "Digite sobrenome.", type: "error" };
+        if (!val) {
+          return { message: 'Nome é obrigatório.', type: 'error' };
+        }
+        if (String(val).split(' ').length < 2) {
+          return { message: 'Digite sobrenome.', type: 'error' };
+        }
       },
       validarGenero: (val: any) => {
-        if (!val) return { message: "Selecione uma opção.", type: "error" };
+        if (!val) {
+          return { message: 'Selecione uma opção.', type: 'error' };
+        }
       },
       validarSkills: (val: any) => {
-        if (!val || (Array.isArray(val) && val.length < 2))
-          return { message: "Selecione pelo menos 2 skills.", type: "error" };
+        if (!val || (Array.isArray(val) && val.length < 2)) {
+          return { message: 'Selecione pelo menos 2 skills.', type: 'error' };
+        }
       },
       validarCargo: (val: any) => {
-        if (!val) return { message: "Cargo é obrigatório.", type: "error" };
+        if (!val) {
+          return { message: 'Cargo é obrigatório.', type: 'error' };
+        }
       },
       validarTermos: (val: any) => {
-        if (!val)
-          return { message: "Você deve aceitar os termos.", type: "error" };
+        if (!val) {
+          return { message: 'Você deve aceitar os termos.', type: 'error' };
+        }
       },
     });
   }, [setValidators]);
@@ -115,12 +125,8 @@ const RegistrationComplexExample = () => {
           <UserPlus size={24} />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Cadastro Completo
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Validação mista: Inputs, Radios, Arrays e Autocomplete.
-          </p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Cadastro Completo</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Validação mista: Inputs, Radios, Arrays e Autocomplete.</p>
         </div>
       </div>
 
@@ -130,13 +136,7 @@ const RegistrationComplexExample = () => {
           <label className="flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 mb-1">
             <User size={16} /> Nome Completo
           </label>
-          <input
-            type="text"
-            name="nome"
-            className="form-input"
-            placeholder="Ex: Ana Silva"
-            data-validation="validarNome"
-          />
+          <input type="text" name="nome" className="form-input" placeholder="Ex: Ana Silva" data-validation="validarNome" />
           <div id="error-nome" className="error-msg"></div>
         </div>
 
@@ -216,25 +216,15 @@ const RegistrationComplexExample = () => {
           </label>
 
           <div className="grid grid-cols-2 gap-2 pl-4 border-l-2 border-gray-200 dark:border-gray-700 ml-1.5">
-            {[
-              "React",
-              "Node.js",
-              "TypeScript",
-              "Python",
-              "DevOps",
-              "UI/UX",
-            ].map((skill) => (
+            {['React', 'Node.js', 'TypeScript', 'Python', 'DevOps', 'UI/UX'].map((skill) => (
               <label
                 key={skill}
-                className="flex items-center gap-2 cursor-pointer text-gray-600 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-white transition-colors"
-              >
+                className="flex items-center gap-2 cursor-pointer text-gray-600 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-white transition-colors">
                 <input
                   type="checkbox"
                   name="skills"
                   value={skill.toLowerCase()}
-                  data-validation={
-                    skill === "React" ? "validarSkills" : undefined
-                  } // Validação no primeiro
+                  data-validation={skill === 'React' ? 'validarSkills' : undefined} // Validação no primeiro
                   className="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-cyan-600 focus:ring-cyan-500"
                 />
                 {skill}
@@ -265,8 +255,7 @@ const RegistrationComplexExample = () => {
 
         <button
           type="submit"
-          className="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-900/20 hover:scale-[1.02] transition-all active:scale-95"
-        >
+          className="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-900/20 hover:scale-[1.02] transition-all active:scale-95">
           Finalizar Cadastro
         </button>
       </form>

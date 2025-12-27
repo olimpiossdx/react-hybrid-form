@@ -8,7 +8,7 @@ class ToastManager {
 
   subscribe(listener: Listener) {
     this.listeners.push(listener);
-    
+
     // CORREÇÃO CRÍTICA:
     // Envia o estado atual imediatamente para o novo ouvinte.
     // Isso garante que o ToastContainer receba os toasts que foram adicionados
@@ -16,12 +16,12 @@ class ToastManager {
     listener(this.toasts);
 
     return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
+      this.listeners = this.listeners.filter((l) => l !== listener);
     };
   }
 
   private notify() {
-    this.listeners.forEach(listener => listener(this.toasts));
+    this.listeners.forEach((listener) => listener(this.toasts));
   }
 
   add(toast: IToast) {
@@ -30,7 +30,7 @@ class ToastManager {
   }
 
   remove(id: string) {
-    this.toasts = this.toasts.filter(t => t.id !== id);
+    this.toasts = this.toasts.filter((t) => t.id !== id);
     this.notify();
   }
 }

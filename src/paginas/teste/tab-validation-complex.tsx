@@ -1,10 +1,11 @@
-import React from "react";
-import { showModal } from "../../componentes/modal";
-import StarRating from "../../componentes/start-rating";
-import useForm from "../../hooks/use-form";
-import { pipe, required, minLength, isEmail, equalsTo, when } from "../../utils/validate";
-import { MessageSquare, Lock, Building2, Mail, ShieldCheck, Star, User } from "lucide-react";
-import useMask from "../../hooks/use-mask";
+import React from 'react';
+import { Building2, Lock, Mail, MessageSquare, ShieldCheck, Star, User } from 'lucide-react';
+
+import { showModal } from '../../componentes/modal';
+import StarRating from '../../componentes/start-rating';
+import useForm from '../../hooks/use-form';
+import useMask from '../../hooks/use-mask';
+import { equalsTo, isEmail, minLength, pipe, required, when } from '../../utils/validate';
 
 const TabValidationComplexExample = () => {
   const cnpjMask = useMask('cnpj');
@@ -12,12 +13,15 @@ const TabValidationComplexExample = () => {
   // ... setup onSubmit ...
   const onSubmit = (data: any) => {
     showModal({
-      title: "Dados Válidos!",
+      title: 'Dados Válidos!',
       content: JSON.stringify(data, null, 2),
     });
   };
 
-  const { formProps, setValidators } = useForm({ id: "complex-validation", onSubmit });
+  const { formProps, setValidators } = useForm({
+    id: 'complex-validation',
+    onSubmit,
+  });
 
   React.useEffect(() => {
     // USO DA NOVA SINTAXE LIMPA
@@ -30,37 +34,25 @@ const TabValidationComplexExample = () => {
 
       // Cruzada (Senha vs Confirmação)
       senha: pipe(required(), minLength(6)),
-      confirmarSenha: pipe(
-        required(),
-        equalsTo("senha", "As senhas devem ser iguais")
-      ),
+      confirmarSenha: pipe(required(), equalsTo('senha', 'As senhas devem ser iguais')),
 
       // Condicional (Cruzada Lógica)
-      cnpj: when(
-        (values) => values.temEmpresa,
-        required("CNPJ é obrigatório para empresas")
-      ),
+      cnpj: when((values) => values.temEmpresa, required('CNPJ é obrigatório para empresas')),
 
       // --- NOVA REGRA DE NEGÓCIO (Rating vs Comentário) ---
-      rating: required("Selecione uma nota"),
+      rating: required('Selecione uma nota'),
 
       comentario: pipe(
         // Cenário A: Nota Baixa (1 ou 2 estrelas)
         // Regra: Obrigatório E Mínimo 10 caracteres (Justificativa forte)
         when(
           (values) => Number(values.rating) > 0 && Number(values.rating) < 3,
-          pipe(
-            required("Para notas baixas, o comentário é obrigatório."),
-            minLength(10, "Explique melhor o motivo (mínimo 10 letras).")
-          )
+          pipe(required('Para notas baixas, o comentário é obrigatório.'), minLength(10, 'Explique melhor o motivo (mínimo 10 letras).')),
         ),
 
         // Cenário B: Nota Alta (3, 4 ou 5 estrelas)
         // Regra: Opcional, mas se escrever, Mínimo 5 caracteres
-        when(
-          (values) => Number(values.rating) >= 3,
-          minLength(5, "O comentário é curto demais.")
-        )
+        when((values) => Number(values.rating) >= 3, minLength(5, 'O comentário é curto demais.')),
       ),
     });
   }, [setValidators]);
@@ -73,8 +65,7 @@ const TabValidationComplexExample = () => {
           Regras Dinâmicas
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Exemplo de validação condicional (<code>when</code>) e composição (
-          <code>pipe</code>).
+          Exemplo de validação condicional (<code>when</code>) e composição (<code>pipe</code>).
         </p>
       </div>
 
@@ -85,50 +76,28 @@ const TabValidationComplexExample = () => {
             <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 flex items-center gap-1">
               <User size={12} /> Nome
             </label>
-            <input
-              name="nome"
-              data-validation="nome"
-              className="form-input"
-              placeholder="Seu nome"
-            />
+            <input name="nome" data-validation="nome" className="form-input" placeholder="Seu nome" />
           </div>
 
           <div>
             <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 flex items-center gap-1">
               <Mail size={12} /> Email
             </label>
-            <input
-              name="email"
-              data-validation="email"
-              className="form-input"
-              placeholder="seu@email.com"
-            />
+            <input name="email" data-validation="email" className="form-input" placeholder="seu@email.com" />
           </div>
 
           <div>
             <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 flex items-center gap-1">
               <Lock size={12} /> Senha
             </label>
-            <input
-              name="senha"
-              data-validation="senha"
-              type="password"
-              className="form-input"
-              placeholder="••••••"
-            />
+            <input name="senha" data-validation="senha" type="password" className="form-input" placeholder="••••••" />
           </div>
 
           <div>
             <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 flex items-center gap-1">
               <Lock size={12} /> Confirmar
             </label>
-            <input
-              name="confirmarSenha"
-              data-validation="confirmarSenha"
-              type="password"
-              className="form-input"
-              placeholder="••••••"
-            />
+            <input name="confirmarSenha" data-validation="confirmarSenha" type="password" className="form-input" placeholder="••••••" />
           </div>
         </div>
 
@@ -140,25 +109,15 @@ const TabValidationComplexExample = () => {
               type="checkbox"
               className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500 cursor-pointer"
             />
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Represento uma Empresa
-            </label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Represento uma Empresa</label>
           </div>
 
           <div>
             <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 flex items-center gap-1">
               <Building2 size={12} /> CNPJ (Condicional)
             </label>
-            <input
-              name="cnpj"
-              data-validation="cnpj"
-              className="form-input"
-              placeholder="00.000.000/0000-00"
-              {...cnpjMask}
-            />
-            <p className="text-[10px] text-gray-400 mt-1">
-              * Obrigatório apenas se o checkbox acima estiver marcado.
-            </p>
+            <input name="cnpj" data-validation="cnpj" className="form-input" placeholder="00.000.000/0000-00" {...cnpjMask} />
+            <p className="text-[10px] text-gray-400 mt-1">* Obrigatório apenas se o checkbox acima estiver marcado.</p>
           </div>
         </div>
 
@@ -195,12 +154,10 @@ const TabValidationComplexExample = () => {
               </p>
               <ul className="list-disc pl-3 mt-1 space-y-0.5">
                 <li>
-                  Nota 1-2: Comentário <strong>Obrigatório</strong> (min 10
-                  chars).
+                  Nota 1-2: Comentário <strong>Obrigatório</strong> (min 10 chars).
                 </li>
                 <li>
-                  Nota 3-5: Comentário <strong>Opcional</strong> (min 5 chars se
-                  preenchido).
+                  Nota 3-5: Comentário <strong>Opcional</strong> (min 5 chars se preenchido).
                 </li>
               </ul>
             </div>
@@ -210,8 +167,7 @@ const TabValidationComplexExample = () => {
         <div className="flex justify-end pt-4 border-t border-gray-100 dark:border-gray-700">
           <button
             type="submit"
-            className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg shadow-lg transition-transform active:scale-95"
-          >
+            className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg shadow-lg transition-transform active:scale-95">
             Validar Tudo
           </button>
         </div>

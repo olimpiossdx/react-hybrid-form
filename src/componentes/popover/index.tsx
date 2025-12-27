@@ -1,5 +1,5 @@
-import React, { useLayoutEffect, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface PopoverProps {
   isOpen: boolean;
@@ -11,14 +11,7 @@ interface PopoverProps {
   fullWidth?: boolean; // Se true, força min-width igual ao trigger
 }
 
-const Popover: React.FC<PopoverProps> = ({
-  isOpen,
-  onClose,
-  triggerRef,
-  children,
-  className = "",
-  fullWidth = false,
-}) => {
+const Popover: React.FC<PopoverProps> = ({ isOpen, onClose, triggerRef, children, className = '', fullWidth = false }) => {
   const [coords, setCoords] = useState<{
     top: number;
     left: number;
@@ -56,7 +49,9 @@ const Popover: React.FC<PopoverProps> = ({
         // Tenta alinhar pela direita
         left = triggerRect.right + scrollX - popoverWidth;
         // Guarda de segurança
-        if (left < 4) left = 4;
+        if (left < 4) {
+          left = 4;
+        }
       }
 
       setCoords({
@@ -80,32 +75,33 @@ const Popover: React.FC<PopoverProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      window.addEventListener("resize", updatePosition);
-      window.addEventListener("scroll", updatePosition, { capture: true });
+      window.addEventListener('resize', updatePosition);
+      window.addEventListener('scroll', updatePosition, { capture: true });
     }
     return () => {
-      window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("scroll", updatePosition, { capture: true });
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, { capture: true });
     };
   }, [isOpen]);
 
   // Click Outside
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      return;
+    }
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        popoverRef.current?.contains(e.target as Node) ||
-        triggerRef.current?.contains(e.target as Node)
-      ) {
+      if (popoverRef.current?.contains(e.target as Node) || triggerRef.current?.contains(e.target as Node)) {
         return;
       }
       onClose();
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return createPortal(
     <div
@@ -117,20 +113,18 @@ const Popover: React.FC<PopoverProps> = ({
         bg-white dark:bg-gray-800 
         border-gray-200 dark:border-gray-700
         
-        ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"}
+        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}
         ${className}
       `}
       style={{
         top: coords?.top ?? 0,
         left: coords?.left ?? 0,
-        minWidth:
-          coords?.minWidth && coords.minWidth > 0 ? coords.minWidth : undefined,
-        visibility: coords ? "visible" : "hidden", // Esconde enquanto calcula
-      }}
-    >
+        minWidth: coords?.minWidth && coords.minWidth > 0 ? coords.minWidth : undefined,
+        visibility: coords ? 'visible' : 'hidden', // Esconde enquanto calcula
+      }}>
       {children}
     </div>,
-    document.body
+    document.body,
   );
 };
 

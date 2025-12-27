@@ -1,13 +1,6 @@
-import React from "react";
-import {
-  getDaysInMonthGrid,
-  isSameDay,
-  isBetween,
-  isWeekend,
-  isBefore,
-  isAfter,
-  parseISODate,
-} from "../../utils/date";
+import React from 'react';
+
+import { getDaysInMonthGrid, isAfter, isBefore, isBetween, isSameDay, isWeekend, parseISODate } from '../../utils/date';
 
 interface CalendarGridProps {
   monthDate: Date;
@@ -33,14 +26,20 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   onHover,
 }) => {
   const isDateDisabled = (date: Date) => {
-    if (excludeWeekends && isWeekend(date)) return true;
+    if (excludeWeekends && isWeekend(date)) {
+      return true;
+    }
     if (minDate) {
       const min = parseISODate(minDate);
-      if (min && isBefore(date, min)) return true;
+      if (min && isBefore(date, min)) {
+        return true;
+      }
     }
     if (maxDate) {
       const max = parseISODate(maxDate);
-      if (max && isAfter(date, max)) return true;
+      if (max && isAfter(date, max)) {
+        return true;
+      }
     }
     return false;
   };
@@ -50,16 +49,13 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
     <div className="w-full min-w-[18rem] p-3">
       {/* Cabeçalho do Mês */}
       <div className="text-center mb-4 font-bold text-gray-900 dark:text-white text-sm capitalize">
-        {monthDate.toLocaleString("pt-BR", { month: "long", year: "numeric" })}
+        {monthDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })}
       </div>
 
       {/* Dias da Semana */}
       <div className="grid grid-cols-7 gap-1 mb-2">
-        {["D", "S", "T", "Q", "Q", "S", "S"].map((d, i) => (
-          <span
-            key={i}
-            className="text-center text-[10px] text-gray-400 dark:text-gray-500 font-bold"
-          >
+        {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => (
+          <span key={i} className="text-center text-[10px] text-gray-400 dark:text-gray-500 font-bold">
             {d}
           </span>
         ))}
@@ -68,41 +64,36 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
       {/* Grade de Dias */}
       <div className="grid grid-cols-7 gap-1">
         {getDaysInMonthGrid(monthDate).map((day, idx) => {
-          if (!day) return <div key={`empty-${idx}`} />;
+          if (!day) {
+            return <div key={`empty-${idx}`} />;
+          }
 
           const disabledDay = isDateDisabled(day);
           const isSelStart = isSameDay(day, start);
           const isSelEnd = isSameDay(day, end);
           const isInRange = isBetween(day, start, end);
-          const isHoverRange =
-            start && !end && hoverDate && isBetween(day, start, hoverDate);
+          const isHoverRange = start && !end && hoverDate && isBetween(day, start, hoverDate);
 
           // Classes Base
-          let bgClass =
-            "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300";
-          let roundedClass = "rounded-full";
+          let bgClass = 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300';
+          let roundedClass = 'rounded-full';
 
           if (disabledDay) {
-            bgClass = "opacity-20 cursor-not-allowed";
+            bgClass = 'opacity-20 cursor-not-allowed';
           } else if (isSelStart || isSelEnd) {
-            bgClass =
-              "bg-cyan-600 text-white font-bold z-10 relative shadow-md";
+            bgClass = 'bg-cyan-600 text-white font-bold z-10 relative shadow-md';
           } else if (isInRange || isHoverRange) {
             // Range: Azul bem claro no Light, Azul escuro no Dark
-            bgClass =
-              "bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-200";
-            roundedClass = "rounded-none";
+            bgClass = 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-200';
+            roundedClass = 'rounded-none';
           }
 
           // Arredondamento das pontas do range
           if (isSelStart && (end || (hoverDate && isAfter(hoverDate, start)))) {
-            roundedClass = "rounded-l-full rounded-r-none";
+            roundedClass = 'rounded-l-full rounded-r-none';
           }
-          if (
-            isSelEnd ||
-            (start && !end && hoverDate && isSameDay(day, hoverDate))
-          ) {
-            roundedClass = "rounded-r-full rounded-l-none";
+          if (isSelEnd || (start && !end && hoverDate && isSameDay(day, hoverDate))) {
+            roundedClass = 'rounded-r-full rounded-l-none';
           }
 
           return (
@@ -118,8 +109,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
               className={`
                          h-8 w-full text-xs flex items-center justify-center transition-all
                          ${bgClass} ${roundedClass}
-                     `}
-            >
+                     `}>
               {day.getDate()}
             </button>
           );

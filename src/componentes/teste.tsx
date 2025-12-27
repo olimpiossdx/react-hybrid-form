@@ -1,6 +1,7 @@
 import React from 'react';
-import type { AutocompleteProps } from './autocomplete';
 import { createRoot } from 'react-dom/client';
+
+import type { AutocompleteProps } from './autocomplete';
 import useForm from '../hooks/use-form';
 // Importa o novo componente - REMOVIDO: import Autocomplete from './Autocomplete';
 
@@ -23,18 +24,15 @@ export interface SuggestionOption extends React.DetailedHTMLProps<React.OptionHT
   label: string; // Usaremos 'label' para exibição e busca
 }
 
-
 // Assinatura da função de validação (com genéricos)
 type ValidateFn<FormValues> = (
   value: any, // Mantido 'any' devido a limitações do TS em mapas
   field: HTMLFieldElements,
-  formValues: FormValues
+  formValues: FormValues,
 ) => ValidationResult;
 
 // Mapa de validadores (tipado)
 type ValidatorMap<FV> = Record<string, ValidateFn<FV>>;
-
-
 
 // --- COMPONENTE AUTOCOMPLETE (MOVIDO PARA CÁ) ---
 const Autocomplete: React.FC<AutocompleteProps> = ({
@@ -43,14 +41,16 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
   options: suggestions = [], // Garante que seja um array
   required,
   validationKey,
-  initialValue = "",
+  initialValue = '',
 }) => {
   // Encontra o label inicial correspondente ao initialValue
   const findInitialLabel = (): string => {
-    if (!initialValue || !Array.isArray(suggestions)) return "";
+    if (!initialValue || !Array.isArray(suggestions)) {
+      return '';
+    }
     // Prioriza o 'label' que definimos, mas usa 'children' como fallback se 'label' não existir
-    const found = suggestions.find(s => s.value === initialValue);
-    return found ? (found.label || (typeof found.children === 'string' ? found.children : "")) : "";
+    const found = suggestions.find((s) => s.value === initialValue);
+    return found ? found.label || (typeof found.children === 'string' ? found.children : '') : '';
   };
 
   const [inputValue, setInputValue] = React.useState<string>(findInitialLabel()); // Estado para o texto visível (label)
@@ -86,38 +86,40 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
     const typedLabel = event.target.value;
     setInputValue(typedLabel);
 
-    let finalValue = "";
+    let finalValue = '';
     let foundMatch = false;
 
     if (typedLabel && Array.isArray(suggestions)) {
       // Filtra usando 'label' ou 'children' como fallback
-      const filtered = suggestions.filter(suggestion =>
-        (suggestion.label || (typeof suggestion.children === 'string' ? suggestion.children : ""))
-          .toLowerCase().includes(typedLabel.toLowerCase())
+      const filtered = suggestions.filter((suggestion) =>
+        (suggestion.label || (typeof suggestion.children === 'string' ? suggestion.children : ''))
+          .toLowerCase()
+          .includes(typedLabel.toLowerCase()),
       );
       setFilteredSuggestions(filtered);
       setShowSuggestions(filtered.length > 0);
 
       // Verifica se o texto digitado corresponde exatamente a um label
-      const exactMatch = suggestions.find(s => (s.label || (typeof s.children === 'string' ? s.children : "")).toLowerCase() === typedLabel.toLowerCase());
+      const exactMatch = suggestions.find(
+        (s) => (s.label || (typeof s.children === 'string' ? s.children : '')).toLowerCase() === typedLabel.toLowerCase(),
+      );
       if (exactMatch) {
         finalValue = exactMatch.value;
         foundMatch = true;
       }
-
     } else {
       setFilteredSuggestions([]);
       setShowSuggestions(false);
     }
     if (!foundMatch) {
-      finalValue = "";
+      finalValue = '';
     }
     updateHiddenSelect(finalValue);
   };
 
   // Seleciona uma sugestão (objeto SuggestionOption)
   const handleSuggestionClick = (suggestion: SuggestionOption) => {
-    const displayLabel = suggestion.label || (typeof suggestion.children === 'string' ? suggestion.children : "");
+    const displayLabel = suggestion.label || (typeof suggestion.children === 'string' ? suggestion.children : '');
     setInputValue(displayLabel); // Mostra o label no input visível
     updateHiddenSelect(suggestion.value); // Define o value no select escondido
     setFilteredSuggestions([]);
@@ -141,10 +143,12 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
       }
       setShowSuggestions(false);
       // Ao sair, verifica se o input visível corresponde a um label válido
-      const isValidLabel = Array.isArray(suggestions) && suggestions.some(s => (s.label || (typeof s.children === 'string' ? s.children : "")) === inputValue);
+      const isValidLabel =
+        Array.isArray(suggestions) &&
+        suggestions.some((s) => (s.label || (typeof s.children === 'string' ? s.children : '')) === inputValue);
       if (!isValidLabel) {
-        setInputValue("");
-        updateHiddenSelect("");
+        setInputValue('');
+        updateHiddenSelect('');
       }
     }
   };
@@ -155,19 +159,20 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
         // Ao clicar fora, verifica se o input visível corresponde a um label válido
-        const isValidLabel = Array.isArray(suggestions) && suggestions.some(s => (s.label || (typeof s.children === 'string' ? s.children : "")) === inputValue);
-        if (!isValidLabel && selectedValue !== "") {
-          setInputValue("");
-          updateHiddenSelect("");
+        const isValidLabel =
+          Array.isArray(suggestions) &&
+          suggestions.some((s) => (s.label || (typeof s.children === 'string' ? s.children : '')) === inputValue);
+        if (!isValidLabel && selectedValue !== '') {
+          setInputValue('');
+          updateHiddenSelect('');
         }
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [containerRef, inputValue, suggestions, selectedValue]);
-
 
   return (
     <div className="relative mb-4" ref={containerRef} onBlur={handleBlur}>
@@ -183,9 +188,10 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
         onChange={handleInputChange}
         onFocus={() => {
           if (Array.isArray(suggestions)) {
-            const filtered = suggestions.filter(suggestion =>
-              (suggestion.label || (typeof suggestion.children === 'string' ? suggestion.children : ""))
-                .toLowerCase().includes(inputValue.toLowerCase())
+            const filtered = suggestions.filter((suggestion) =>
+              (suggestion.label || (typeof suggestion.children === 'string' ? suggestion.children : ''))
+                .toLowerCase()
+                .includes(inputValue.toLowerCase()),
             );
             setFilteredSuggestions(filtered);
             setShowSuggestions(true);
@@ -205,24 +211,26 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
         id={name}
         name={name}
         value={selectedValue} // Usa o value
-        onChange={() => { }}
+        onChange={() => {}}
         required={required}
         data-validation={validationKey}
-        className='absolute w-1px h-1px -m-1px p-0 overflow-hidden clip-[rect(0,0,0,0)] border-0'
+        className="absolute w-1px h-1px -m-1px p-0 overflow-hidden clip-[rect(0,0,0,0)] border-0"
         tabIndex={-1}
-        aria-hidden="true"
-      >
+        aria-hidden="true">
         <option value=""></option>
         {/* Popula com value e label, e passa o resto das props para <option> */}
-        {Array.isArray(suggestions) && suggestions.map(suggestion => {
-          // Separa 'label' e 'children' das outras props de <option>
-          const { label: suggestionLabel, children: suggestionChildren, ...optionProps } = suggestion;
-          return (
-            <option key={suggestion.value} {...optionProps} > {/* Passa as props restantes */}
-              {suggestionLabel || suggestionChildren} {/* Usa label ou children para o texto interno */}
-            </option>
-          );
-        })}
+        {Array.isArray(suggestions) &&
+          suggestions.map((suggestion) => {
+            // Separa 'label' e 'children' das outras props de <option>
+            const { label: suggestionLabel, children: suggestionChildren, ...optionProps } = suggestion;
+            return (
+              <option key={suggestion.value} {...optionProps}>
+                {' '}
+                {/* Passa as props restantes */}
+                {suggestionLabel || suggestionChildren} {/* Usa label ou children para o texto interno */}
+              </option>
+            );
+          })}
       </select>
 
       {/* Lista de Sugestões (mostra LABEL ou children) */}
@@ -232,7 +240,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
           role="listbox"
           className="absolute z-10 w-full bg-gray-700 border border-gray-600 rounded-md mt-1 max-h-40 overflow-y-auto shadow-lg">
           {filteredSuggestions.map((suggestion, index) => {
-            const displayLabel = suggestion.label || (typeof suggestion.children === 'string' ? suggestion.children : "");
+            const displayLabel = suggestion.label || (typeof suggestion.children === 'string' ? suggestion.children : '');
             return (
               <li
                 key={suggestion.value}
@@ -249,8 +257,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
                   }
                   e.preventDefault();
                   handleSuggestionClick(suggestion);
-                }}
-              >
+                }}>
                 {displayLabel}
               </li>
             );
@@ -260,7 +267,6 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
     </div>
   );
 };
-
 
 // --- COMPONENTES DE EXEMPLO ---
 
@@ -279,24 +285,30 @@ const LoginForm = () => {
   };
 
   return (
-    <div className='bg-gray-800 p-6 rounded-lg shadow-xl'>
-      <h3 className='text-xl font-bold mb-4 text-cyan-400'>1. Campos Nativos</h3>
-      <p className='text-gray-400 mb-4'>JSX 100% limpo, hook encontra por `id`.</p>
+    <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
+      <h3 className="text-xl font-bold mb-4 text-cyan-400">1. Campos Nativos</h3>
+      <p className="text-gray-400 mb-4">JSX 100% limpo, hook encontra por `id`.</p>
       {/* Usa o formId retornado pelo hook */}
       <form id={formId} onSubmit={handleSubmit(onSubmit)} noValidate>
-        <div className='mb-4'>
-          <label className='block mb-1 text-gray-300' htmlFor='email'>Email</label>
-          <input id='email' name='email' type='email' className='form-input' required pattern='^\S+@\S+$' />
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-300" htmlFor="email">
+            Email
+          </label>
+          <input id="email" name="email" type="email" className="form-input" required pattern="^\S+@\S+$" />
         </div>
-        <div className='mb-4'>
-          <label className='block mb-1 text-gray-300' htmlFor='senha'>Senha</label>
-          <input id='senha' name='senha' type='password' className='form-input' required minLength={6} />
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-300" htmlFor="senha">
+            Senha
+          </label>
+          <input id="senha" name="senha" type="password" className="form-input" required minLength={6} />
         </div>
-        <button type='submit' className='w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded transition-colors'>Entrar</button>
+        <button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded transition-colors">
+          Entrar
+        </button>
       </form>
     </div>
   );
-}
+};
 
 // 2. Cenário: Validação Customizada (Nativo)
 const RegistrationForm = () => {
@@ -314,13 +326,11 @@ const RegistrationForm = () => {
       return { message: 'As senhas não correspondem', type: 'error' };
     }
     return true; // Válido
-  },
-    []
-  );
+  }, []);
 
   React.useEffect(() => {
     setValidators({
-      validarSenha: validarSenha
+      validarSenha: validarSenha,
     });
   }, [setValidators, validarSenha]);
 
@@ -329,32 +339,38 @@ const RegistrationForm = () => {
   };
 
   return (
-    <div className='bg-gray-800 p-6 rounded-lg shadow-xl'>
-      <h3 className='text-xl font-bold mb-4 text-cyan-400'>2. Validação Customizada (Nativo)</h3>
-      <p className='text-gray-400 mb-4'>`data-validation` linka com a função JS.</p>
+    <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
+      <h3 className="text-xl font-bold mb-4 text-cyan-400">2. Validação Customizada (Nativo)</h3>
+      <p className="text-gray-400 mb-4">`data-validation` linka com a função JS.</p>
       <form id={formId} onSubmit={handleSubmit(onSubmit)} noValidate>
-        <div className='mb-4'>
-          <label className='block mb-1 text-gray-300' htmlFor='reg_senha'>Senha</label>
-          <input id='reg_senha' name='senha' type='password' className='form-input' required />
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-300" htmlFor="reg_senha">
+            Senha
+          </label>
+          <input id="reg_senha" name="senha" type="password" className="form-input" required />
         </div>
-        <div className='mb-4'>
-          <label className='block mb-1 text-gray-300' htmlFor='confirmarSenha'>Confirmar Senha</label>
-          <input id='confirmarSenha' name='confirmarSenha' type='password' className='form-input' required data-validation='validarSenha' />
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-300" htmlFor="confirmarSenha">
+            Confirmar Senha
+          </label>
+          <input id="confirmarSenha" name="confirmarSenha" type="password" className="form-input" required data-validation="validarSenha" />
         </div>
-        <button type='submit' className='w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded'>Cadastrar</button>
+        <button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded">
+          Cadastrar
+        </button>
       </form>
     </div>
   );
-}
+};
 
 // 3. Componente Híbrido Customizado: StarRating
-const StarRating = ({ name, label, required }: { name: string, label: string, required?: boolean }) => {
-  const [currentValue, setCurrentValue] = React.useState<number | string>("");
+const StarRating = ({ name, label, required }: { name: string; label: string; required?: boolean }) => {
+  const [currentValue, setCurrentValue] = React.useState<number | string>('');
   const [hoverValue, setHoverValue] = React.useState(0);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const handleClick = (value: number) => {
-    const newValue = value === currentValue ? "" : value;
+    const newValue = value === currentValue ? '' : value;
     setCurrentValue(newValue);
     if (inputRef.current) {
       inputRef.current.value = String(newValue);
@@ -369,16 +385,12 @@ const StarRating = ({ name, label, required }: { name: string, label: string, re
   const displayValue = Number(currentValue) || 0;
 
   return (
-    <div className='relative mb-4'>
-      <label className='block mb-1 text-gray-300' htmlFor={name}>
+    <div className="relative mb-4">
+      <label className="block mb-1 text-gray-300" htmlFor={name}>
         {label}
       </label>
 
-      <div
-        className='star-display flex focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded-md'
-        onBlur={handleBlur}
-        tabIndex={0}
-      >
+      <div className="star-display flex focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded-md" onBlur={handleBlur} tabIndex={0}>
         {[1, 2, 3, 4, 5].map((value) => (
           <svg
             key={value}
@@ -386,10 +398,9 @@ const StarRating = ({ name, label, required }: { name: string, label: string, re
             onMouseOver={() => setHoverValue(value)}
             onMouseOut={() => setHoverValue(0)}
             className={`w-8 h-8 cursor-pointer transition-colors ${(hoverValue || displayValue) >= value ? 'text-yellow-400' : 'text-gray-600'}`}
-            fill='currentColor'
-            viewBox='0 0 20 20'
-          >
-            <path d='M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z' />
+            fill="currentColor"
+            viewBox="0 0 20 20">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
           </svg>
         ))}
       </div>
@@ -398,13 +409,13 @@ const StarRating = ({ name, label, required }: { name: string, label: string, re
         ref={inputRef}
         id={name}
         name={name}
-        type='number'
+        type="number"
         value={currentValue}
-        onChange={() => { }}
+        onChange={() => {}}
         required={required}
         min={required ? 1 : 0}
         style={{ appearance: 'none' }}
-        className='absolute opacity-0 w-[250px] h-1px m-0 p-0 border-0 pointer-events-none' // Removido pointer-events-none, mantido w-[250px]
+        className="absolute opacity-0 w-[250px] h-1px m-0 p-0 border-0 pointer-events-none" // Removido pointer-events-none, mantido w-[250px]
         max={5}
         tabIndex={-1}
       />
@@ -416,7 +427,7 @@ const StarRating = ({ name, label, required }: { name: string, label: string, re
 const HybridForm = () => {
   // Define o tipo do formulário
   interface MyHybridForm {
-    rating: number | "";
+    rating: number | '';
     comentario: string;
     corFavorita: string; // Novo campo
   }
@@ -429,15 +440,16 @@ const HybridForm = () => {
     console.log('validarComentario - field', field);
     const rating = Number(formValues.rating);
     if (rating > 0 && rating <= 3 && !value) {
-      return { message: 'O comentário é obrigatório para avaliações de 3 estrelas ou menos.', type: 'error' };
+      return {
+        message: 'O comentário é obrigatório para avaliações de 3 estrelas ou menos.',
+        type: 'error',
+      };
     }
     if (value && value.length > 0 && value.length < 5) {
       return { message: 'Seu comentário é um pouco curto.', type: 'error' };
     }
     return true;
-  },
-    []
-  );
+  }, []);
 
   // Exemplo de validação para o Autocomplete
   const validarCor = React.useCallback((value: any, field: HTMLFieldElements, formValues: MyHybridForm): ValidationResult => {
@@ -446,15 +458,14 @@ const HybridForm = () => {
     if (value === 'verde') {
       return { message: 'Verde é uma ótima cor!', type: 'success' };
     }
-    if (!value && (field as HTMLSelectElement).required) { // Verifica o required no select
+    if (!value && (field as HTMLSelectElement).required) {
+      // Verifica o required no select
       // O required nativo do select escondido já deve tratar isso,
       // mas podemos adicionar uma mensagem customizada se quisermos.
       // return { message: 'Por favor, selecione sua cor favorita.', type: 'error'};
     }
     return true;
-  },
-    []
-  );
+  }, []);
 
   React.useEffect(() => {
     setValidators({
@@ -470,25 +481,20 @@ const HybridForm = () => {
 
   // Lista de sugestões para o Autocomplete (formato SuggestionOption)
   const cores: SuggestionOption[] = [
-    { value: "vermelho", label: "Vermelho" },
-    { value: "azul", label: "Azul" },
-    { value: "verde", label: "Verde" },
-    { value: "amarelo", label: "Amarelo", disabled: true }, // Exemplo de opção desabilitada
-    { value: "preto", label: "Preto" },
-    { value: "branco", label: "Branco" },
+    { value: 'vermelho', label: 'Vermelho' },
+    { value: 'azul', label: 'Azul' },
+    { value: 'verde', label: 'Verde' },
+    { value: 'amarelo', label: 'Amarelo', disabled: true }, // Exemplo de opção desabilitada
+    { value: 'preto', label: 'Preto' },
+    { value: 'branco', label: 'Branco' },
   ];
 
   return (
-    <div className='bg-gray-800 p-6 rounded-lg shadow-xl'>
-      <h3 className='text-xl font-bold mb-4 text-cyan-400'>4. Formulário Híbrido Completo</h3>
-      <p className='text-gray-400 mb-4'>Rating + Autocomplete + Validação Cruzada.</p>
+    <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
+      <h3 className="text-xl font-bold mb-4 text-cyan-400">4. Formulário Híbrido Completo</h3>
+      <p className="text-gray-400 mb-4">Rating + Autocomplete + Validação Cruzada.</p>
       <form id={formId} onSubmit={handleSubmit(onSubmit)} noValidate>
-
-        <StarRating
-          name='rating'
-          label='Avaliação (obrigatório)'
-          required
-        />
+        <StarRating name="rating" label="Avaliação (obrigatório)" required />
 
         {/* Novo campo Autocomplete */}
         <Autocomplete
@@ -499,23 +505,26 @@ const HybridForm = () => {
           validationKey="validarCor" // Chave para o validador customizado
         />
 
-        <div className='mb-4'>
-          <label className='block mb-1 text-gray-300' htmlFor='comentario'>Comentário</label>
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-300" htmlFor="comentario">
+            Comentário
+          </label>
           <input
-            id='comentario'
-            name='comentario'
-            type='text'
-            className='form-input'
-            data-validation='validarComentario' // A chave
+            id="comentario"
+            name="comentario"
+            type="text"
+            className="form-input"
+            data-validation="validarComentario" // A chave
           />
         </div>
 
-        <button type='submit' className='w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded'>Enviar</button>
+        <button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded">
+          Enviar
+        </button>
       </form>
     </div>
   );
-}
-
+};
 
 // 5. Cenário: Teste de Estresse (Nativo)
 const StressTestForm = () => {
@@ -526,20 +535,24 @@ const StressTestForm = () => {
 
   const fieldCount = 50;
   return (
-    <div className='bg-gray-800 p-6 rounded-lg shadow-xl'>
-      <h3 className='text-xl font-bold mb-4 text-cyan-400'>5. Teste de Estresse (Nativo)</h3>
-      <p className='text-gray-400 mb-4'>A interação continua fluida.</p>
-      <form id={formId} onSubmit={handleSubmit(onSubmit)} noValidate className='max-h-96 overflow-y-auto pr-4'>
+    <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
+      <h3 className="text-xl font-bold mb-4 text-cyan-400">5. Teste de Estresse (Nativo)</h3>
+      <p className="text-gray-400 mb-4">A interação continua fluida.</p>
+      <form id={formId} onSubmit={handleSubmit(onSubmit)} noValidate className="max-h-96 overflow-y-auto pr-4">
         {Array.from({ length: fieldCount }, (_, i) => (
-          <div key={i} className='mb-2'>
-            <input name={`campo${i}`} className='form-input text-sm py-1' placeholder={`Campo ${i + 1}`} />
+          <div key={i} className="mb-2">
+            <input name={`campo${i}`} className="form-input text-sm py-1" placeholder={`Campo ${i + 1}`} />
           </div>
         ))}
-        <button type='submit' className='w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded transition-colors mt-4'>Submeter Estresse</button>
+        <button
+          type="submit"
+          className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded transition-colors mt-4">
+          Submeter Estresse
+        </button>
       </form>
     </div>
-  )
-}
+  );
+};
 
 // --- Funções e Componentes Utilitários ---
 
@@ -547,23 +560,25 @@ const StressTestForm = () => {
 let modalRootInstance: any = null;
 
 // Modal customizado para substituir o alert()
-const CustomModal: React.FC<{ title: string; message: string; onClose: () => void }> = ({ title, message, onClose }) => {
+const CustomModal: React.FC<{
+  title: string;
+  message: string;
+  onClose: () => void;
+}> = ({ title, message, onClose }) => {
   return (
     <div
-      className='fixed inset-0 z-50 flex items-center justify-center p-4'
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}
-      onClick={onClose}
-    >
+      onClick={onClose}>
       <div
-        className='bg-gray-800 rounded-lg shadow-xl max-w-sm w-full p-6'
+        className="bg-gray-800 rounded-lg shadow-xl max-w-sm w-full p-6"
         onClick={(e) => e.stopPropagation()} // Impede o fechamento ao clicar dentro
       >
-        <h2 className='text-xl font-bold text-cyan-400 mb-4'>{title}</h2>
-        <p className='text-gray-300 whitespace-pre-wrap wrap-break-words'>{message}</p>
+        <h2 className="text-xl font-bold text-cyan-400 mb-4">{title}</h2>
+        <p className="text-gray-300 whitespace-pre-wrap wrap-break-words">{message}</p>
         <button
           onClick={onClose}
-          className='w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded transition-colors mt-6'
-        >
+          className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded transition-colors mt-6">
           Fechar
         </button>
       </div>
@@ -583,7 +598,7 @@ const showModal = (title: string, message: string) => {
   // Importa o createRoot do ReactDOM (assume que está disponível globalmente OU importado)
   // FIX: Adiciona verificação se createRoot existe antes de usar
   if (typeof createRoot === 'undefined') {
-    console.error("createRoot não está disponível. Certifique-se de que react-dom/client está importado.");
+    console.error('createRoot não está disponível. Certifique-se de que react-dom/client está importado.');
     // Fallback para alert se createRoot não estiver disponível
     alert(`${title}\n\n${message}`);
     return;
@@ -602,9 +617,7 @@ const showModal = (title: string, message: string) => {
   };
 
   // Usa root.render()
-  modalRootInstance.render(
-    <CustomModal title={title} message={message} onClose={closeModal} />
-  );
+  modalRootInstance.render(<CustomModal title={title} message={message} onClose={closeModal} />);
 };
 
 // --- Componente Principal e Estilos ---
@@ -619,14 +632,12 @@ const Teste: React.FC = () => {
     stress: <StressTestForm />,
   };
 
-  const TabButton: React.FC<{ tabId: string, label: string }> = ({ tabId, label }) => (
+  const TabButton: React.FC<{ tabId: string; label: string }> = ({ tabId, label }) => (
     <button
       onClick={() => setActiveTab(tabId)}
-      className={`px-3 py-2 sm:px-4 text-sm font-medium rounded-md transition-colors ${activeTab === tabId
-        ? 'bg-cyan-600 text-white'
-        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-        }`}
-    >
+      className={`px-3 py-2 sm:px-4 text-sm font-medium rounded-md transition-colors ${
+        activeTab === tabId ? 'bg-cyan-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+      }`}>
       {label}
     </button>
   );
@@ -677,25 +688,23 @@ const Teste: React.FC = () => {
          /* O feedback visual de erro/sucesso virá da borda do input visível */
 
       `}</style>
-      <div className='bg-gray-800 text-white min-h-screen p-4 sm:p-8 font-sans'>
-        <div className='max-w-2xl mx-auto'>
-          <header className='text-center mb-8'>
-            <h1 className='text-xl sm:text-4xl font-extrabold text-cyan-400'>`useForm` - v4.0</h1>
+      <div className="bg-gray-800 text-white min-h-screen p-4 sm:p-8 font-sans">
+        <div className="max-w-2xl mx-auto">
+          <header className="text-center mb-8">
+            <h1 className="text-xl sm:text-4xl font-extrabold text-cyan-400">`useForm` - v4.0</h1>
             {/* FIX: Escaped < and > to render as text and fix DOM nesting warning */}
-            <p className='text-gray-400 mt-2'>Tipado, Validação Cruzada Realtime, Híbrido.</p>
+            <p className="text-gray-400 mt-2">Tipado, Validação Cruzada Realtime, Híbrido.</p>
           </header>
 
-          <div className='flex justify-center flex-wrap gap-2 mb-6'>
-            <TabButton tabId='login' label='Nativo' />
-            <TabButton tabId='registration' label='Nativo (Custom)' />
-            <TabButton tabId='hybrid' label='Híbrido Completo' /> {/* Renomeado */}
+          <div className="flex justify-center flex-wrap gap-2 mb-6">
+            <TabButton tabId="login" label="Nativo" />
+            <TabButton tabId="registration" label="Nativo (Custom)" />
+            <TabButton tabId="hybrid" label="Híbrido Completo" /> {/* Renomeado */}
             {/* <TabButton tabId='autocomplete' label='Autocomplete' /> */} {/* Removido tab separada */}
-            <TabButton tabId='stress' label='Estresse' />
+            <TabButton tabId="stress" label="Estresse" />
           </div>
 
-          <main>
-            {scenarios[activeTab as keyof typeof scenarios]}
-          </main>
+          <main>{scenarios[activeTab as keyof typeof scenarios]}</main>
         </div>
       </div>
       {/* O container do modal será adicionado aqui */}

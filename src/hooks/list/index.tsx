@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 export interface ListItem<T> {
   id: string;
@@ -16,23 +16,23 @@ export interface UseListReturn<T> {
   clear: () => void;
 }
 
-export const useList = <T = any>(initialDataOrCount: T[] | number = []): UseListReturn<T> => {
+export const useList = <T = any,>(initialDataOrCount: T[] | number = []): UseListReturn<T> => {
   const generateItem = (data?: T): ListItem<T> => ({
     id: `item-${crypto.randomUUID()}`,
-    data: data || ({} as T)
+    data: data || ({} as T),
   });
 
   const [items, setItems] = useState<ListItem<T>[]>(() => {
     if (typeof initialDataOrCount === 'number') {
       return Array.from({ length: initialDataOrCount }, () => generateItem());
     }
-    return (initialDataOrCount || []).map(item => generateItem(item));
+    return (initialDataOrCount || []).map((item) => generateItem(item));
   });
 
   const add = useCallback((payload?: T | T[]) => {
-    setItems(prev => {
+    setItems((prev) => {
       if (Array.isArray(payload)) {
-        const newItems = payload.map(item => generateItem(item));
+        const newItems = payload.map((item) => generateItem(item));
         return [...prev, ...newItems];
       }
       return [...prev, generateItem(payload)];
@@ -40,7 +40,7 @@ export const useList = <T = any>(initialDataOrCount: T[] | number = []): UseList
   }, []);
 
   const insertAt = useCallback((index: number, payload?: T) => {
-    setItems(prev => {
+    setItems((prev) => {
       const newItem = generateItem(payload);
       const newItems = [...prev];
       newItems.splice(index, 0, newItem);
@@ -50,18 +50,22 @@ export const useList = <T = any>(initialDataOrCount: T[] | number = []): UseList
 
   // --- MÉTODO DE ATUALIZAÇÃO ---
   const update = useCallback((id: string, payload: Partial<T>) => {
-    setItems(prev => prev.map(item => {
-      if (item.id === id) {
-        // Merge dos dados antigos com os novos
-        return { ...item, data: { ...item.data, ...payload } };
-      }
-      return item;
-    }));
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          // Merge dos dados antigos com os novos
+          return { ...item, data: { ...item.data, ...payload } };
+        }
+        return item;
+      }),
+    );
   }, []);
 
   const move = useCallback((fromIndex: number, toIndex: number) => {
-    setItems(prev => {
-      if (toIndex < 0 || toIndex >= prev.length || fromIndex < 0 || fromIndex >= prev.length) return prev;
+    setItems((prev) => {
+      if (toIndex < 0 || toIndex >= prev.length || fromIndex < 0 || fromIndex >= prev.length) {
+        return prev;
+      }
       const newItems = [...prev];
       const [movedItem] = newItems.splice(fromIndex, 1);
       newItems.splice(toIndex, 0, movedItem);
@@ -70,18 +74,26 @@ export const useList = <T = any>(initialDataOrCount: T[] | number = []): UseList
   }, []);
 
   const remove = useCallback((identifier: number | string | { id: string }) => {
-    setItems(prev => {
-      if (typeof identifier === 'number') return prev.filter((_, i) => i !== identifier);
-      if (typeof identifier === 'string') return prev.filter(item => item.id !== identifier);
-      if (typeof identifier === 'object' && 'id' in identifier) return prev.filter(item => item.id !== identifier.id);
+    setItems((prev) => {
+      if (typeof identifier === 'number') {
+        return prev.filter((_, i) => i !== identifier);
+      }
+      if (typeof identifier === 'string') {
+        return prev.filter((item) => item.id !== identifier);
+      }
+      if (typeof identifier === 'object' && 'id' in identifier) {
+        return prev.filter((item) => item.id !== identifier.id);
+      }
       return prev;
     });
   }, []);
 
   const replace = useCallback((dataOrCount: T[] | number) => {
     setItems(() => {
-      if (typeof dataOrCount === 'number') return Array.from({ length: dataOrCount }, () => generateItem());
-      return (dataOrCount || []).map(item => generateItem(item));
+      if (typeof dataOrCount === 'number') {
+        return Array.from({ length: dataOrCount }, () => generateItem());
+      }
+      return (dataOrCount || []).map((item) => generateItem(item));
     });
   }, []);
 

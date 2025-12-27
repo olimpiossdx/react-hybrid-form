@@ -3,7 +3,7 @@
 export interface UseFormConfig<FV> {
   id?: string;
   onSubmit?: (data: FV) => void;
-};
+}
 
 export interface IAnyObject {
   [key: string]: any;
@@ -11,7 +11,7 @@ export interface IAnyObject {
 
 export interface IValidationResult {
   message: string;
-  type: "error" | "warning" | "info" | "success";
+  type: 'error' | 'warning' | 'info' | 'success';
 }
 
 export type ValidationResult = string | IValidationResult | undefined;
@@ -21,9 +21,9 @@ export type FormField = HTMLInputElement | HTMLSelectElement | HTMLTextAreaEleme
 // --- TIPAGEM DE VALIDAÇÃO ---
 
 export type ValidateFn<FormValues, ValueType = any> = (
-  value: ValueType, 
+  value: ValueType,
   field: FormField | null,
-  formValues: FormValues
+  formValues: FormValues,
 ) => ValidationResult;
 
 export type ValidatorMap<FV> = Record<string, ValidateFn<FV, any>>;
@@ -51,15 +51,17 @@ type BrowserNativeObject = Date | FileList | File | Blob;
  * T = { user: { address: { city: string }, tags: string[] } }
  * Path<T> = "user" | "user.address" | "user.address.city" | "user.tags" | "user.tags.0"
  */
-export type Path<T> = T extends Primitive | BrowserNativeObject ? never : {
-  [K in keyof T]: K extends string | number
-    ? T[K] extends Array<infer U>
-      ? `${K}` | `${K}.${number}` | `${K}.${number}.${Path<U>}` // Suporte a Arrays (index numérico)
-      : T[K] extends object
-        ? `${K}` | `${K}.${Path<T[K]>}` // Suporte a Objetos Aninhados
-        : `${K}`
-    : never
-}[keyof T];
+export type Path<T> = T extends Primitive | BrowserNativeObject
+  ? never
+  : {
+      [K in keyof T]: K extends string | number
+        ? T[K] extends Array<infer U>
+          ? `${K}` | `${K}.${number}` | `${K}.${number}.${Path<U>}` // Suporte a Arrays (index numérico)
+          : T[K] extends object
+            ? `${K}` | `${K}.${Path<T[K]>}` // Suporte a Objetos Aninhados
+            : `${K}`
+        : never;
+    }[keyof T];
 
 /**
  * Utilitário Recursivo: Extrai o TIPO do valor dado um caminho (P) e o objeto original (T).

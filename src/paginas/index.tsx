@@ -1,10 +1,13 @@
-import React from 'react'
+import React from 'react';
+
 import Homolocao from './teste';
 
 const Paginas: React.FC = () => {
-  return (<>
-    <Homolocao/>
-  </>);
+  return (
+    <>
+      <Homolocao />
+    </>
+  );
 };
 
-export default Paginas
+export default Paginas;

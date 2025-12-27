@@ -1,13 +1,14 @@
-import React, { useState, useMemo } from "react";
-import { Trash2, Save, User, AlertCircle, Search, Database, Mail, Shield } from "lucide-react";
-import Alert from "../../componentes/alert";
-import { DataTable } from "../../componentes/data-table";
-import { showModal } from "../../componentes/modal";
-import Switch from "../../componentes/switch";
-import { toast } from "../../componentes/toast";
-import useList from "../../hooks/list";
-import useForm from "../../hooks/use-form";
-import { useVirtualizer } from "../../hooks/virtualize";
+import React, { useMemo, useState } from 'react';
+import { AlertCircle, Database, Mail, Save, Search, Shield, Trash2, User } from 'lucide-react';
+
+import Alert from '../../componentes/alert';
+import { DataTable } from '../../componentes/data-table';
+import { showModal } from '../../componentes/modal';
+import Switch from '../../componentes/switch';
+import { toast } from '../../componentes/toast';
+import useList from '../../hooks/list';
+import useForm from '../../hooks/use-form';
+import { useVirtualizer } from '../../hooks/virtualize';
 
 const TabDataTable = () => {
   const generateUsers = (qtd: number) =>
@@ -15,16 +16,16 @@ const TabDataTable = () => {
       id: String(i + 1),
       name: `Funcionário ${i + 1}`,
       email: `func.${i + 1}@empresa.com`,
-      role: i % 3 === 0 ? "Admin" : "User",
+      role: i % 3 === 0 ? 'Admin' : 'User',
       active: i % 5 !== 0,
     }));
   const initialData = useMemo(() => generateUsers(1000), []);
   const { items, remove } = useList(initialData);
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [sortState, setSortState] = useState<{
     key: string;
-    dir: "asc" | "desc";
+    dir: 'asc' | 'desc';
   } | null>(null);
 
   const processedItems = useMemo(() => {
@@ -32,17 +33,19 @@ const TabDataTable = () => {
     if (searchTerm) {
       const lowerTerm = searchTerm.toLowerCase();
       result = result.filter(
-        (item) =>
-          item.data.name.toLowerCase().includes(lowerTerm) ||
-          item.data.email.toLowerCase().includes(lowerTerm)
+        (item) => item.data.name.toLowerCase().includes(lowerTerm) || item.data.email.toLowerCase().includes(lowerTerm),
       );
     }
     if (sortState) {
       result = [...result].sort((a, b) => {
         const valA = a.data[sortState.key as keyof typeof a.data];
         const valB = b.data[sortState.key as keyof typeof b.data];
-        if (valA < valB) return sortState.dir === "asc" ? -1 : 1;
-        if (valA > valB) return sortState.dir === "asc" ? 1 : -1;
+        if (valA < valB) {
+          return sortState.dir === 'asc' ? -1 : 1;
+        }
+        if (valA > valB) {
+          return sortState.dir === 'asc' ? 1 : -1;
+        }
         return 0;
       });
     }
@@ -51,12 +54,12 @@ const TabDataTable = () => {
 
   const onSubmit = (data: any) => {
     if (Math.random() > 0.9) {
-      toast.warning("Erro de validação no servidor (Simulado).");
+      toast.warning('Erro de validação no servidor (Simulado).');
       return;
     }
     showModal({
-      title: "Edição em Massa Salva",
-      size: "lg",
+      title: 'Edição em Massa Salva',
+      size: 'lg',
       content: (
         <div className="space-y-3">
           <Alert variant="success" title="Operação Concluída">
@@ -70,7 +73,7 @@ const TabDataTable = () => {
     });
   };
 
-  const { formProps, handleSubmit } = useForm("bulk-edit-form");
+  const { formProps, handleSubmit } = useForm('bulk-edit-form');
 
   const { virtualItems, totalHeight, containerProps } = useVirtualizer({
     count: processedItems.length,
@@ -80,18 +83,14 @@ const TabDataTable = () => {
 
   const paddingTop = virtualItems.length > 0 ? virtualItems[0].start : 0;
   const paddingBottom =
-    virtualItems.length > 0
-      ? totalHeight -
-        (virtualItems[virtualItems.length - 1].start +
-          virtualItems[virtualItems.length - 1].size)
-      : 0;
+    virtualItems.length > 0 ? totalHeight - (virtualItems[virtualItems.length - 1].start + virtualItems[virtualItems.length - 1].size) : 0;
 
   const handleDelete = (e: React.MouseEvent, id: string, name: string) => {
     e.preventDefault();
     e.stopPropagation();
     showModal({
-      title: "Excluir Registro",
-      size: "sm",
+      title: 'Excluir Registro',
+      size: 'sm',
       content: (
         <p className="text-gray-600 dark:text-gray-300">
           Tem certeza que deseja remover <strong>{name}</strong>?
@@ -101,8 +100,7 @@ const TabDataTable = () => {
         <div className="flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors"
-          >
+            className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors">
             Cancelar
           </button>
           <button
@@ -111,8 +109,7 @@ const TabDataTable = () => {
               toast.error(`Usuário ${name} removido.`);
               onClose();
             }}
-            className="px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors shadow-sm"
-          >
+            className="px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors shadow-sm">
             Excluir
           </button>
         </div>
@@ -123,7 +120,7 @@ const TabDataTable = () => {
   const handleSort = (key: string) => {
     setSortState((prev) => ({
       key,
-      dir: prev?.key === key && prev.dir === "asc" ? "desc" : "asc",
+      dir: prev?.key === key && prev.dir === 'asc' ? 'desc' : 'asc',
     }));
   };
 
@@ -132,12 +129,9 @@ const TabDataTable = () => {
       <div className="flex justify-between items-end mb-4 shrink-0 border-b border-gray-100 dark:border-gray-700 pb-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Database className="text-cyan-600 dark:text-cyan-400" /> Gestão de
-            Usuários
+            <Database className="text-cyan-600 dark:text-cyan-400" /> Gestão de Usuários
           </h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Virtualização ({processedItems.length} visíveis).
-          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Virtualização ({processedItems.length} visíveis).</p>
         </div>
         <div className="flex gap-2">
           <div className="relative">
@@ -151,8 +145,7 @@ const TabDataTable = () => {
           <button
             type="submit"
             onClick={() => handleSubmit(onSubmit)}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded shadow-lg transition-transform active:scale-95 text-sm font-bold"
-          >
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded shadow-lg transition-transform active:scale-95 text-sm font-bold">
             <Save size={16} /> Salvar Tudo
           </button>
         </div>
@@ -164,11 +157,7 @@ const TabDataTable = () => {
         </Alert>
       </div>
 
-      <form
-        {...formProps}
-        id="bulk-edit-form"
-        className="flex-1 overflow-hidden flex flex-col relative"
-      >
+      <form {...formProps} id="bulk-edit-form" className="flex-1 overflow-hidden flex flex-col relative">
         {/* 1. ROOT: Provedor de Contexto */}
         <DataTable.Root className="h-full">
           {/* 2. CONTAINER: Scroll Virtualizado (Recebe as props do hook) */}
@@ -176,28 +165,23 @@ const TabDataTable = () => {
             {/* 3. TABLE: A Tag Table Real (Corrige o erro de HTML inválido) */}
             <DataTable.Table className="min-w-[800px]">
               <DataTable.ColGroup>
-                <DataTable.Col style={{ width: "80px" }} />
+                <DataTable.Col style={{ width: '80px' }} />
                 <DataTable.Col />
-                <DataTable.Col style={{ width: "250px" }} />
-                <DataTable.Col style={{ width: "150px" }} />
-                <DataTable.Col style={{ width: "100px" }} />
-                <DataTable.Col style={{ width: "80px" }} />
+                <DataTable.Col style={{ width: '250px' }} />
+                <DataTable.Col style={{ width: '150px' }} />
+                <DataTable.Col style={{ width: '100px' }} />
+                <DataTable.Col style={{ width: '80px' }} />
               </DataTable.ColGroup>
 
               <DataTable.Header>
                 <DataTable.HeadCell>ID</DataTable.HeadCell>
-                <DataTable.HeadCell
-                  sortable
-                  direction={sortState?.key === "name" ? sortState.dir : null}
-                  onSort={() => handleSort("name")}
-                >
+                <DataTable.HeadCell sortable direction={sortState?.key === 'name' ? sortState.dir : null} onSort={() => handleSort('name')}>
                   Nome
                 </DataTable.HeadCell>
                 <DataTable.HeadCell
                   sortable
-                  direction={sortState?.key === "email" ? sortState.dir : null}
-                  onSort={() => handleSort("email")}
-                >
+                  direction={sortState?.key === 'email' ? sortState.dir : null}
+                  onSort={() => handleSort('email')}>
                   Email
                 </DataTable.HeadCell>
                 <DataTable.HeadCell>Cargo</DataTable.HeadCell>
@@ -216,19 +200,16 @@ const TabDataTable = () => {
                   const item = processedItems[virtualRow.index];
                   const index = virtualRow.index;
 
-                  if (!item) return null;
+                  if (!item) {
+                    return null;
+                  }
 
                   return (
                     <DataTable.Row key={item.id}>
-                      <DataTable.Cell className="text-gray-400 font-mono text-xs select-none">
-                        #{item.data.id}
-                      </DataTable.Cell>
+                      <DataTable.Cell className="text-gray-400 font-mono text-xs select-none">#{item.data.id}</DataTable.Cell>
                       <DataTable.Cell>
                         <div className="flex items-center gap-2">
-                          <User
-                            size={14}
-                            className="text-purple-400 shrink-0"
-                          />
+                          <User size={14} className="text-purple-400 shrink-0" />
                           <input
                             name={`users[${index}].name`}
                             defaultValue={item.data.name}
@@ -252,25 +233,14 @@ const TabDataTable = () => {
                           {item.data.role}
                         </span>
                       </DataTable.Cell>
-                      <DataTable.Cell
-                        className="flex justify-center"
-                        colSpan={2}
-                      >
-                        <Switch
-                          name={`users[${index}].active`}
-                          defaultValue={item.data.active}
-                          size="sm"
-                          className="mb-0"
-                        />
+                      <DataTable.Cell className="flex justify-center" colSpan={2}>
+                        <Switch name={`users[${index}].active`} defaultValue={item.data.active} size="sm" className="mb-0" />
                       </DataTable.Cell>
                       <DataTable.Cell>
                         <button
                           type="button"
-                          onClick={(e) =>
-                            handleDelete(e, item.id, item.data.name)
-                          }
-                          className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
-                        >
+                          onClick={(e) => handleDelete(e, item.id, item.data.name)}
+                          className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded transition-colors hover:bg-red-50 dark:hover:bg-red-900/20">
                           <Trash2 size={16} />
                         </button>
                       </DataTable.Cell>

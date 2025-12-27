@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+
 import { graph } from '../../core/native-bus';
 
 // Tipo padrão: Aceita qualquer string como evento e qualquer coisa como payload
@@ -10,7 +11,7 @@ type DefaultEventMap = Record<string, any>;
  */
 export const useGraphBus = <E extends Record<string, any> = DefaultEventMap>() => {
   // Emitir com tipagem forte baseada em E
-  const emit = useCallback(<K extends keyof E>( event: K extends string ? K : never, payload: E[K]) => {
+  const emit = useCallback(<K extends keyof E>(event: K extends string ? K : never, payload: E[K]) => {
     graph.emit(event as string, payload);
   }, []);
 

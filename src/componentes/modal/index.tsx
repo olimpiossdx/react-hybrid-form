@@ -1,2 +1,2 @@
-export { default as showModal, closeModal } from './hook';
+export { closeModal, default as showModal } from './hook';
 export type { IModalOptions } from './types';

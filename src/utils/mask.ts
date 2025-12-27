@@ -1,8 +1,8 @@
 // Tokens padrão de mercado
 const TOKENS: Record<string, RegExp> = {
-  '9': /\d/,       // Apenas números
-  'a': /[a-zA-Z]/, // Apenas letras
-  '*': /[a-zA-Z0-9]/ // Alfanumérico
+  '9': /\d/, // Apenas números
+  a: /[a-zA-Z]/, // Apenas letras
+  '*': /[a-zA-Z0-9]/, // Alfanumérico
 };
 
 /**
@@ -31,7 +31,7 @@ export const applyPatternMask = (value: string, pattern: string): string => {
     } else {
       output += patternChar;
       if (valueChar === patternChar) {
-          v++; // Consome se o usuário digitou o literal
+        v++; // Consome se o usuário digitou o literal
       }
     }
     i++;
@@ -46,8 +46,10 @@ export const applyPatternMask = (value: string, pattern: string): string => {
 export const applyCurrencyMask = (value: string, locale = 'pt-BR', currency = 'BRL'): string => {
   // 1. Limpa tudo que não é dígito
   const raw = value.replace(/\D/g, '');
-  
-  if (!raw) return '';
+
+  if (!raw) {
+    return '';
+  }
 
   // 2. Garante mínimo de 3 dígitos para formatar (0,01)
   const padded = raw.padStart(3, '0');
@@ -62,10 +64,13 @@ export const applyCurrencyMask = (value: string, locale = 'pt-BR', currency = 'B
 
   // 5. Descobre os símbolos do Locale (R$, vírgula, ponto)
   // Truque: Formata 1.1 para descobrir o separador decimal
-  const parts = new Intl.NumberFormat(locale, { style: 'currency', currency }).formatToParts(1.1);
-  const symbol = parts.find(p => p.type === 'currency')?.value || '$';
-  const decimal = parts.find(p => p.type === 'decimal')?.value || ',';
-  
+  const parts = new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+  }).formatToParts(1.1);
+  const symbol = parts.find((p) => p.type === 'currency')?.value || '$';
+  const decimal = parts.find((p) => p.type === 'decimal')?.value || ',';
+
   // O separador de milhar já veio no toLocaleString do BigInt
 
   return `${symbol} ${formattedInteger}${decimal}${cents}`;
@@ -77,19 +82,23 @@ export const applyCurrencyMask = (value: string, locale = 'pt-BR', currency = 'B
  * - Pattern: Retorna string limpa ("123456").
  */
 export const unmaskValue = (value: string, type?: string): string => {
-  if (!value) return '';
+  if (!value) {
+    return '';
+  }
 
   if (type === 'currency') {
-      const raw = value.replace(/\D/g, '');
-      if (!raw) return '';
-      // Insere o ponto decimal manualmente antes dos últimos 2 dígitos
-      const padded = raw.padStart(3, '0');
-      const integer = padded.slice(0, -2);
-      const decimal = padded.slice(-2);
-      // Remove zeros à esquerda do inteiro para ficar limpo (ex: 001.23 -> 1.23)
-      return `${BigInt(integer)}.${decimal}`;
+    const raw = value.replace(/\D/g, '');
+    if (!raw) {
+      return '';
+    }
+    // Insere o ponto decimal manualmente antes dos últimos 2 dígitos
+    const padded = raw.padStart(3, '0');
+    const integer = padded.slice(0, -2);
+    const decimal = padded.slice(-2);
+    // Remove zeros à esquerda do inteiro para ficar limpo (ex: 001.23 -> 1.23)
+    return `${BigInt(integer)}.${decimal}`;
   }
-  
+
   // Padrão: remove tudo que não é alfanumérico
   return value.replace(/[^a-zA-Z0-9]/g, '');
 };

@@ -1,7 +1,8 @@
-import React, { useCallback, useRef } from "react";
-import { syncCheckboxGroup, setNativeChecked, setNativeValue, initializeCheckboxMasters } from "../../utils/utilities";
-import type { FieldListenerMap, ValidatorMap, Path, PathValue, FormField } from "./props";
-import { getFormFields, parseFieldValue, getRelativePath, setNestedValue, getNestedValue } from "./utilities";
+import React, { useCallback, useRef } from 'react';
+
+import type { FieldListenerMap, FormField, Path, PathValue, ValidatorMap } from './props';
+import { getFormFields, getNestedValue, getRelativePath, parseFieldValue, setNestedValue } from './utilities';
+import { initializeCheckboxMasters, setNativeChecked, setNativeValue, syncCheckboxGroup } from '../../utils/utilities';
 
 // Configuração do Hook
 interface UseFormConfig<FV> {
@@ -78,13 +79,15 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
 
   const getValueImpl = useCallback((namePrefix?: string): any => {
     const form = formRef.current;
-    if (!form) return namePrefix ? undefined : ({} as FV);
+    if (!form) {
+      return namePrefix ? undefined : ({} as FV);
+    }
 
     const fields = getFormFields(form, namePrefix);
 
     // Busca exata (campo único)
     if (namePrefix) {
-      const exactMatch = fields.find(f => f.name === namePrefix);
+      const exactMatch = fields.find((f) => f.name === namePrefix);
       if (exactMatch) {
         if (exactMatch instanceof HTMLInputElement && exactMatch.type === 'checkbox') {
           // Se for checkbox único, retorna boolean. Se for grupo, retorna array.
@@ -101,16 +104,18 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
     const formData = {};
     const processedNames = new Set<string>();
 
-    fields.forEach(field => {
+    fields.forEach((field) => {
       const relativePath = getRelativePath(field.name, namePrefix);
-      if (!relativePath || processedNames.has(field.name)) return;
+      if (!relativePath || processedNames.has(field.name)) {
+        return;
+      }
 
       if (field instanceof HTMLInputElement && field.type === 'checkbox') {
         const count = countFieldsByName(form, field.name);
         if (count > 1) {
           // Grupo de Checkbox: Retorna Array de valores marcados
           const allChecked = form.querySelectorAll<HTMLInputElement>(`input[type="checkbox"][name="${field.name}"]:checked`);
-          const values = Array.from(allChecked).map(cb => cb.value);
+          const values = Array.from(allChecked).map((cb) => cb.value);
           setNestedValue(formData, relativePath, values);
           processedNames.add(field.name);
         } else {
@@ -148,7 +153,9 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
 
     // 2. Validação Nativa (HTML5)
     // Se falhar aqui, paramos e usamos a mensagem do browser
-    if (!field.checkValidity()) return field.validationMessage;
+    if (!field.checkValidity()) {
+      return field.validationMessage;
+    }
 
     // 3. Validação Customizada (JS)
     if (validateFn) {
@@ -170,7 +177,9 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
 
     if (message) {
       field.setAttribute('aria-invalid', 'true');
-      if (errorSlot) field.setAttribute('aria-describedby', errorId);
+      if (errorSlot) {
+        field.setAttribute('aria-describedby', errorId);
+      }
     } else {
       field.removeAttribute('aria-invalid');
       field.removeAttribute('aria-describedby');
@@ -185,11 +194,15 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
 
   const revalidateAllCustomRules = useCallback(() => {
     const form = formRef.current;
-    if (!form) return;
+    if (!form) {
+      return;
+    }
     const formValues = getValue() as FV;
     const allFields = getFormFields(form);
-    allFields.forEach(field => {
-      if (field.disabled) return;
+    allFields.forEach((field) => {
+      if (field.disabled) {
+        return;
+      }
       const msg = validateFieldInternal(field, formValues);
       updateErrorUI(field, msg);
     });
@@ -199,97 +212,125 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
    * Valida apenas um subconjunto de campos dentro de um container específico.
    * Essencial para Wizards e Abas onde apenas o passo atual deve ser validado.
    */
-  const validateScope = useCallback((container: HTMLElement) => {
-    const form = formRef.current;
-    if (!form || !container) return true;
-
-    const formValues = getValue() as FV;
-    const fieldsInScope = getFormFields(container);
-    let isValid = true;
-    let firstInvalid: HTMLElement | null = null;
-
-    fieldsInScope.forEach(field => {
-      field.classList.add('is-touched');
-      if (field.disabled) return;
-
-      const msg = validateFieldInternal(field, formValues);
-      updateErrorUI(field, msg);
-
-      if (msg || !field.checkValidity()) {
-        isValid = false;
-        if (!firstInvalid) firstInvalid = field;
+  const validateScope = useCallback(
+    (container: HTMLElement) => {
+      const form = formRef.current;
+      if (!form || !container) {
+        return true;
       }
-    });
 
-    if (!isValid && firstInvalid) {
-      // @ts-ignore
-      if (firstInvalid.reportValidity) firstInvalid.reportValidity();
-      // @ts-ignore
-      firstInvalid.focus();
-    }
+      const formValues = getValue() as FV;
+      const fieldsInScope = getFormFields(container);
+      let isValid = true;
+      let firstInvalid: HTMLElement | null = null;
 
-    return isValid;
-  }, [getValue]);
+      fieldsInScope.forEach((field) => {
+        field.classList.add('is-touched');
+        if (field.disabled) {
+          return;
+        }
+
+        const msg = validateFieldInternal(field, formValues);
+        updateErrorUI(field, msg);
+
+        if (msg || !field.checkValidity()) {
+          isValid = false;
+          if (!firstInvalid) {
+            firstInvalid = field;
+          }
+        }
+      });
+
+      if (!isValid && firstInvalid) {
+        // @ts-ignore
+        if (firstInvalid.reportValidity) {
+          firstInvalid.reportValidity();
+        }
+        // @ts-ignore
+        firstInvalid.focus();
+      }
+
+      return isValid;
+    },
+    [getValue],
+  );
 
   // ============ INTERAÇÃO (LISTENERS) ============
 
-  const handleFieldInteraction = useCallback((event: Event) => {
-    if (isResetting.current) return;
-    const target = event.currentTarget;
-    if (!(target instanceof HTMLElement)) return;
-
-    // Sincronia de Checkbox Group
-    if (event.type === 'change' && target instanceof HTMLInputElement && target.type === 'checkbox') {
-      if (formRef.current) syncCheckboxGroup(target, formRef.current);
-    }
-
-    const field = target as FormField;
-    if (!field.name) return;
-
-    field.classList.add('is-touched');
-    const formValues = getValue() as FV;
-
-    if (debounceMap.current.has(field.name)) {
-      clearTimeout(debounceMap.current.get(field.name));
-      debounceMap.current.delete(field.name);
-    }
-
-    // Blur: Valida imediatamente
-    if (event.type === 'blur') {
-      const msg = validateFieldInternal(field, formValues);
-      updateErrorUI(field, msg);
-      return;
-    }
-
-    // Input/Change: Valida com Debounce (600ms)
-    if (event.type === 'input' || event.type === 'change') {
-      const wasInvalid = field.hasAttribute('aria-invalid') || !field.validity.valid;
-      if (!wasInvalid) return;
-
-      const msg = validateFieldInternal(field, formValues);
-      if (!msg) {
-        updateErrorUI(field, ''); // Limpa erro na hora se corrigiu
-      } else {
-        const timer = setTimeout(() => {
-          updateErrorUI(field, msg);
-          if (document.activeElement === field) field.reportValidity();
-        }, 600);
-        debounceMap.current.set(field.name, timer);
+  const handleFieldInteraction = useCallback(
+    (event: Event) => {
+      if (isResetting.current) {
+        return;
       }
-    }
-  }, [getValue]);
+      const target = event.currentTarget;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      // Sincronia de Checkbox Group
+      if (event.type === 'change' && target instanceof HTMLInputElement && target.type === 'checkbox') {
+        if (formRef.current) {
+          syncCheckboxGroup(target, formRef.current);
+        }
+      }
+
+      const field = target as FormField;
+      if (!field.name) {
+        return;
+      }
+
+      field.classList.add('is-touched');
+      const formValues = getValue() as FV;
+
+      if (debounceMap.current.has(field.name)) {
+        clearTimeout(debounceMap.current.get(field.name));
+        debounceMap.current.delete(field.name);
+      }
+
+      // Blur: Valida imediatamente
+      if (event.type === 'blur') {
+        const msg = validateFieldInternal(field, formValues);
+        updateErrorUI(field, msg);
+        return;
+      }
+
+      // Input/Change: Valida com Debounce (600ms)
+      if (event.type === 'input' || event.type === 'change') {
+        const wasInvalid = field.hasAttribute('aria-invalid') || !field.validity.valid;
+        if (!wasInvalid) {
+          return;
+        }
+
+        const msg = validateFieldInternal(field, formValues);
+        if (!msg) {
+          updateErrorUI(field, ''); // Limpa erro na hora se corrigiu
+        } else {
+          const timer = setTimeout(() => {
+            updateErrorUI(field, msg);
+            if (document.activeElement === field) {
+              field.reportValidity();
+            }
+          }, 600);
+          debounceMap.current.set(field.name, timer);
+        }
+      }
+    },
+    [getValue],
+  );
 
   // ============ RESET / LOAD DATA ============
 
   const resetSection = useCallback((namePrefix: string, originalValues: any) => {
     const form = formRef.current;
-    if (!form) return;
+    if (!form) {
+      return;
+    }
 
     isResetting.current = true; // Bloqueia listeners durante o reset
     try {
       const fields = getFormFields(form, namePrefix);
 
-      fields.forEach(field => {
+      fields.forEach((field) => {
         // Limpa timers pendentes
         if (debounceMap.current.has(field.name)) {
           clearTimeout(debounceMap.current.get(field.name));
@@ -302,16 +343,22 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
         let valueToApply = undefined;
         if (originalValues) {
           valueToApply = relativePath ? getNestedValue(originalValues, relativePath) : undefined;
-          if (valueToApply === undefined && !relativePath) valueToApply = getNestedValue(originalValues, field.name);
+          if (valueToApply === undefined && !relativePath) {
+            valueToApply = getNestedValue(originalValues, field.name);
+          }
         }
 
         // Aplica valor usando setters nativos (Bypass)
         if (field instanceof HTMLInputElement && (field.type === 'checkbox' || field.type === 'radio')) {
           let shouldCheck = false;
           if (valueToApply !== undefined) {
-            if (field.type === 'checkbox' && Array.isArray(valueToApply)) shouldCheck = valueToApply.includes(field.value);
-            else if (field.type === 'checkbox' && typeof valueToApply === 'boolean') shouldCheck = valueToApply;
-            else shouldCheck = field.value === String(valueToApply);
+            if (field.type === 'checkbox' && Array.isArray(valueToApply)) {
+              shouldCheck = valueToApply.includes(field.value);
+            } else if (field.type === 'checkbox' && typeof valueToApply === 'boolean') {
+              shouldCheck = valueToApply;
+            } else {
+              shouldCheck = field.value === String(valueToApply);
+            }
           } else {
             shouldCheck = field.defaultChecked;
           }
@@ -327,7 +374,9 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
 
       setTimeout(() => initializeCheckboxMasters(form), 0);
     } finally {
-      setTimeout(() => { isResetting.current = false; }, 0);
+      setTimeout(() => {
+        isResetting.current = false;
+      }, 0);
     }
   }, []);
 
@@ -336,16 +385,27 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
   const addFieldInteractionListeners = (field: HTMLElement): void => {
     const isMaster = field.hasAttribute('data-checkbox-master');
     const allowedTypes = [HTMLInputElement, HTMLSelectElement, HTMLTextAreaElement];
-    if (!allowedTypes.some(type => field instanceof type)) return;
+    if (!allowedTypes.some((type) => field instanceof type)) {
+      return;
+    }
 
     if (((field as any).name || isMaster) && !fieldListeners.current.has(field)) {
-      const listeners = { blur: handleFieldInteraction, change: handleFieldInteraction };
+      const listeners = {
+        blur: handleFieldInteraction,
+        change: handleFieldInteraction,
+      };
       field.addEventListener('blur', listeners.blur);
 
       // Input para texto, Change para outros
-      const inputEvent = (field instanceof HTMLInputElement && (field.type === 'text' || field.type === 'email' || field.type === 'password' || field.type === 'search')) ? 'input' : 'change';
+      const inputEvent =
+        field instanceof HTMLInputElement &&
+        (field.type === 'text' || field.type === 'email' || field.type === 'password' || field.type === 'search')
+          ? 'input'
+          : 'change';
 
-      if (inputEvent === 'input') field.addEventListener('input', listeners.change);
+      if (inputEvent === 'input') {
+        field.addEventListener('input', listeners.change);
+      }
       field.addEventListener('change', listeners.change);
 
       fieldListeners.current.set(field, listeners);
@@ -367,30 +427,40 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
     initialFields.forEach(addFieldInteractionListeners);
 
     // Inicializa mestres
-    form.querySelectorAll('input[type="checkbox"][data-checkbox-master]').forEach(cb => {
-      if (cb instanceof HTMLElement) addFieldInteractionListeners(cb);
+    form.querySelectorAll('input[type="checkbox"][data-checkbox-master]').forEach((cb) => {
+      if (cb instanceof HTMLElement) {
+        addFieldInteractionListeners(cb);
+      }
     });
     initializeCheckboxMasters(form);
 
     observerRef.current = new MutationObserver((mutations) => {
       let needsReinitMasters = false;
       mutations.forEach((mutation) => {
-        if (mutation.type !== 'childList') return;
-        mutation.addedNodes.forEach(node => {
-          if (!(node instanceof HTMLElement)) return;
+        if (mutation.type !== 'childList') {
+          return;
+        }
+        mutation.addedNodes.forEach((node) => {
+          if (!(node instanceof HTMLElement)) {
+            return;
+          }
           addFieldInteractionListeners(node);
           getFormFields(node as any).forEach(addFieldInteractionListeners);
           if (node.querySelector('input[type="checkbox"]') || (node instanceof HTMLInputElement && node.type === 'checkbox')) {
             needsReinitMasters = true;
           }
         });
-        mutation.removedNodes.forEach(node => {
-          if (!(node instanceof HTMLElement)) return;
+        mutation.removedNodes.forEach((node) => {
+          if (!(node instanceof HTMLElement)) {
+            return;
+          }
           removeFieldInteractionListeners(node);
           getFormFields(node as any).forEach(removeFieldInteractionListeners);
         });
       });
-      if (needsReinitMasters) initializeCheckboxMasters(form);
+      if (needsReinitMasters) {
+        initializeCheckboxMasters(form);
+      }
     });
 
     observerRef.current.observe(form, { childList: true, subtree: true });
@@ -398,7 +468,9 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
 
   const focusFirstInvalidField = (form: HTMLFormElement): void => {
     const invalid = form.querySelector<HTMLElement>(':invalid');
-    if (!invalid) return;
+    if (!invalid) {
+      return;
+    }
 
     // Tenta focar elementos visuais se o input for hidden (Shadow Inputs)
     const focusable = invalid.parentElement?.querySelector<HTMLElement>('input:not([type="hidden"]), select, textarea, [tabindex="0"]');
@@ -407,19 +479,23 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
 
   // ============ SUBMIT ============
 
-  const handleSubmit = useCallback((onValid: (data: FV, event: React.FormEvent<HTMLFormElement>) => void) =>
-    (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = useCallback(
+    (onValid: (data: FV, event: React.FormEvent<HTMLFormElement>) => void) => (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       const form = formRef.current;
-      if (!form) return;
+      if (!form) {
+        return;
+      }
 
       const allFields = getFormFields(form);
-      allFields.forEach(field => field.classList.add('is-touched'));
+      allFields.forEach((field) => field.classList.add('is-touched'));
 
       revalidateAllCustomRules();
 
       setTimeout(() => {
-        if (!formRef.current) return;
+        if (!formRef.current) {
+          return;
+        }
         const isValid = formRef.current.checkValidity();
 
         if (!isValid) {
@@ -430,7 +506,9 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
           onValid(getValue() as FV, event);
         }
       }, 0);
-    }, [getValue, revalidateAllCustomRules]);
+    },
+    [getValue, revalidateAllCustomRules],
+  );
 
   // Prepara o handler se foi passado na config
   const submitHandler = onSubmitCallback ? handleSubmit(onSubmitCallback) : undefined;
@@ -451,7 +529,7 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
     getValue,
     registerForm,
     formProps,
-    validateScope // API Pública para Wizards
+    validateScope, // API Pública para Wizards
   };
 };
 

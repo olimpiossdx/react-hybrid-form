@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { Star, Heart, ThumbsUp, Medal, MessageSquare } from "lucide-react";
-import showModal from "../../componentes/modal/hook";
-import StarRating from "../../componentes/start-rating";
-import useForm from "../../hooks/use-form";
+import React, { useState } from 'react';
+import { Heart, Medal, MessageSquare, Star, ThumbsUp } from 'lucide-react';
+
+import showModal from '../../componentes/modal/hook';
+import StarRating from '../../componentes/start-rating';
+import useForm from '../../hooks/use-form';
 
 interface IRateForm {
   nota_servico: number;
@@ -12,12 +13,12 @@ interface IRateForm {
 }
 
 const StarRatingExample = () => {
-  const [npsMessage, setNpsMessage] = useState("");
+  const [npsMessage, setNpsMessage] = useState('');
 
   const onSubmit = (data: IRateForm) => {
     showModal({
-      title: "Avaliação Enviada",
-      size: "sm",
+      title: 'Avaliação Enviada',
+      size: 'sm',
       content: (
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-yellow-500 justify-center">
@@ -33,15 +34,19 @@ const StarRatingExample = () => {
   };
 
   const { formProps } = useForm<IRateForm>({
-    id: "star-rating-form",
+    id: 'star-rating-form',
     onSubmit,
   });
 
   // Callback para Ilha de Reatividade (NPS)
   const handleNpsChange = (val: number) => {
-    if (val <= 6) setNpsMessage("😟 Poxa, que pena! O que podemos melhorar?");
-    else if (val <= 8) setNpsMessage("😐 Obrigado! Vamos tentar melhorar.");
-    else setNpsMessage("🤩 Uau! Ficamos muito felizes!");
+    if (val <= 6) {
+      setNpsMessage('😟 Poxa, que pena! O que podemos melhorar?');
+    } else if (val <= 8) {
+      setNpsMessage('😐 Obrigado! Vamos tentar melhorar.');
+    } else {
+      setNpsMessage('🤩 Uau! Ficamos muito felizes!');
+    }
   };
 
   return (
@@ -51,12 +56,8 @@ const StarRatingExample = () => {
           <Star size={24} />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Avaliações & Feedback
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Componente acessível com suporte a teclado, touch e customização.
-          </p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Avaliações & Feedback</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Componente acessível com suporte a teclado, touch e customização.</p>
         </div>
       </div>
 
@@ -69,15 +70,8 @@ const StarRatingExample = () => {
               1. Padrão (5 Estrelas)
             </div>
 
-            <StarRating
-              name="nota_servico"
-              label="O que achou do atendimento?"
-              required
-              className="mb-0"
-            />
-            <p className="text-[10px] text-gray-500 mt-2">
-              * Campo obrigatório. Tente salvar vazio para ver o erro nativo.
-            </p>
+            <StarRating name="nota_servico" label="O que achou do atendimento?" required className="mb-0" />
+            <p className="text-[10px] text-gray-500 mt-2">* Campo obrigatório. Tente salvar vazio para ver o erro nativo.</p>
           </div>
 
           {/* 2. CUSTOMIZADO (NPS - 10 Ícones) */}
@@ -109,8 +103,7 @@ const StarRatingExample = () => {
         {/* 3. ÍCONES CUSTOMIZADOS (Hearts/Thumbs) */}
         <div className="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
           <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4 uppercase flex items-center gap-2">
-            <Heart size={16} className="text-red-500" /> 3. Estilização Avançada
-            (SVG Swap)
+            <Heart size={16} className="text-red-500" /> 3. Estilização Avançada (SVG Swap)
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -143,8 +136,7 @@ const StarRatingExample = () => {
         <div className="flex justify-end pt-6 border-t border-gray-100 dark:border-gray-700">
           <button
             type="submit"
-            className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg active:scale-95 transition-transform"
-          >
+            className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg active:scale-95 transition-transform">
             Enviar Avaliação
           </button>
         </div>

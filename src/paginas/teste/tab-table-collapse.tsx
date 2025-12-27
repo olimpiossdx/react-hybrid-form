@@ -1,64 +1,66 @@
-import React from "react";
-import { DataTable } from "../../componentes/data-table";
-import useList from "../../hooks/list";
-import { ChevronDown, ChevronRight, Calendar, FileText } from "lucide-react";
-import { showModal } from "../../componentes/modal";
+import React from 'react';
+import { Calendar, ChevronDown, ChevronRight, FileText } from 'lucide-react';
+
+import { DataTable } from '../../componentes/data-table';
+import { showModal } from '../../componentes/modal';
+import useList from '../../hooks/list';
 
 // --- MOCK DATA ---
 const DATA = [
   {
-    id: "INV-001",
-    client: "Acme Corp",
-    date: "2023-10-01",
+    id: 'INV-001',
+    client: 'Acme Corp',
+    date: '2023-10-01',
     amount: 5000,
-    status: "Pago",
-    details: "Consultoria de Software - Q3",
+    status: 'Pago',
+    details: 'Consultoria de Software - Q3',
   },
   {
-    id: "INV-002",
-    client: "Global Tech",
-    date: "2023-10-05",
+    id: 'INV-002',
+    client: 'Global Tech',
+    date: '2023-10-05',
     amount: 12000,
-    status: "Pendente",
-    details: "Licença Anual Enterprise",
+    status: 'Pendente',
+    details: 'Licença Anual Enterprise',
   },
   {
-    id: "INV-003",
-    client: "Local Coff",
-    date: "2023-10-10",
+    id: 'INV-003',
+    client: 'Local Coff',
+    date: '2023-10-10',
     amount: 350,
-    status: "Pago",
-    details: "Catering Evento de Lançamento",
+    status: 'Pago',
+    details: 'Catering Evento de Lançamento',
   },
   {
-    id: "INV-004",
-    client: "Startup Inc",
-    date: "2023-10-12",
+    id: 'INV-004',
+    client: 'Startup Inc',
+    date: '2023-10-12',
     amount: 2500,
-    status: "Atrasado",
-    details: "Design System MVP",
+    status: 'Atrasado',
+    details: 'Design System MVP',
   },
   {
-    id: "INV-005",
-    client: "Mega Corp",
-    date: "2023-10-15",
+    id: 'INV-005',
+    client: 'Mega Corp',
+    date: '2023-10-15',
     amount: 50000,
-    status: "Pago",
-    details: "Servidores Dedicados",
+    status: 'Pago',
+    details: 'Servidores Dedicados',
   },
 ];
 
 const TabTableCollapse = () => {
   const { items } = useList(DATA);
-  const [expandedRows, setExpandedRows] = React.useState<Set<string>>(
-    new Set()
-  );
+  const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set());
 
   const toggleRow = (id: string) => {
     setExpandedRows((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -66,12 +68,8 @@ const TabTableCollapse = () => {
   const handleDetails = (item: any) => {
     showModal({
       title: `Fatura ${item.id}`,
-      size: "sm",
-      content: (
-        <div className="p-4 text-gray-600 dark:text-gray-300">
-          {item.details}
-        </div>
-      ),
+      size: 'sm',
+      content: <div className="p-4 text-gray-600 dark:text-gray-300">{item.details}</div>,
     });
   };
 
@@ -83,8 +81,7 @@ const TabTableCollapse = () => {
           Faturas (Modo Collapse)
         </h2>
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          Redimensione a tela. As colunas "Data" e "Status" somem no mobile e
-          aparecem ao expandir.
+          Redimensione a tela. As colunas "Data" e "Status" somem no mobile e aparecem ao expandir.
         </p>
       </div>
 
@@ -93,30 +90,20 @@ const TabTableCollapse = () => {
         <DataTable.Container>
           <DataTable.Table>
             <DataTable.ColGroup>
-              <DataTable.Col style={{ width: "40px" }} />
-              <DataTable.Col style={{ width: "100px" }} />
+              <DataTable.Col style={{ width: '40px' }} />
+              <DataTable.Col style={{ width: '100px' }} />
               <DataTable.Col />
-              <DataTable.Col
-                className="hidden md:table-column"
-                style={{ width: "120px" }}
-              />
-              <DataTable.Col
-                className="hidden md:table-column"
-                style={{ width: "100px" }}
-              />
-              <DataTable.Col style={{ width: "120px" }} />
+              <DataTable.Col className="hidden md:table-column" style={{ width: '120px' }} />
+              <DataTable.Col className="hidden md:table-column" style={{ width: '100px' }} />
+              <DataTable.Col style={{ width: '120px' }} />
             </DataTable.ColGroup>
 
             <DataTable.Header>
               <DataTable.HeadCell></DataTable.HeadCell>
               <DataTable.HeadCell>ID</DataTable.HeadCell>
               <DataTable.HeadCell>Cliente</DataTable.HeadCell>
-              <DataTable.HeadCell className="hidden md:table-cell">
-                Data
-              </DataTable.HeadCell>
-              <DataTable.HeadCell className="hidden md:table-cell">
-                Status
-              </DataTable.HeadCell>
+              <DataTable.HeadCell className="hidden md:table-cell">Data</DataTable.HeadCell>
+              <DataTable.HeadCell className="hidden md:table-cell">Status</DataTable.HeadCell>
               <DataTable.HeadCell align="right">Valor</DataTable.HeadCell>
             </DataTable.Header>
 
@@ -124,57 +111,43 @@ const TabTableCollapse = () => {
               {items.map((item) => {
                 const isExpanded = expandedRows.has(item.id);
                 const statusColors: any = {
-                  Pago: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800",
+                  Pago: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800',
                   Pendente:
-                    "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800",
-                  Atrasado:
-                    "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800",
+                    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
+                  Atrasado: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
                 };
 
                 return (
                   <React.Fragment key={item.id}>
                     <DataTable.Row
-                      className={`transition-all ${isExpanded ? "bg-gray-50 dark:bg-gray-900/40" : ""}`}
-                      onClick={() => toggleRow(item.id)}
-                    >
+                      className={`transition-all ${isExpanded ? 'bg-gray-50 dark:bg-gray-900/40' : ''}`}
+                      onClick={() => toggleRow(item.id)}>
                       <DataTable.Cell>
                         <button className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition-colors">
-                          {isExpanded ? (
-                            <ChevronDown size={16} />
-                          ) : (
-                            <ChevronRight size={16} />
-                          )}
+                          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                         </button>
                       </DataTable.Cell>
 
                       <DataTable.Cell>
-                        <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
-                          {item.data.id}
-                        </span>
+                        <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{item.data.id}</span>
                       </DataTable.Cell>
 
                       <DataTable.Cell>
-                        <span className="font-bold text-gray-900 dark:text-white">
-                          {item.data.client}
-                        </span>
+                        <span className="font-bold text-gray-900 dark:text-white">{item.data.client}</span>
                       </DataTable.Cell>
 
-                      <DataTable.Cell className="hidden md:table-cell">
-                        {item.data.date}
-                      </DataTable.Cell>
+                      <DataTable.Cell className="hidden md:table-cell">{item.data.date}</DataTable.Cell>
 
                       <DataTable.Cell className="hidden md:table-cell">
-                        <span
-                          className={`text-[10px] px-2 py-0.5 rounded border ${statusColors[item.data.status]}`}
-                        >
+                        <span className={`text-[10px] px-2 py-0.5 rounded border ${statusColors[item.data.status]}`}>
                           {item.data.status}
                         </span>
                       </DataTable.Cell>
 
                       <DataTable.Cell align="right">
                         <span className="font-mono font-medium text-gray-900 dark:text-white">
-                          R${" "}
-                          {item.data.amount.toLocaleString("pt-BR", {
+                          R${' '}
+                          {item.data.amount.toLocaleString('pt-BR', {
                             minimumFractionDigits: 2,
                           })}
                         </span>
@@ -189,24 +162,14 @@ const TabTableCollapse = () => {
                               {/* Info Mobile */}
                               <div className="md:hidden space-y-3 p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
                                 <div>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">
-                                    Data de Emissão
-                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Data de Emissão</p>
                                   <p className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                                    <Calendar
-                                      size={14}
-                                      className="text-cyan-500"
-                                    />{" "}
-                                    {item.data.date}
+                                    <Calendar size={14} className="text-cyan-500" /> {item.data.date}
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">
-                                    Status Atual
-                                  </p>
-                                  <span
-                                    className={`text-xs px-2 py-1 rounded inline-block border ${statusColors[item.data.status]}`}
-                                  >
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Status Atual</p>
+                                  <span className={`text-xs px-2 py-1 rounded inline-block border ${statusColors[item.data.status]}`}>
                                     {item.data.status}
                                   </span>
                                 </div>
@@ -214,9 +177,7 @@ const TabTableCollapse = () => {
 
                               {/* Detalhes */}
                               <div className="md:col-span-2">
-                                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">
-                                  Descrição do Serviço
-                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Descrição do Serviço</p>
                                 <div className="text-gray-700 dark:text-gray-300 leading-relaxed border-l-2 border-gray-300 dark:border-gray-600 pl-3 py-1">
                                   {item.data.details}
                                 </div>
@@ -225,8 +186,7 @@ const TabTableCollapse = () => {
                                     e.stopPropagation();
                                     handleDetails(item.data);
                                   }}
-                                  className="mt-3 text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 font-bold"
-                                >
+                                  className="mt-3 text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 font-bold">
                                   <FileText size={12} /> Ver Fatura Original
                                 </button>
                               </div>
@@ -243,15 +203,9 @@ const TabTableCollapse = () => {
             <DataTable.Footer>
               <DataTable.Row>
                 <DataTable.Cell colSpan={3}>Total</DataTable.Cell>
-                <DataTable.Cell
-                  className="hidden md:table-cell"
-                  colSpan={2}
-                ></DataTable.Cell>
+                <DataTable.Cell className="hidden md:table-cell" colSpan={2}></DataTable.Cell>
                 <DataTable.Cell align="right">
-                  R${" "}
-                  {items
-                    .reduce((acc, curr) => acc + curr.data.amount, 0)
-                    .toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  R$ {items.reduce((acc, curr) => acc + curr.data.amount, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </DataTable.Cell>
               </DataTable.Row>
             </DataTable.Footer>

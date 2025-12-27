@@ -1,4 +1,4 @@
-import type { ExistingFile } from "../../utils/fileUtils";
+import type { ExistingFile } from '../../utils/fileUtils';
 
 export interface IFileInputProps {
   name: string;
@@ -10,5 +10,5 @@ export interface IFileInputProps {
   required?: boolean;
   disabled?: boolean;
   className?: string;
-  "data-validation"?: string;
+  'data-validation'?: string;
 }

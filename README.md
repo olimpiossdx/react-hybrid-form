@@ -1,4 +1,3 @@
-
 ````markdown
 # 🚀 React Hybrid Form `v0.6.1`
 
@@ -15,13 +14,13 @@ Uma arquitetura de formulários para React focada em **alta performance**, **ace
 
 ## ✨ Destaques da Versão
 
-* **🏎️ Performance Extrema:** Componentes não controlados (*Uncontrolled*) por padrão. Digitar em um input não causa re-renderização do formulário.
-* **🌐 HTTP Client Enterprise:** Wrapper robusto sobre `fetch` com **Retry Policy**, **AbortController**, **Interceptors** e **Smart Adapters** (detecta automaticamente JSON vs Raw).
-* **♾️ Virtualização (Big Data):** Renderize listas de 10.000+ itens com performance nativa (60fps) usando `useVirtualizer` e `ResizeObserver`.
-* **🧠 Smart Validation:** Estratégia "Reward Early, Punish Late". Feedback imediato ao corrigir, suave ao errar.
-* **📅 DateRange Avançado:** Seleção de períodos com calendário duplo, presets (atalhos), validação cruzada e input inteligente (digitação).
-* **🖥️ Sistema de Modais:** Arquitetura de **Portals** com Hook Headless (`showModal`) e suporte a Stacking (Modais sobrepostos).
-* **🔌 Native Bypass:** Sincronia perfeita entre alterações programáticas do DOM e o estado do React.
+- **🏎️ Performance Extrema:** Componentes não controlados (_Uncontrolled_) por padrão. Digitar em um input não causa re-renderização do formulário.
+- **🌐 HTTP Client Enterprise:** Wrapper robusto sobre `fetch` com **Retry Policy**, **AbortController**, **Interceptors** e **Smart Adapters** (detecta automaticamente JSON vs Raw).
+- **♾️ Virtualização (Big Data):** Renderize listas de 10.000+ itens com performance nativa (60fps) usando `useVirtualizer` e `ResizeObserver`.
+- **🧠 Smart Validation:** Estratégia "Reward Early, Punish Late". Feedback imediato ao corrigir, suave ao errar.
+- **📅 DateRange Avançado:** Seleção de períodos com calendário duplo, presets (atalhos), validação cruzada e input inteligente (digitação).
+- **🖥️ Sistema de Modais:** Arquitetura de **Portals** com Hook Headless (`showModal`) e suporte a Stacking (Modais sobrepostos).
+- **🔌 Native Bypass:** Sincronia perfeita entre alterações programáticas do DOM e o estado do React.
 
 ---
 
@@ -47,9 +46,10 @@ src/
 │   ├── props.ts          # Definições de Tipos.
 │   └── utilities.ts      # Helpers de DOM, Parser e Lógica.
 └── scenarios/            # Exemplos de implementação.
+```
 ````
 
------
+---
 
 ## 🛠️ Hook Core: `useForm`
 
@@ -64,13 +64,13 @@ interface FormData {
 
 const MyForm = () => {
   const onSubmit = (data: FormData) => {
-    console.log("JSON Submetido:", data);
+    console.log('JSON Submetido:', data);
   };
 
   // Configura ID e Submit Handler diretamente no hook
   const { formProps, getValue, setValidators } = useForm<FormData>({
-      id: "my-form",
-      onSubmit: onSubmit
+    id: 'my-form',
+    onSubmit: onSubmit,
   });
 
   return (
@@ -83,7 +83,7 @@ const MyForm = () => {
 };
 ```
 
------
+---
 
 ## 🌐 Camada de Serviço (`HttpClient`)
 
@@ -91,9 +91,9 @@ Um cliente HTTP resiliente que padroniza o consumo de APIs.
 
 ### Recursos
 
-  * **Smart Adapter:** Detecta automaticamente se a resposta é um envelope padrão (`{ data, isSuccess }`) ou um dado cru (ex: JSONPlaceholder).
-  * **Retry Exponencial:** Tenta novamente em caso de falhas de rede ou erros 5xx/429.
-  * **Notification System:** Integração automática com Toasts de erro/sucesso.
+- **Smart Adapter:** Detecta automaticamente se a resposta é um envelope padrão (`{ data, isSuccess }`) ou um dado cru (ex: JSONPlaceholder).
+- **Retry Exponencial:** Tenta novamente em caso de falhas de rede ou erros 5xx/429.
+- **Notification System:** Integração automática com Toasts de erro/sucesso.
 
 <!-- end list -->
 
@@ -103,23 +103,23 @@ import { api } from './services/api';
 const loadData = async () => {
   // 1. Chamada Padrão (Tipada)
   const res = await api.get<IUser[]>('/users');
-  
+
   if (res.isSuccess) {
-     setUsers(res.data);
+    setUsers(res.data);
   }
 
   // 2. Chamada com Cancelamento e Retry
   const controller = new AbortController();
-  
+
   await api.post('/dados', payload, {
-      retries: 3,            // Tenta 3x
-      notifyOnError: true,   // Mostra Toast se falhar
-      signal: controller.signal
+    retries: 3, // Tenta 3x
+    notifyOnError: true, // Mostra Toast se falhar
+    signal: controller.signal,
   });
 };
 ```
 
------
+---
 
 ## 🧩 Componentes Ricos
 
@@ -127,16 +127,16 @@ const loadData = async () => {
 
 Componente de seleção de período com inteligência de entrada.
 
-  * **Smart Parse:** Digite "1" e ele entende "01/Mes/Ano".
-  * **Presets:** Atalhos configuráveis como "Últimos 7 dias".
-  * **Shadow Inputs:** Mantém dois inputs `date` ocultos para validação nativa.
+- **Smart Parse:** Digite "1" e ele entende "01/Mes/Ano".
+- **Presets:** Atalhos configuráveis como "Últimos 7 dias".
+- **Shadow Inputs:** Mantém dois inputs `date` ocultos para validação nativa.
 
 <!-- end list -->
 
 ```tsx
-<DateRangePicker 
-  startDateName="inicio" 
-  endDateName="fim" 
+<DateRangePicker
+  startDateName="inicio"
+  endDateName="fim"
   label="Período"
   minDate="2024-01-01"
   presets={FINANCIAL_PRESETS} // Opcional
@@ -145,15 +145,15 @@ Componente de seleção de período com inteligência de entrada.
 
 ### Autocomplete (Async)
 
-  * **Shadow Select:** Mantém integridade de dados no DOM.
-  * **Portal:** Fura `overflow: hidden` e `z-index`.
-  * **Async:** Busca remota e paginação infinita.
+- **Shadow Select:** Mantém integridade de dados no DOM.
+- **Portal:** Fura `overflow: hidden` e `z-index`.
+- **Async:** Busca remota e paginação infinita.
 
 ### StarRating & Switch
 
-  * **Anchor/Overlay Input:** Utilizam inputs nativos invisíveis posicionados estrategicamente para garantir acessibilidade e ancoragem do balão de erro.
+- **Anchor/Overlay Input:** Utilizam inputs nativos invisíveis posicionados estrategicamente para garantir acessibilidade e ancoragem do balão de erro.
 
------
+---
 
 ## ♾️ Virtualização (`useVirtualizer`)
 
@@ -161,19 +161,21 @@ Para lidar com listas massivas (ex: 10.000 linhas), utilizamos o padrão **Virtu
 
 ```tsx
 const { virtualItems, containerProps, wrapperProps } = useVirtualizer({
-    count: 10000,
-    estimateSize: () => 56, // Altura da linha
-    overscan: 5
+  count: 10000,
+  estimateSize: () => 56, // Altura da linha
+  overscan: 5,
 });
 
 // Renderização Otimizada
 return (
   <div {...containerProps} className="h-full">
-      <div {...wrapperProps}>
-          {virtualItems.map((row) => (
-              <div key={row.index} {...row.props}>Linha {row.index}</div>
-          ))}
-      </div>
+    <div {...wrapperProps}>
+      {virtualItems.map((row) => (
+        <div key={row.index} {...row.props}>
+          Linha {row.index}
+        </div>
+      ))}
+    </div>
   </div>
 );
 ```
@@ -181,7 +183,7 @@ return (
 > **⚠️ Estratégia de Persistência Híbrida:**
 > Em listas virtuais, o DOM não contém todos os dados. O `onSubmit` deve fazer o merge manual dos dados do Header (DOM) com os dados da Lista (Memória/Ref).
 
------
+---
 
 ## 🖥️ Sistema de Modais (Imperativo)
 
@@ -200,7 +202,7 @@ const handleOpen = () => {
 };
 ```
 
------
+---
 
 ## 🛡️ Validação: "Native-First"
 
@@ -209,20 +211,21 @@ O pipeline de validação garante performance e UX:
 1.  **Nível 1 (Browser):** Verifica regras HTML (`required`, `min`, `pattern`). Se falhar, para e exibe mensagem nativa.
 2.  **Nível 2 (Custom):** Verifica regras JavaScript (`setValidators`). Se falhar, injeta o erro no navegador via `setCustomValidity`.
 
------
+---
 
 ## 🧪 Utilitários (`utilities.ts`)
 
 Funções puras exportadas para uso geral:
 
-  * `setNativeValue(element, value)`: Define valor e dispara eventos, burlando o bloqueio de Synthetic Events do React.
-  * `getFormFields(root)`: Busca inputs válidos dentro de qualquer container.
-  * `setNestedValue(obj, path, value)`: Cria objetos profundos a partir de strings de caminho.
-  * `syncCheckboxGroup(target, form)`: Lógica central que sincroniza Mestres e Filhos.
+- `setNativeValue(element, value)`: Define valor e dispara eventos, burlando o bloqueio de Synthetic Events do React.
+- `getFormFields(root)`: Busca inputs válidos dentro de qualquer container.
+- `setNestedValue(obj, path, value)`: Cria objetos profundos a partir de strings de caminho.
+- `syncCheckboxGroup(target, form)`: Lógica central que sincroniza Mestres e Filhos.
 
 ### Licença
 
 MIT
 
 ```
+
 ```

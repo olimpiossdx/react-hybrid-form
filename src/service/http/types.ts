@@ -5,13 +5,13 @@ export interface IApiError {
   code: string;
   message: string;
   details?: any;
-};
+}
 
 export interface IApiNotification {
   type: 'success' | 'error' | 'info' | 'warning';
   message: string;
   code?: string;
-};
+}
 
 // O Nosso Envelope Padrão (A verdade única da aplicação)
 export interface IApiResponse<T = any> {
@@ -20,8 +20,8 @@ export interface IApiResponse<T = any> {
   isSuccess: boolean;
   status: number;
   headers: Headers;
-  notifications: IApiNotification[]; 
-};
+  notifications: IApiNotification[];
+}
 
 // Assinatura do Adaptador
 export type ResponseAdapter = <T>(response: Response, body: any) => IApiResponse<T>;
@@ -30,32 +30,32 @@ export type ResponseAdapter = <T>(response: Response, body: any) => IApiResponse
 export interface HttpClientOptions {
   baseURL?: string;
   headers?: Record<string, string>;
-  
+
   // O padrão que esta instância vai usar sempre
-  defaultAdapter?: ResponseAdapter; 
-  
+  defaultAdapter?: ResponseAdapter;
+
   // Defaults de resiliência
   defaultRetries?: number;
   defaultRetryDelay?: number;
-};
+}
 
 export interface HttpRequestConfig extends RequestInit {
   baseURL?: string;
   url?: string; // URL completa ou relativa (Injetada pelo HttpClient)
-  headers?: HeadersInit; 
+  headers?: HeadersInit;
   params?: Record<string, string | number | boolean | undefined>;
-  
+
   // Features DX
-  notifyOnError?: boolean; 
-  
+  notifyOnError?: boolean;
+
   // Resiliência
-  retries?: number;        
-  retryDelay?: number;     
-  retryBackoff?: boolean;  
+  retries?: number;
+  retryDelay?: number;
+  retryBackoff?: boolean;
 
   // Estratégia de Parsing
   adapter?: ResponseAdapter;
-};
+}
 
 export type RequestInterceptor = (config: HttpRequestConfig) => Promise<HttpRequestConfig> | HttpRequestConfig;
 export type ResponseInterceptor = (response: IApiResponse) => Promise<IApiResponse> | IApiResponse;

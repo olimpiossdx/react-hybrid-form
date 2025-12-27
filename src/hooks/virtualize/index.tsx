@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface VirtualizerProps {
   count: number;
@@ -9,12 +9,7 @@ interface VirtualizerProps {
   scrollRef?: React.RefObject<HTMLElement>;
 }
 
-export const useVirtualizer = ({
-  count,
-  estimateSize,
-  scrollRef: externalScrollRef,
-  overscan = 5
-}: VirtualizerProps) => {
+export const useVirtualizer = ({ count, estimateSize, scrollRef: externalScrollRef, overscan = 5 }: VirtualizerProps) => {
   const [scrollTop, setScrollTop] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
 
@@ -27,45 +22,52 @@ export const useVirtualizer = ({
   const resizeObserver = useRef<ResizeObserver | null>(null);
 
   // --- CALLBACK REF (Gerencia conexão) ---
-  const registerContainer = useCallback((node: HTMLElement | null) => {
-    const ref = externalScrollRef || internalRef;
+  const registerContainer = useCallback(
+    (node: HTMLElement | null) => {
+      const ref = externalScrollRef || internalRef;
 
-    // Se o nó já é o atual, não faz nada
-    if (ref.current === node) return;
+      // Se o nó já é o atual, não faz nada
+      if (ref.current === node) {
+        return;
+      }
 
-    // Atualiza a ref
-    if (externalScrollRef) {
-      (externalScrollRef as any).current = node;
-    } else {
-      internalRef.current = node;
-    }
+      // Atualiza a ref
+      if (externalScrollRef) {
+        (externalScrollRef as any).current = node;
+      } else {
+        internalRef.current = node;
+      }
 
-    if (node) {
-      // 1. Medição Inicial
-      setContainerHeight(node.clientHeight);
+      if (node) {
+        // 1. Medição Inicial
+        setContainerHeight(node.clientHeight);
 
-      // 2. Observer do Container
-      const containerRo = new ResizeObserver(entries => {
-        const height = entries[0].contentRect.height;
-        if (height > 0) setContainerHeight(height);
-      });
-      containerRo.observe(node);
+        // 2. Observer do Container
+        const containerRo = new ResizeObserver((entries) => {
+          const height = entries[0].contentRect.height;
+          if (height > 0) {
+            setContainerHeight(height);
+          }
+        });
+        containerRo.observe(node);
 
-      // 3. Listener de Scroll
-      const onScroll = () => {
-        // Atualização direta para performance
-        setScrollTop(node.scrollTop);
-      };
+        // 3. Listener de Scroll
+        const onScroll = () => {
+          // Atualização direta para performance
+          setScrollTop(node.scrollTop);
+        };
 
-      node.addEventListener('scroll', onScroll, { passive: true });
+        node.addEventListener('scroll', onScroll, { passive: true });
 
-      // Cleanup anexado ao nó
-      (node as any).__cleanup = () => {
-        containerRo.disconnect();
-        node.removeEventListener('scroll', onScroll);
-      };
-    }
-  }, [externalScrollRef]);
+        // Cleanup anexado ao nó
+        (node as any).__cleanup = () => {
+          containerRo.disconnect();
+          node.removeEventListener('scroll', onScroll);
+        };
+      }
+    },
+    [externalScrollRef],
+  );
 
   // Cleanup Global
   useEffect(() => {
@@ -81,9 +83,9 @@ export const useVirtualizer = ({
   // --- OBSERVER DE ITENS ---
   useEffect(() => {
     if (!resizeObserver.current) {
-      resizeObserver.current = new ResizeObserver(entries => {
+      resizeObserver.current = new ResizeObserver((entries) => {
         let hasChanges = false;
-        entries.forEach(entry => {
+        entries.forEach((entry) => {
           if (entry.target instanceof HTMLElement) {
             const index = Number(entry.target.getAttribute('data-index'));
             const height = entry.borderBoxSize?.[0]?.blockSize ?? entry.contentRect.height;
@@ -95,7 +97,7 @@ export const useVirtualizer = ({
           }
         });
         if (hasChanges) {
-          requestAnimationFrame(() => setMeasurementVersion(v => v + 1));
+          requestAnimationFrame(() => setMeasurementVersion((v) => v + 1));
         }
       });
     }
@@ -121,9 +123,13 @@ export const useVirtualizer = ({
     while (low <= high) {
       const mid = Math.floor((low + high) / 2);
       const offset = offsets[mid];
-      if (offset < scrollTop) low = mid + 1;
-      else if (offset > scrollTop) high = mid - 1;
-      else return mid;
+      if (offset < scrollTop) {
+        low = mid + 1;
+      } else if (offset > scrollTop) {
+        high = mid - 1;
+      } else {
+        return mid;
+      }
     }
     return Math.max(0, low - 1);
   };
@@ -155,10 +161,10 @@ export const useVirtualizer = ({
             top: 0,
             left: 0,
             width: '100%',
-            transform: `translateY(${offsets[i]}px)`
+            transform: `translateY(${offsets[i]}px)`,
           },
-          'data-index': i
-        }
+          'data-index': i,
+        },
       });
     }
     return items;
@@ -167,16 +173,21 @@ export const useVirtualizer = ({
   // --- API ---
 
   const measureElement = useCallback((node: HTMLElement | null) => {
-    if (node) resizeObserver.current?.observe(node);
+    if (node) {
+      resizeObserver.current?.observe(node);
+    }
   }, []);
 
-  const scrollToIndex = useCallback((index: number) => {
-    const ref = externalScrollRef || internalRef;
-    if (ref.current) {
-      const offset = offsets[index] ?? 0;
-      ref.current.scrollTo({ top: offset, behavior: 'smooth' });
-    }
-  }, [offsets, externalScrollRef]);
+  const scrollToIndex = useCallback(
+    (index: number) => {
+      const ref = externalScrollRef || internalRef;
+      if (ref.current) {
+        const offset = offsets[index] ?? 0;
+        ref.current.scrollTo({ top: offset, behavior: 'smooth' });
+      }
+    },
+    [offsets, externalScrollRef],
+  );
 
   return {
     virtualItems,
@@ -190,12 +201,16 @@ export const useVirtualizer = ({
         height: '100%',
         width: '100%',
         position: 'relative' as const,
-        contain: 'strict'
-      }
+        contain: 'strict',
+      },
     },
     wrapperProps: {
-      style: { height: `${totalHeight}px`, position: 'relative' as const, width: '100%' }
+      style: {
+        height: `${totalHeight}px`,
+        position: 'relative' as const,
+        width: '100%',
+      },
     },
-    containerHeight
+    containerHeight,
   };
 };

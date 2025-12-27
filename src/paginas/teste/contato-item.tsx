@@ -1,4 +1,4 @@
-import AddressList from "./adress-list";
+import AddressList from './adress-list';
 
 interface IContato {
   numero: string;
@@ -13,27 +13,15 @@ interface ContactItemProps {
   isEditing: boolean;
   isDisabled: boolean;
 }
-const ContactItem: React.FC<ContactItemProps> = ({
-  contactIndex,
-  initialData,
-  onRemoveContact,
-  isEditing,
-  isDisabled,
-}) => {
+const ContactItem: React.FC<ContactItemProps> = ({ contactIndex, initialData, onRemoveContact, isEditing, isDisabled }) => {
   const fieldsetDisabled = isDisabled;
   const fieldsReadOnly = !isEditing;
 
   return (
-    <fieldset
-      className="mb-4 p-4 border border-gray-700 rounded"
-      disabled={fieldsetDisabled}
-    >
+    <fieldset className="mb-4 p-4 border border-gray-700 rounded" disabled={fieldsetDisabled}>
       <div className="flex items-end gap-2 mb-3">
         <div className="flex-grow">
-          <label
-            className="block text-sm mb-1 text-gray-400"
-            htmlFor={`contatos.${contactIndex}.numero`}
-          >
+          <label className="block text-sm mb-1 text-gray-400" htmlFor={`contatos.${contactIndex}.numero`}>
             Número
           </label>
           <input
@@ -48,10 +36,7 @@ const ContactItem: React.FC<ContactItemProps> = ({
           />
         </div>
         <div className="w-auto">
-          <label
-            className="block text-sm mb-1 text-gray-400"
-            htmlFor={`contatos.${contactIndex}.tipo`}
-          >
+          <label className="block text-sm mb-1 text-gray-400" htmlFor={`contatos.${contactIndex}.tipo`}>
             Tipo
           </label>
           <select
@@ -59,8 +44,7 @@ const ContactItem: React.FC<ContactItemProps> = ({
             name={`contatos.${contactIndex}.tipo`}
             className="form-input bg-gray-600"
             defaultValue={initialData.tipo}
-            disabled={fieldsReadOnly}
-          >
+            disabled={fieldsReadOnly}>
             <option value="celular">Celular</option>
             <option value="casa">Casa</option>
             <option value="trabalho">Trabalho</option>
@@ -72,8 +56,7 @@ const ContactItem: React.FC<ContactItemProps> = ({
           onClick={onRemoveContact}
           className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded text-sm flex-shrink-0 self-end h-[42px]"
           title="Remover Contato"
-          disabled={isDisabled || isEditing}
-        >
+          disabled={isDisabled || isEditing}>
           X
         </button>
       </div>

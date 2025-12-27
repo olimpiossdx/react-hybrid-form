@@ -1,10 +1,11 @@
-import React from "react";
-import { Check, X, Edit2, Trash2, Package } from "lucide-react";
-import { DataTable } from "../../../componentes/data-table";
-import { toast } from "../../../componentes/toast";
-import useList from "../../../hooks/list";
-import useForm from "../../../hooks/use-form";
-import { useTable, type TableColumn } from "../../../hooks/use-table";
+import React from 'react';
+import { Check, Edit2, Package, Trash2, X } from 'lucide-react';
+
+import { DataTable } from '../../../componentes/data-table';
+import { toast } from '../../../componentes/toast';
+import useList from '../../../hooks/list';
+import useForm from '../../../hooks/use-form';
+import { type TableColumn, useTable } from '../../../hooks/use-table';
 
 interface IProduct {
   id?: string;
@@ -14,9 +15,9 @@ interface IProduct {
 }
 
 const generateInitialData = () => [
-  { id: "1", name: "Teclado Mecânico", price: 250, stock: 10 },
-  { id: "2", name: "Mouse Gamer", price: 120, stock: 50 },
-  { id: "3", name: "Monitor 4K", price: 1500, stock: 5 },
+  { id: '1', name: 'Teclado Mecânico', price: 250, stock: 10 },
+  { id: '2', name: 'Mouse Gamer', price: 120, stock: 50 },
+  { id: '3', name: 'Monitor 4K', price: 1500, stock: 5 },
 ];
 
 const TableScrollCRUD = () => {
@@ -25,16 +26,16 @@ const TableScrollCRUD = () => {
   const [editingId, setEditingId] = React.useState<string | null>(null);
 
   const columns: TableColumn<IProduct>[] = [
-    { id: "name", header: "Produto", width: "40%" },
-    { id: "price", header: "Preço", width: "20%" },
-    { id: "stock", header: "Estoque", width: "20%" },
-    { id: "actions", header: "Ações", width: "20%", hideLabelOnStack: true },
+    { id: 'name', header: 'Produto', width: '40%' },
+    { id: 'price', header: 'Preço', width: '20%' },
+    { id: 'stock', header: 'Estoque', width: '20%' },
+    { id: 'actions', header: 'Ações', width: '20%', hideLabelOnStack: true },
   ];
 
   const table = useTable({
     data: items.map((i) => ({ ...i.data, id: i.id })),
     columns,
-    responsiveMode: "scroll",
+    responsiveMode: 'scroll',
   });
 
   const onSubmit = (formData: any) => {
@@ -47,19 +48,19 @@ const TableScrollCRUD = () => {
           price: Number(editedItemData.price),
           stock: Number(editedItemData.stock),
         });
-        toast.success("Produto atualizado!");
+        toast.success('Produto atualizado!');
       }
     }
     setEditingId(null);
   };
 
-  const { formProps, handleSubmit } = useForm({ id: "inline-crud", onSubmit });
+  const { formProps, handleSubmit } = useForm({ id: 'inline-crud', onSubmit });
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    add({ name: "", price: 0, stock: 0 });
-    toast.info("Novo item adicionado.");
+    add({ name: '', price: 0, stock: 0 });
+    toast.info('Novo item adicionado.');
   };
 
   const handleEdit = (e: React.MouseEvent, id: string) => {
@@ -72,7 +73,7 @@ const TableScrollCRUD = () => {
     e.preventDefault();
     e.stopPropagation();
     remove(id);
-    toast.error("Item removido.");
+    toast.error('Item removido.');
   };
 
   const handleCancel = (e: React.MouseEvent) => {
@@ -93,25 +94,18 @@ const TableScrollCRUD = () => {
         <button
           type="button"
           onClick={handleAdd}
-          className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1.5 rounded text-sm transition-colors font-bold shadow-sm flex items-center gap-2"
-        >
+          className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1.5 rounded text-sm transition-colors font-bold shadow-sm flex items-center gap-2">
           + Novo Produto
         </button>
       </div>
 
-      <form
-        {...formProps}
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex-1 overflow-hidden flex flex-col"
-      >
+      <form {...formProps} onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-hidden flex flex-col">
         <DataTable.Root instance={table} className="h-full">
           <DataTable.Container>
             <DataTable.Table>
               <DataTable.Header>
                 {table.columns.map((col) => (
-                  <DataTable.HeadCell key={col.id}>
-                    {col.header}
-                  </DataTable.HeadCell>
+                  <DataTable.HeadCell key={col.id}>{col.header}</DataTable.HeadCell>
                 ))}
               </DataTable.Header>
 
@@ -119,12 +113,7 @@ const TableScrollCRUD = () => {
                 {items.map((item, index) => {
                   const isEditing = editingId === item.id;
                   return (
-                    <DataTable.Row
-                      key={item.id}
-                      className={
-                        isEditing ? "bg-blue-50 dark:bg-blue-900/20" : ""
-                      }
-                    >
+                    <DataTable.Row key={item.id} className={isEditing ? 'bg-blue-50 dark:bg-blue-900/20' : ''}>
                       <DataTable.Cell>
                         {isEditing ? (
                           <input
@@ -135,7 +124,7 @@ const TableScrollCRUD = () => {
                             required
                           />
                         ) : (
-                          item.data.name || "(Sem nome)"
+                          item.data.name || '(Sem nome)'
                         )}
                       </DataTable.Cell>
                       <DataTable.Cell>
@@ -168,32 +157,22 @@ const TableScrollCRUD = () => {
                             <>
                               <button
                                 type="submit"
-                                className="p-1.5 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded"
-                              >
+                                className="p-1.5 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded">
                                 <Check size={16} />
                               </button>
                               <button
                                 type="button"
                                 onClick={handleCancel}
-                                className="p-1.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded"
-                              >
+                                className="p-1.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded">
                                 <X size={16} />
                               </button>
                             </>
                           ) : (
                             <>
-                              <button
-                                type="button"
-                                onClick={(e) => handleEdit(e, item.id)}
-                                className="p-1.5 text-blue-500 rounded"
-                              >
+                              <button type="button" onClick={(e) => handleEdit(e, item.id)} className="p-1.5 text-blue-500 rounded">
                                 <Edit2 size={16} />
                               </button>
-                              <button
-                                type="button"
-                                onClick={(e) => handleDelete(e, item.id)}
-                                className="p-1.5 text-red-500 rounded"
-                              >
+                              <button type="button" onClick={(e) => handleDelete(e, item.id)} className="p-1.5 text-red-500 rounded">
                                 <Trash2 size={16} />
                               </button>
                             </>

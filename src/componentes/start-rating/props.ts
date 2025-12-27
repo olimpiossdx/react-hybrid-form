@@ -1,4 +1,3 @@
-
 export interface IStarRatingProps {
   name: string;
   label?: string;
@@ -11,4 +10,4 @@ export interface IStarRatingProps {
   validationKey?: string;
   className?: string;
   starClassName?: string;
-};
+}

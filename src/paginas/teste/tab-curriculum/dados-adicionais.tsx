@@ -1,6 +1,7 @@
-import React from "react";
-import type { IDadosAdicionais } from "./types";
-import { FilePlus, DollarSign } from "lucide-react";
+import React from 'react';
+import { DollarSign, FilePlus } from 'lucide-react';
+
+import type { IDadosAdicionais } from './types';
 
 interface Props {
   data?: IDadosAdicionais;
@@ -23,16 +24,12 @@ const DadosAdicionais: React.FC<Props> = ({ data }) => {
             defaultChecked={data?.disponibilidadeImediata}
             className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500"
           />
-          <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">
-            Disponibilidade Imediata
-          </span>
+          <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">Disponibilidade Imediata</span>
         </div>
 
         {/* Input Numérico */}
         <div>
-          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">
-            Pretensão Salarial
-          </label>
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Pretensão Salarial</label>
           <div className="relative">
             <DollarSign className="absolute left-3 top-2.5 text-gray-400 w-4 h-4 pointer-events-none" />
             <input

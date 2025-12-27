@@ -1,26 +1,27 @@
-import React from "react";
+import React from 'react';
 import {
-  Bell,
-  MapPin,
-  Clock,
-  Zap,
-  Layout,
-  Shield,
-  CheckCircle,
-  AlertTriangle,
-  Info,
   AlertCircle,
-  Trash2,
+  AlertTriangle,
+  Bell,
+  CheckCircle,
+  Clock,
   DownloadCloud,
-  WifiOff,
+  Info,
+  Layout,
+  MapPin,
+  Shield,
+  Trash2,
   Trophy,
-} from "lucide-react";
-import { toast } from "../../componentes/toast";
+  WifiOff,
+  Zap,
+} from 'lucide-react';
+
+import { toast } from '../../componentes/toast';
 
 const ToastExample = () => {
   // Estilo base para os botões de grade (Adaptado para Light/Dark)
   const btnGridClass =
-    "flex items-center justify-center gap-2 px-3 py-2 text-xs font-mono text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-cyan-600 dark:hover:text-white hover:border-cyan-500 transition-all active:scale-95";
+    'flex items-center justify-center gap-2 px-3 py-2 text-xs font-mono text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-cyan-600 dark:hover:text-white hover:border-cyan-500 transition-all active:scale-95';
 
   return (
     <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 max-w-6xl mx-auto transition-colors">
@@ -29,8 +30,7 @@ const ToastExample = () => {
           <Bell className="w-6 h-6" /> Central de Notificações
         </h2>
         <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
-          Sistema de Toasts de Alta Performance com suporte a filas,
-          posicionamento e ações.
+          Sistema de Toasts de Alta Performance com suporte a filas, posicionamento e ações.
         </p>
       </div>
 
@@ -45,41 +45,33 @@ const ToastExample = () => {
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() =>
-                  toast.success("Dados salvos com sucesso!", {
-                    title: "Sucesso",
+                  toast.success('Dados salvos com sucesso!', {
+                    title: 'Sucesso',
                   })
                 }
-                className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors text-left flex items-center gap-2"
-              >
+                className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors text-left flex items-center gap-2">
                 <CheckCircle size={18} /> Sucesso
               </button>
 
               <button
                 onClick={() =>
-                  toast.error("Não foi possível conectar.", {
-                    title: "Erro 500",
+                  toast.error('Não foi possível conectar.', {
+                    title: 'Erro 500',
                   })
                 }
-                className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors text-left flex items-center gap-2"
-              >
+                className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors text-left flex items-center gap-2">
                 <AlertCircle size={18} /> Erro
               </button>
 
               <button
-                onClick={() =>
-                  toast.warning("Sessão expira em 2min.", { title: "Atenção" })
-                }
-                className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800/50 rounded text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition-colors text-left flex items-center gap-2"
-              >
+                onClick={() => toast.warning('Sessão expira em 2min.', { title: 'Atenção' })}
+                className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800/50 rounded text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition-colors text-left flex items-center gap-2">
                 <AlertTriangle size={18} /> Aviso
               </button>
 
               <button
-                onClick={() =>
-                  toast.info("Nova versão disponível.", { title: "Update" })
-                }
-                className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors text-left flex items-center gap-2"
-              >
+                onClick={() => toast.info('Nova versão disponível.', { title: 'Update' })}
+                className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors text-left flex items-center gap-2">
                 <Info size={18} /> Info
               </button>
             </div>
@@ -92,28 +84,13 @@ const ToastExample = () => {
             </h3>
             <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded border border-gray-200 dark:border-gray-700">
               <div className="grid grid-cols-3 gap-2">
-                <button
-                  onClick={() =>
-                    toast.info("Topo Esquerda", { position: "top-left" })
-                  }
-                  className={btnGridClass}
-                >
+                <button onClick={() => toast.info('Topo Esquerda', { position: 'top-left' })} className={btnGridClass}>
                   ↖ TL
                 </button>
-                <button
-                  onClick={() =>
-                    toast.info("Topo Centro", { position: "top-center" })
-                  }
-                  className={btnGridClass}
-                >
+                <button onClick={() => toast.info('Topo Centro', { position: 'top-center' })} className={btnGridClass}>
                   ⬆ TC
                 </button>
-                <button
-                  onClick={() =>
-                    toast.info("Topo Direita", { position: "top-right" })
-                  }
-                  className={btnGridClass}
-                >
+                <button onClick={() => toast.info('Topo Direita', { position: 'top-right' })} className={btnGridClass}>
                   ↗ TR
                 </button>
 
@@ -121,28 +98,13 @@ const ToastExample = () => {
                   SCREEN
                 </div>
 
-                <button
-                  onClick={() =>
-                    toast.info("Baixo Esquerda", { position: "bottom-left" })
-                  }
-                  className={btnGridClass}
-                >
+                <button onClick={() => toast.info('Baixo Esquerda', { position: 'bottom-left' })} className={btnGridClass}>
                   ↙ BL
                 </button>
-                <button
-                  onClick={() =>
-                    toast.info("Baixo Centro", { position: "bottom-center" })
-                  }
-                  className={btnGridClass}
-                >
+                <button onClick={() => toast.info('Baixo Centro', { position: 'bottom-center' })} className={btnGridClass}>
                   ⬇ BC
                 </button>
-                <button
-                  onClick={() =>
-                    toast.info("Baixo Direita", { position: "bottom-right" })
-                  }
-                  className={btnGridClass}
-                >
+                <button onClick={() => toast.info('Baixo Direita', { position: 'bottom-right' })} className={btnGridClass}>
                   ↘ BR
                 </button>
               </div>
@@ -160,24 +122,18 @@ const ToastExample = () => {
             {/* TESTE 1: COM AÇÃO (UNDO) */}
             <button
               onClick={() =>
-                toast.warning(
-                  "O item 'Relatório_Final.pdf' foi movido para a lixeira.",
-                  {
-                    title: "Item Excluído",
-                    duration: 8000,
-                    action: {
-                      label: "Desfazer",
-                      onClick: () =>
-                        toast.success("Ação desfeita! O item foi restaurado."),
-                    },
-                  }
-                )
+                toast.warning("O item 'Relatório_Final.pdf' foi movido para a lixeira.", {
+                  title: 'Item Excluído',
+                  duration: 8000,
+                  action: {
+                    label: 'Desfazer',
+                    onClick: () => toast.success('Ação desfeita! O item foi restaurado.'),
+                  },
+                })
               }
-              className="p-4 bg-white dark:bg-gray-700/30 rounded border border-gray-200 dark:border-gray-600 hover:border-yellow-400 dark:hover:border-yellow-500/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-left group transition-all shadow-sm hover:shadow-md"
-            >
+              className="p-4 bg-white dark:bg-gray-700/30 rounded border border-gray-200 dark:border-gray-600 hover:border-yellow-400 dark:hover:border-yellow-500/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-left group transition-all shadow-sm hover:shadow-md">
               <div className="flex items-center gap-2 text-gray-900 dark:text-white font-bold mb-1">
-                <Trash2 size={20} className="text-red-500 dark:text-red-400" />{" "}
-                Com Ação (Undo)
+                <Trash2 size={20} className="text-red-500 dark:text-red-400" /> Com Ação (Undo)
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300">
                 Exibe um botão dentro do toast para reverter a ação.
@@ -187,27 +143,19 @@ const ToastExample = () => {
             {/* TESTE 2: PERSISTENTE (INFINITO) */}
             <button
               onClick={() =>
-                toast.error(
-                  "Conexão com o servidor perdida. Tentando reconectar...",
-                  {
-                    title: "Sem Internet",
-                    icon: <WifiOff className="text-red-500 animate-pulse" />,
-                    duration: Infinity, // Nunca fecha sozinho
-                    action: {
-                      label: "Tentar Agora",
-                      onClick: () => window.location.reload(),
-                    },
-                  }
-                )
+                toast.error('Conexão com o servidor perdida. Tentando reconectar...', {
+                  title: 'Sem Internet',
+                  icon: <WifiOff className="text-red-500 animate-pulse" />,
+                  duration: Infinity, // Nunca fecha sozinho
+                  action: {
+                    label: 'Tentar Agora',
+                    onClick: () => window.location.reload(),
+                  },
+                })
               }
-              className="p-4 bg-white dark:bg-gray-700/30 rounded border border-gray-200 dark:border-gray-600 hover:border-red-400 dark:hover:border-red-500/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-left group transition-all shadow-sm hover:shadow-md"
-            >
+              className="p-4 bg-white dark:bg-gray-700/30 rounded border border-gray-200 dark:border-gray-600 hover:border-red-400 dark:hover:border-red-500/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-left group transition-all shadow-sm hover:shadow-md">
               <div className="flex items-center gap-2 text-gray-900 dark:text-white font-bold mb-1">
-                <Clock
-                  size={20}
-                  className="text-orange-500 dark:text-orange-400"
-                />{" "}
-                Persistente
+                <Clock size={20} className="text-orange-500 dark:text-orange-400" /> Persistente
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300">
                 Não desaparece até que o usuário feche ou clique na ação.
@@ -218,24 +166,14 @@ const ToastExample = () => {
             <button
               onClick={() =>
                 toast.custom("Você desbloqueou o nível 'Master'!", {
-                  title: "Conquista!",
-                  icon: (
-                    <Trophy
-                      className="text-yellow-500 dark:text-yellow-400 drop-shadow-lg animate-bounce"
-                      size={32}
-                    />
-                  ),
+                  title: 'Conquista!',
+                  icon: <Trophy className="text-yellow-500 dark:text-yellow-400 drop-shadow-lg animate-bounce" size={32} />,
                   duration: 5000,
                 })
               }
-              className="p-4 bg-white dark:bg-gray-700/30 rounded border border-gray-200 dark:border-gray-600 hover:border-purple-400 dark:hover:border-purple-500/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-left group transition-all shadow-sm hover:shadow-md"
-            >
+              className="p-4 bg-white dark:bg-gray-700/30 rounded border border-gray-200 dark:border-gray-600 hover:border-purple-400 dark:hover:border-purple-500/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-left group transition-all shadow-sm hover:shadow-md">
               <div className="flex items-center gap-2 text-gray-900 dark:text-white font-bold mb-1">
-                <Trophy
-                  size={20}
-                  className="text-purple-600 dark:text-purple-400"
-                />{" "}
-                Ícone Custom
+                <Trophy size={20} className="text-purple-600 dark:text-purple-400" /> Ícone Custom
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300">
                 Permite passar qualquer ReactNode como ícone (ex: SVG animado).
@@ -245,29 +183,16 @@ const ToastExample = () => {
             {/* TESTE 4: TAMANHO GRANDE (DESCRIÇÃO LONGA) */}
             <button
               onClick={() =>
-                toast.success(
-                  "O relatório complexo foi gerado e enviado para o seu e-mail corporativo com sucesso.",
-                  {
-                    size: "large",
-                    title: "Relatório Gerado",
-                    icon: (
-                      <DownloadCloud
-                        className="text-blue-500 dark:text-blue-400"
-                        size={28}
-                      />
-                    ),
-                    duration: 6000,
-                  }
-                )
+                toast.success('O relatório complexo foi gerado e enviado para o seu e-mail corporativo com sucesso.', {
+                  size: 'large',
+                  title: 'Relatório Gerado',
+                  icon: <DownloadCloud className="text-blue-500 dark:text-blue-400" size={28} />,
+                  duration: 6000,
+                })
               }
-              className="p-4 bg-white dark:bg-gray-700/30 rounded border border-gray-200 dark:border-gray-600 hover:border-cyan-400 dark:hover:border-cyan-500/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-left group transition-all shadow-sm hover:shadow-md"
-            >
+              className="p-4 bg-white dark:bg-gray-700/30 rounded border border-gray-200 dark:border-gray-600 hover:border-cyan-400 dark:hover:border-cyan-500/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-left group transition-all shadow-sm hover:shadow-md">
               <div className="flex items-center gap-2 text-gray-900 dark:text-white font-bold mb-1">
-                <Layout
-                  size={20}
-                  className="text-cyan-600 dark:text-cyan-400"
-                />{" "}
-                Tamanho Grande
+                <Layout size={20} className="text-cyan-600 dark:text-cyan-400" /> Tamanho Grande
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300">
                 Layout expandido para mensagens longas ou detalhadas.
@@ -277,8 +202,7 @@ const ToastExample = () => {
 
           <div className="mt-6 p-4 bg-gray-50 dark:bg-black/30 rounded border border-gray-200 dark:border-gray-700/50">
             <p className="text-xs text-gray-500 font-mono">
-              * Dica: Clique várias vezes rapidamente para testar o empilhamento
-              (Stacking).
+              * Dica: Clique várias vezes rapidamente para testar o empilhamento (Stacking).
             </p>
           </div>
         </div>
