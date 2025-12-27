@@ -5,7 +5,7 @@ export interface ListItem<T> {
   data: T;
 }
 
-export interface UseListReturn<T> {
+export interface IUseListReturn<T> {
   items: ListItem<T>[];
   add: (payload?: T | T[]) => void;
   insertAt: (index: number, payload?: T) => void;
@@ -16,7 +16,7 @@ export interface UseListReturn<T> {
   clear: () => void;
 }
 
-export const useList = <T = any,>(initialDataOrCount: T[] | number = []): UseListReturn<T> => {
+export const useList = <T = any,>(initialDataOrCount: T[] | number = []): IUseListReturn<T> => {
   const generateItem = (data?: T): ListItem<T> => ({
     id: `item-${crypto.randomUUID()}`,
     data: data || ({} as T),

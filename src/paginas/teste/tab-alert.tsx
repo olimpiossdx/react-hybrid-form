@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { AlertOctagon, Megaphone, ShieldCheck, Terminal } from 'lucide-react';
 
 import Alert from '../../componentes/alert';
@@ -6,8 +6,8 @@ import useForm from '../../hooks/use-form';
 
 const AlertExample: React.FC = () => {
   const { formProps, handleSubmit } = useForm('alert-form');
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [showInfo, setShowInfo] = useState(true);
+  const [serverError, setServerError] = React.useState<string | null>(null);
+  const [showInfo, setShowInfo] = React.useState(true);
 
   const onSubmit = () => {
     setServerError('Erro 500: Não foi possível conectar ao banco de dados.');
@@ -45,7 +45,8 @@ const AlertExample: React.FC = () => {
                       setServerError(null);
                       alert('Tentando...');
                     }}
-                    className="text-xs font-bold bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-100 px-3 py-1.5 rounded border border-red-200 dark:border-red-800 transition-colors hover:bg-red-200 dark:hover:bg-red-900/60"
+                    className="text-xs font-bold bg-red-100 dark:bg-red-900/40 text-red-700
+                     dark:text-red-100 px-3 py-1.5 rounded border border-red-200 dark:border-red-800 transition-colors hover:bg-red-200 dark:hover:bg-red-900/60"
                   >
                     Tentar Novamente
                   </button>
