@@ -26,6 +26,7 @@ import TabSwitchExample from './tab-switch';
 import TabTableCollapse from './tab-table-collapse';
 import TabTableStackCRUD from './tab-table-stack-crud';
 import ToastContainerExample from './tab-toast-container';
+import TabTransferList from './tab-transferlist';
 import ValidationFeedbackExample from './tab-validacao';
 import TabValidationComplexExample from './tab-validation-complex';
 import TabVirtualList from './tab-virtualize';
@@ -72,6 +73,7 @@ const Homologacao: React.FC = () => {
     tabTableStackCRUD: <TabTableStackCRUD />,
     tabTableCollapse: <TabTableCollapse />,
     tabPagination: <TabPagination />,
+    tabTransferList: <TabTransferList />,
   };
 
   return (
@@ -119,6 +121,7 @@ const Homologacao: React.FC = () => {
             onClick={setActiveTab}
           />
           <TabButton tabId="tabSwitchExample" label="Switch" isActive={activeTab === 'tabSwitchExample'} onClick={setActiveTab} />
+          <TabButton tabId="tabTransferList" label="Transfer List" isActive={activeTab === 'tabTransferList'} onClick={setActiveTab} />
           <TabButton tabId="dateRangeExample" label="Date Range" isActive={activeTab === 'dateRangeExample'} onClick={setActiveTab} />
           <TabButton tabId="tabMaskExample" label="Masks" isActive={activeTab === 'tabMaskExample'} onClick={setActiveTab} />
           <TabButton tabId="nestedLevelForm" label="Fractal" isActive={activeTab === 'nestedLevelForm'} onClick={setActiveTab} />

@@ -6,21 +6,21 @@ interface IContato {
   enderecos: any[];
 }
 
-interface ContactItemProps {
+interface IContactItemProps {
   contactIndex: number;
   initialData: IContato;
   onRemoveContact: () => void;
   isEditing: boolean;
   isDisabled: boolean;
 }
-const ContactItem: React.FC<ContactItemProps> = ({ contactIndex, initialData, onRemoveContact, isEditing, isDisabled }) => {
+const ContactItem: React.FC<IContactItemProps> = ({ contactIndex, initialData, onRemoveContact, isEditing, isDisabled }) => {
   const fieldsetDisabled = isDisabled;
   const fieldsReadOnly = !isEditing;
 
   return (
     <fieldset className="mb-4 p-4 border border-gray-700 rounded" disabled={fieldsetDisabled}>
       <div className="flex items-end gap-2 mb-3">
-        <div className="flex-grow">
+        <div className="grow">
           <label className="block text-sm mb-1 text-gray-400" htmlFor={`contatos.${contactIndex}.numero`}>
             Número
           </label>
@@ -54,7 +54,7 @@ const ContactItem: React.FC<ContactItemProps> = ({ contactIndex, initialData, on
         <button
           type="button"
           onClick={onRemoveContact}
-          className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded text-sm flex-shrink-0 self-end h-[42px]"
+          className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded text-sm shrink-0 self-end h-[42px]"
           title="Remover Contato"
           disabled={isDisabled || isEditing}>
           X
