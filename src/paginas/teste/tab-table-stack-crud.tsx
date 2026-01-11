@@ -24,8 +24,8 @@ const ROLES_OPTIONS = [
 ];
 
 // --- FORMULÁRIO DO MODAL ---
-const EditUserForm = ({ user, onSave, onClose }: { user: User; onSave: (data: any) => void; onClose?: () => void }) => {
-  const { formProps, resetSection } = useForm({
+const EditUserForm: React.FC<{ user: User; onSave: (data: any) => void; onClose?: () => void }> = ({ user, onSave, onClose }) => {
+  const { formProps } = useForm({
     id: 'edit-user-modal',
     onSubmit: (data) => {
       onSave(data);
@@ -34,13 +34,6 @@ const EditUserForm = ({ user, onSave, onClose }: { user: User; onSave: (data: an
       }
     },
   });
-
-  React.useEffect(() => {
-    resetSection('', {
-      ...user,
-      role: { label: user.role, value: user.role },
-    });
-  }, [user, resetSection]);
 
   return (
     <form {...formProps} className="space-y-4">

@@ -28,7 +28,7 @@ const DADOS_VAZIOS = {
   urgente: false,
 };
 
-const AsyncAutocompleteExample = () => {
+const AsyncAutocompleteExample: React.FC = () => {
   const onSubmit = (data: any) => {
     showModal({
       title: 'Equipe Cadastrada',
