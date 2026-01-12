@@ -73,7 +73,7 @@ const TabDataTable = () => {
     });
   };
 
-  const { formProps, handleSubmit } = useForm('bulk-edit-form');
+  const { formProps } = useForm({ id: 'bulk-edit-form', onSubmit });
 
   const { virtualItems, totalHeight, containerProps } = useVirtualizer({
     count: processedItems.length,
@@ -85,9 +85,7 @@ const TabDataTable = () => {
   const paddingBottom =
     virtualItems.length > 0 ? totalHeight - (virtualItems[virtualItems.length - 1].start + virtualItems[virtualItems.length - 1].size) : 0;
 
-  const handleDelete = (e: React.MouseEvent, id: string, name: string) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDelete = (_: React.MouseEvent, id: string, name: string) => {
     showModal({
       title: 'Excluir Registro',
       size: 'sm',
@@ -144,7 +142,6 @@ const TabDataTable = () => {
           </div>
           <button
             type="submit"
-            onClick={() => handleSubmit(onSubmit)}
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded shadow-lg transition-transform active:scale-95 text-sm font-bold">
             <Save size={16} /> Salvar Tudo
           </button>
