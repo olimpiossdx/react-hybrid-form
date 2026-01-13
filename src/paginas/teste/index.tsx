@@ -25,6 +25,7 @@ import TabServiceExample from './tab-service';
 import TabSwitchExample from './tab-switch';
 import TabTableCollapse from './tab-table-collapse';
 import TabTableStackCRUD from './tab-table-stack-crud';
+import TabTextArea from './tab-textarea';
 import ToastContainerExample from './tab-toast-container';
 import TabTransferList from './tab-transferlist';
 import ValidationFeedbackExample from './tab-validacao';
@@ -74,6 +75,7 @@ const Homologacao: React.FC = () => {
     tabTableCollapse: <TabTableCollapse />,
     tabPagination: <TabPagination />,
     tabTransferList: <TabTransferList />,
+    tabTextArea: <TabTextArea />,
   };
 
   return (
@@ -147,6 +149,7 @@ const Homologacao: React.FC = () => {
             onClick={setActiveTab}
           />
           <TabButton tabId="tabPagination" label="Paginação" isActive={activeTab === 'tabPagination'} onClick={setActiveTab} />
+          <TabButton tabId="tabTextArea" label="TextArea" isActive={activeTab === 'tabTextArea'} onClick={setActiveTab} />
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
