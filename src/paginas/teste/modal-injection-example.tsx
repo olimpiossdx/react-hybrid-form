@@ -54,16 +54,14 @@ const ActionFooter: React.FC<IActionProps> = ({
   <div className="flex justify-end gap-3 w-full">
     <button
       onClick={onClose}
-      className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors font-medium"
-    >
+      className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">
       {cancelText}
     </button>
     <button
       onClick={onConfirm}
       className={`px-6 py-2 text-sm text-white font-bold rounded shadow-lg transition-transform active:scale-95 flex items-center gap-2 ${
         isDestructive ? 'bg-red-600 hover:bg-red-700' : 'bg-cyan-600 hover:bg-cyan-700'
-      }`}
-    >
+      }`}>
       {isDestructive && <Trash2 size={16} />}
       {confirmText}
     </button>
@@ -100,8 +98,7 @@ const LoginFormContent: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
       <button
         disabled={loading}
         type="submit"
-        className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white font-bold py-2.5 rounded transition-all mt-2"
-      >
+        className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white font-bold py-2.5 rounded transition-all mt-2">
         {loading ? '...' : 'Acessar'}
       </button>
     </form>
@@ -125,8 +122,7 @@ const WizardContent: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
           return (
             <div key={idx} className="relative z-10 flex flex-col items-center gap-2 bg-white dark:bg-gray-800 px-2">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${active ? 'bg-cyan-600 border-cyan-500 text-white' : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400'}`}
-              >
+                className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${active ? 'bg-cyan-600 border-cyan-500 text-white' : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400'}`}>
                 {s.icon}
               </div>
               <span className={`text-[10px] font-bold uppercase ${active ? 'text-cyan-600 dark:text-cyan-400' : 'text-gray-400'}`}>
@@ -166,14 +162,12 @@ const WizardContent: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
       <div className="flex justify-between mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
         <button
           onClick={() => (step > 1 ? setStep(step - 1) : onClose?.())}
-          className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors font-medium"
-        >
+          className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">
           {step === 1 ? 'Cancelar' : 'Voltar'}
         </button>
         <button
           onClick={() => (step < 3 ? setStep(step + 1) : (alert('Fim!'), onClose?.()))}
-          className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded font-bold flex items-center gap-2 transition-transform active:scale-95"
-        >
+          className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded font-bold flex items-center gap-2 transition-transform active:scale-95">
           {step === 3 ? (
             'Concluir'
           ) : (
@@ -203,8 +197,7 @@ const SettingsContent = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded text-left text-sm transition-all ${activeTab === tab.id ? 'bg-cyan-50 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-400 border-l-2 border-cyan-500' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-          >
+            className={`flex items-center gap-3 px-3 py-2.5 rounded text-left text-sm transition-all ${activeTab === tab.id ? 'bg-cyan-50 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-400 border-l-2 border-cyan-500' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
             <tab.icon size={16} /> {tab.label}
           </button>
         ))}
@@ -231,8 +224,7 @@ const SettingsContent = () => {
             {['Email', 'SMS', 'Push'].map((c) => (
               <label
                 key={c}
-                className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700/30 rounded border border-gray-200 dark:border-gray-700 cursor-pointer"
-              >
+                className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700/30 rounded border border-gray-200 dark:border-gray-700 cursor-pointer">
                 <span className="text-sm text-gray-700 dark:text-gray-300">{c}</span>
                 <input type="checkbox" defaultChecked className="accent-cyan-500 w-4 h-4" />
               </label>
@@ -278,8 +270,7 @@ const FeedbackContent: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
             type="button"
             key={star}
             onClick={() => setRating(star)}
-            className={`transition-transform hover:scale-110 ${star <= rating ? 'text-yellow-500' : 'text-gray-300 dark:text-gray-600'}`}
-          >
+            className={`transition-transform hover:scale-110 ${star <= rating ? 'text-yellow-500' : 'text-gray-300 dark:text-gray-600'}`}>
             <Star size={32} fill={star <= rating ? 'currentColor' : 'none'} />
           </button>
         ))}
@@ -289,15 +280,13 @@ const FeedbackContent: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors font-medium"
-        >
+          className="flex-1 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors font-medium">
           Cancelar
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="flex-1 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white font-bold rounded transition-colors"
-        >
+          className="flex-1 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white font-bold rounded transition-colors">
           {loading ? '...' : 'Enviar'}
         </button>
       </div>
@@ -388,9 +377,11 @@ const ModalInjectionExample = ({ showModal }: { showModal: <H, C, A>(opts: IModa
       ),
       content: <div className="py-4 text-gray-600 dark:text-gray-300">Operação realizada com sucesso!</div>,
       size: 'sm',
-      actions: (
+      actions: ({ onClose }) => (
         <div className="flex justify-end">
-          <button className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-4 py-2 rounded font-medium">
+          <button
+            onClick={onClose}
+            className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-4 py-2 rounded font-medium">
             OK
           </button>
         </div>
@@ -401,7 +392,7 @@ const ModalInjectionExample = ({ showModal }: { showModal: <H, C, A>(opts: IModa
       title: 'Relatório',
       content: ReportContent,
       size: 'full',
-      actions: ({ onClose }: any) => (
+      actions: ({ onClose }) => (
         <button onClick={onClose} className="bg-cyan-600 text-white px-4 py-2 rounded">
           Fechar
         </button>
@@ -423,8 +414,7 @@ const ModalInjectionExample = ({ showModal }: { showModal: <H, C, A>(opts: IModa
                 content: <div className="text-red-500 font-bold py-4">Erro Crítico!</div>,
               })
             }
-            className="bg-purple-600 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-purple-700 transition-colors"
-          >
+            className="bg-purple-600 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-purple-700 transition-colors">
             <Layers size={16} /> Abrir Próximo
           </button>
         </div>
@@ -476,8 +466,7 @@ const CardButton = ({ title, desc, onClick, icon: Icon, color }: any) => {
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-start p-4 rounded-lg border transition-all duration-200 hover:shadow-md group ${colors[color] || colors.cyan}`}
-    >
+      className={`flex flex-col items-start p-4 rounded-lg border transition-all duration-200 hover:shadow-md group ${colors[color] || colors.cyan}`}>
       <div className="flex items-center gap-2 mb-2">
         <Icon size={20} />
         <span className="font-bold">{title}</span>

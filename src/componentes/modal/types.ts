@@ -1,13 +1,25 @@
 import React from 'react';
 
+// Define as props padrão injetadas automaticamente pelo sistema de modal
+export interface InjectedModalProps {
+  onClose: () => void;
+}
+
+/**
+ * Tipo auxiliar para componentes que aceitam props.
+ * Agora ele explicitamente diz que as props (P) serão unidas com InjectedModalProps (onClose).
+ */
+export type ModalComponentType<P = {} & any> = React.ComponentType<P & InjectedModalProps>;
+
 /**
  * Interface Genérica para Configuração do Modal.
  * @template H Tipo das props do Header
  * @template C Tipo das props do Content
  * @template A Tipo das props das Actions/Footer
  */
-export interface IModalOptions<H = any, C = any, A = any> {
+export interface IModalOptions<H = {} & any, C = {} & any, A = {} & any> {
   // SLOTS: Aceitam um Componente (Função) OU um Node (JSX pronto)
+  // Se for função, ela recebe as props definidas (H, C, A) + onClose
   title?: ModalComponentType<H> | React.ReactNode;
   content: ModalComponentType<C> | React.ReactNode;
   actions?: ModalComponentType<A> | React.ReactNode;
@@ -24,7 +36,7 @@ export interface IModalOptions<H = any, C = any, A = any> {
   // CONFIGURAÇÃO
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full' | 'custom';
   closeOnBackdropClick?: boolean;
-  styleConfig?: React.CSSProperties | any; // Flexibilidade para estilos inline
+  styleConfig?: React.CSSProperties | any;
 
   // LIFECYCLE
   onClose?: () => void;
@@ -36,13 +48,5 @@ export interface IModalProps {
   onClose: () => void;
 }
 
-// Definição para o Manager (se usado)
+// Definição para o Manager
 export type Listener = (options: IModalOptions<any, any, any> | null) => void;
-
-// Tipo auxiliar para componentes que aceitam props
-export type ModalComponentType<P = any> = React.ComponentType<P>;
-
-// O que a função showModal retorna
-export interface IModalHandle {
-  close: () => void;
-}
