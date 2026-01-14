@@ -6,6 +6,7 @@ import TabGraphExample from './graph-event-bus';
 import ListPatternsExample from './list-patterns';
 import TabAlertExample from './tab-alert';
 import TabAsyncAutocompleteExample from './tab-autocomplete';
+import TabBadge from './tab-badge';
 import BudgetProjectForm from './tab-budget-project-form';
 import TabButtonExample from './tab-button';
 import CheckboxGroupForm from './tab-checkbox-group-form';
@@ -88,6 +89,7 @@ const Homologacao: React.FC = () => {
     tabSelect: <TabSelect />,
     tabSpinner: <TabSpinner />,
     tabCard: <TabCard />,
+    tabBadge: <TabBadge />,
   };
 
   return (
@@ -168,6 +170,7 @@ const Homologacao: React.FC = () => {
           <TabButton tabId="tabSelect" label="Select" isActive={activeTab === 'tabSelect'} onClick={setActiveTab} />
           <TabButton tabId="tabSpinner" label="Spinner" isActive={activeTab === 'tabSpinner'} onClick={setActiveTab} />
           <TabButton tabId="tabCard" label="Card" isActive={activeTab === 'tabCard'} onClick={setActiveTab} />
+          <TabButton tabId="tabBadge" label="Badge" isActive={activeTab === 'tabBadge'} onClick={setActiveTab} />
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 

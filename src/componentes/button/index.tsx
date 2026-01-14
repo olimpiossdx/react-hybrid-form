@@ -1,129 +1,158 @@
-import React, { forwardRef } from 'react';
-import { Loader2 } from 'lucide-react';
-// Importa todo o namespace para permitir tipagem dinâmica e lookup
-import * as lucideIcons from 'lucide-react';
+import { type ButtonHTMLAttributes, forwardRef, type ReactNode, useImperativeHandle, useRef, useState } from 'react';
 
-// --- 1. Tipagem Dinâmica ---
-// Isso gera um tipo gigante: "AArrowDown" | "AArrowUp" | ... | "ZoomOut"
-// O VS Code usará isso para o autocomplete.
-export type LucideIconName = keyof typeof lucideIcons;
+import { Spinner } from '../spinner';
 
-// --- 2. Interfaces ---
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'link';
-  size?: 'sm' | 'md' | 'lg' | 'icon';
-  isLoading?: boolean;
+// --- Interfaces ---
 
-  // O pulo do gato: Aceita string (com autocomplete) ou nó React direto
-  leftIcon?: LucideIconName | React.ReactNode;
-  rightIcon?: LucideIconName | React.ReactNode;
-
-  fluid?: boolean; // Largura 100%
+// O "Super Ref": É um botão HTML nativo + nossos métodos customizados
+export interface ButtonElement extends HTMLButtonElement {
+  setLoading: (loading: boolean) => void;
+  loading: boolean;
 }
 
-// --- 3. Componente ---
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  /**
+   * Estilo visual do botão.
+   */
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'link';
+
+  /**
+   * Tamanho do botão (Alinhado com Inputs).
+   * - 'sm': 32px (Compacto)
+   * - 'md': 40px (Padrão)
+   * - 'lg': 48px (Expandido)
+   * - 'icon': Quadrado para ícones
+   */
+  size?: 'sm' | 'md' | 'lg' | 'icon';
+
+  /**
+   * Estado de carregamento (Controle Declarativo).
+   * Se definido, tem prioridade sobre o estado interno.
+   */
+  isLoading?: boolean;
+
+  /**
+   * Ícone à esquerda do texto.
+   */
+  leftIcon?: ReactNode;
+
+  /**
+   * Ícone à direita do texto.
+   */
+  rightIcon?: ReactNode;
+
+  /**
+   * Se true, ocupa 100% da largura do pai.
+   */
+  fullWidth?: boolean;
+}
+
+// --- Componente ---
+
+const Button = forwardRef<ButtonElement, ButtonProps>(
   (
     {
       children,
-      className = '',
+      className,
       variant = 'primary',
       size = 'md',
-      isLoading = false,
+      isLoading: propLoading,
+      disabled,
       leftIcon,
       rightIcon,
-      disabled,
-      fluid = false,
+      fullWidth = false,
       type = 'button',
       ...props
     },
     ref,
   ) => {
-    // Renderiza o ícone dinamicamente
-    const renderIcon = (iconProp: LucideIconName | React.ReactNode, sizeClass: string) => {
-      if (!iconProp) {
-        return null;
+    // Referência interna ao elemento DOM real
+    const internalRef = useRef<HTMLButtonElement>(null);
+
+    // Estado interno para controle imperativo (via ref.setLoading)
+    const [internalLoading, setInternalLoading] = useState(false);
+
+    // Estado Efetivo: Propriedade externa ganha se estiver definida, senão usa interno
+    const isEffectiveLoading = propLoading !== undefined ? propLoading : internalLoading;
+
+    // A mágica da Ref Híbrida:
+    // Expõe o elemento DOM nativo MAS adiciona os métodos customizados nele
+    useImperativeHandle(ref, () => {
+      const element = internalRef.current;
+
+      if (!element) {
+        return null as unknown as ButtonElement;
       }
 
-      // Se for string, busca no objeto importado
-      if (typeof iconProp === 'string') {
-        const IconComponent = (lucideIcons as any)[iconProp];
+      // Usamos Object.assign ou definimos propriedades diretamente na instância do elemento
+      // Isso permite que 'ref.current.focus()' continue funcionando nativamente
+      const augmentedElement = element as ButtonElement;
 
-        // Proteção contra nomes inválidos ou exports que não são ícones
-        if (!IconComponent) {
-          console.warn(`Ícone "${iconProp}" não encontrado.`);
-          return null;
-        }
-        return <IconComponent className={sizeClass} />;
-      }
+      augmentedElement.setLoading = (val: boolean) => {
+        setInternalLoading(val);
+      };
 
-      // Se for JSX (ex: <Mail />), clona para injetar tamanho se possível
-      if (React.isValidElement(iconProp)) {
-        return React.cloneElement(iconProp as React.ReactElement<{ className?: string }>, {
-          className: `${(iconProp.props as any).className || ''} ${sizeClass}`.trim(),
-        });
-      }
+      // Definimos um getter para 'loading' refletir o estado atual
+      Object.defineProperty(augmentedElement, 'loading', {
+        get: () => isEffectiveLoading,
+        configurable: true, // Permite reconfiguração se necessário
+      });
 
-      return iconProp;
-    };
+      return augmentedElement;
+    }, [isEffectiveLoading]); // Recria o handle se o estado mudar
 
-    // --- Estilos Base ---
+    // --- Estilização (Tailwind) ---
+
     const baseStyles =
-      'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98]';
+      'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:pointer-events-none disabled:opacity-50 select-none';
 
-    // Variantes de Cor
     const variants = {
-      primary:
-        'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500 shadow-sm border border-transparent dark:bg-blue-600 dark:hover:bg-blue-500',
+      primary: 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm border border-transparent',
       secondary:
-        'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-gray-400',
+        'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 border border-transparent',
       outline:
-        'bg-transparent border border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-500 dark:text-blue-400 dark:hover:bg-blue-900/20 focus:ring-blue-500',
-      ghost:
-        'bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white focus:ring-gray-400',
-      danger:
-        'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 focus:ring-red-500 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 dark:border-red-900',
-      link: 'bg-transparent text-blue-600 hover:underline p-0 h-auto shadow-none focus:ring-0 active:scale-100',
+        'border border-gray-300 bg-transparent hover:bg-gray-100 text-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800',
+      ghost: 'hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-gray-100 text-gray-600 dark:text-gray-400',
+      destructive: 'bg-red-600 text-white hover:bg-red-700 shadow-sm',
+      link: 'text-blue-600 underline-offset-4 hover:underline',
     };
 
-    // Tamanhos (Padding e Ícones)
     const sizes = {
-      sm: 'text-xs px-3 py-1.5 gap-1.5',
-      md: 'text-sm px-4 py-2 gap-2',
-      lg: 'text-base px-6 py-3 gap-3',
-      icon: 'p-2 aspect-square',
+      sm: 'h-8 px-3 text-xs',
+      md: 'h-10 px-4 py-2 text-sm', // Alinhado com Input md
+      lg: 'h-12 px-8 text-base',
+      icon: 'h-10 w-10',
     };
 
-    const iconSizes = {
-      sm: 'w-3.5 h-3.5',
-      md: 'w-4 h-4',
-      lg: 'w-5 h-5',
-      icon: 'w-5 h-5',
-    };
-
-    const currentIconClass = iconSizes[size] || 'w-4 h-4';
+    const widthClass = fullWidth ? 'w-full' : '';
 
     return (
       <button
-        ref={ref}
+        ref={internalRef}
         type={type}
-        disabled={disabled || isLoading}
         className={`
-        ${baseStyles}
-        ${variants[variant]}
-        ${sizes[size]}
-        ${fluid ? 'w-full' : ''}
-        ${className}
-      `}
+          ${baseStyles} 
+          ${variants[variant]} 
+          ${sizes[size]} 
+          ${widthClass} 
+          ${className || ''}
+        `}
+        disabled={isEffectiveLoading || disabled}
         {...props}>
-        {/* Loading (Spinner) */}
-        {isLoading ? <Loader2 className={`animate-spin ${currentIconClass}`} /> : renderIcon(leftIcon, currentIconClass)}
-
-        {/* Conteúdo */}
-        {children && <span className="flex">{children}</span>}
-
-        {/* Ícone Direito */}
-        {!isLoading && renderIcon(rightIcon, currentIconClass)}
+        {isEffectiveLoading ? (
+          <>
+            {/* Mantém a largura ou substitui conteúdo? 
+                Geralmente substituir o ícone esquerdo é mais estável visualmente */}
+            <Spinner size={size === 'sm' ? 'sm' : 'md'} className={`animate-spin ${children ? 'mr-2' : ''}`} />
+            {children}
+          </>
+        ) : (
+          <>
+            {leftIcon && <span className="mr-2 flex items-center">{leftIcon}</span>}
+            {children}
+            {rightIcon && <span className="ml-2 flex items-center">{rightIcon}</span>}
+          </>
+        )}
       </button>
     );
   },
