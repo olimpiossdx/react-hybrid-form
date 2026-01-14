@@ -120,7 +120,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {isLoading ? <Loader2 className={`animate-spin ${currentIconClass}`} /> : renderIcon(leftIcon, currentIconClass)}
 
         {/* Conteúdo */}
-        {children && <span>{children}</span>}
+        {children && <span className="flex">{children}</span>}
 
         {/* Ícone Direito */}
         {!isLoading && renderIcon(rightIcon, currentIconClass)}

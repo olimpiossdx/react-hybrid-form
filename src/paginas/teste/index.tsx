@@ -24,6 +24,7 @@ import TabStarRatingExample from './tab-rating';
 import RegistrationComplexExample from './tab-registration';
 import RegistrationForm from './tab-registration-form';
 import TabTableScrollCRUD from './tab-scroll-crud';
+import TabSelect from './tab-select';
 import TabServiceExample from './tab-service';
 import TabSwitchExample from './tab-switch';
 import TabTableCollapse from './tab-table-collapse';
@@ -82,6 +83,7 @@ const Homologacao: React.FC = () => {
     tabRadioGroup: <TabRadioGroup />,
     tabButtonExample: <TabButtonExample />,
     tabInputTypes: <TabInputTypes />,
+    tabSelect: <TabSelect />,
   };
 
   return (
@@ -159,6 +161,7 @@ const Homologacao: React.FC = () => {
           <TabButton tabId="tabRadioGroup" label="Radio Group" isActive={activeTab === 'tabRadioGroup'} onClick={setActiveTab} />
           <TabButton tabId="tabButtonExample" label="Button" isActive={activeTab === 'tabButtonExample'} onClick={setActiveTab} />
           <TabButton tabId="tabInputTypes" label="Input Types" isActive={activeTab === 'tabInputTypes'} onClick={setActiveTab} />
+          <TabButton tabId="tabSelect" label="Select" isActive={activeTab === 'tabSelect'} onClick={setActiveTab} />
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
