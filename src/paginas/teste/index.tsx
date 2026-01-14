@@ -16,6 +16,7 @@ import TabMaskExample from './tab-mask';
 import TabModal from './tab-modal';
 import NestedListForm from './tab-nested-list-form';
 import TabPagination from './tab-pagination';
+import TabRadioGroup from './tab-radio-group';
 import DateRangeExample from './tab-range-date';
 import TabStarRatingExample from './tab-rating';
 import RegistrationComplexExample from './tab-registration';
@@ -76,6 +77,7 @@ const Homologacao: React.FC = () => {
     tabPagination: <TabPagination />,
     tabTransferList: <TabTransferList />,
     tabTextArea: <TabTextArea />,
+    tabRadioGroup: <TabRadioGroup />,
   };
 
   return (
@@ -150,6 +152,7 @@ const Homologacao: React.FC = () => {
           />
           <TabButton tabId="tabPagination" label="Paginação" isActive={activeTab === 'tabPagination'} onClick={setActiveTab} />
           <TabButton tabId="tabTextArea" label="TextArea" isActive={activeTab === 'tabTextArea'} onClick={setActiveTab} />
+          <TabButton tabId="tabRadioGroup" label="Radio Group" isActive={activeTab === 'tabRadioGroup'} onClick={setActiveTab} />
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
