@@ -1,9 +1,9 @@
 import { BellRing, Check, CreditCard, Settings, User } from 'lucide-react';
 
-import Button from '../componentes/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../componentes/card';
-import { Input } from '../componentes/input';
-import { Select } from '../componentes/select';
+import Button from '../../componentes/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../componentes/card';
+import { Input } from '../../componentes/input';
+import { Select } from '../../componentes/select';
 
 const TabCard = () => {
   return (

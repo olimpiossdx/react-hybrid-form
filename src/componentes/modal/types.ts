@@ -20,7 +20,7 @@ export type ModalComponentType<P = {} & any> = React.ComponentType<P & InjectedM
 export interface IModalOptions<H = {} & any, C = {} & any, A = {} & any> {
   // SLOTS: Aceitam um Componente (Função) OU um Node (JSX pronto)
   // Se for função, ela recebe as props definidas (H, C, A) + onClose
-  title?: ModalComponentType<H> | React.ReactNode;
+  title?: ModalComponentType<H> | React.ReactNode | string;
   content: ModalComponentType<C> | React.ReactNode;
   actions?: ModalComponentType<A> | React.ReactNode;
   footer?: ModalComponentType<A> | React.ReactNode; // Alias para actions
@@ -34,7 +34,7 @@ export interface IModalOptions<H = {} & any, C = {} & any, A = {} & any> {
   };
 
   // CONFIGURAÇÃO
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full' | 'custom';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | 'full' | 'custom';
   closeOnBackdropClick?: boolean;
   styleConfig?: React.CSSProperties | any;
 

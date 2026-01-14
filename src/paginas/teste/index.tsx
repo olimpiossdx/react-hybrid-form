@@ -9,6 +9,7 @@ import TabAsyncAutocompleteExample from './tab-autocomplete';
 import TabBadge from './tab-badge';
 import BudgetProjectForm from './tab-budget-project-form';
 import TabButtonExample from './tab-button';
+import TabCard from './tab-card';
 import CheckboxGroupForm from './tab-checkbox-group-form';
 import CurriculumForm from './tab-curriculum';
 import TabDataTableExample from './tab-data-table';
@@ -41,7 +42,6 @@ import TabWizard from './tab-wizard-tabs';
 import NestedLevelForm from '../../componentes/nested-level-form';
 import TabButton from '../../componentes/tab-button';
 import { ThemeToggle } from '../../componentes/theme';
-import TabCard from '../tab-card';
 
 // Foca no nova tab/formulário-ativo
 const Homologacao: React.FC = () => {

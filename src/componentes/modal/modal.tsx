@@ -1,6 +1,31 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { X } from 'lucide-react';
 
 import type { IModalProps } from './types';
+import Button from '../button';
+// ============================================================================
+// 1. SUB-COMPONENTES (COMPOUND API) - DESIGN SYSTEM (CARD STYLE)
+// ============================================================================
+
+export const ModalHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={`flex flex-col space-y-1.5 p-2 ${className || ''}`} {...props} />
+);
+
+export const ModalTitle = ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
+  <h3 className={`font-semibold leading-none tracking-tight text-lg text-gray-900 dark:text-gray-100 ${className || ''}`} {...props} />
+);
+
+export const ModalDescription = ({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
+  <p className={`text-sm text-gray-500 dark:text-gray-400 ${className || ''}`} {...props} />
+);
+
+export const ModalContent = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={`p-2 pt-0 ${className || ''}`} {...props} />
+);
+
+export const ModalFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={`flex items-center justify-end p-2 gap-2 ${className || ''}`} {...props} />
+);
 
 const Modal: React.FC<IModalProps> = ({ options, onClose }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -127,12 +152,14 @@ const Modal: React.FC<IModalProps> = ({ options, onClose }) => {
     return Slot;
   };
 
-  const sizeClasses = {
-    sm: 'max-w-md',
-    md: 'max-w-xl',
-    lg: 'max-w-3xl',
-    xl: 'max-w-5xl',
-    full: 'max-w-full m-4 h-[calc(100%-2rem)]',
+  const sizeClasses: Record<string, string> = {
+    sm: 'max-w-sm',
+    md: 'max-w-md',
+    lg: 'max-w-lg',
+    xl: 'max-w-xl',
+    '2xl': 'max-w-2xl',
+    '3xl': 'max-w-3xl',
+    full: 'max-w-[calc(100vw-2rem)] h-[calc(100vh-2rem)]',
     custom: '',
   };
 
@@ -161,31 +188,37 @@ const Modal: React.FC<IModalProps> = ({ options, onClose }) => {
         `}
         style={options.styleConfig}
         onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
+        {/* Botão Fechar (X) */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleClose}
+          className="absolute right-1 top-1 rounded-full opacity-70 hover:opacity-100 hover:bg-gray-100 dark:hover:bg-gray-700 z-50 h-2 w-2"
+          title="Fechar">
+          <X className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+        </Button>
+
+        {/* --- RENDERIZAÇÃO COMPATÍVEL COM SEU TYPES.TS --- */}
+
+        {/* 1. Header (Title) */}
         {options.title && (
-          <div className="flex justify-between items-start p-6 border-b border-gray-100 dark:border-gray-700 shrink-0">
-            <div id={titleId} className="text-xl font-bold text-gray-900 dark:text-white flex-1">
-              {renderSlot(options.title, options.props?.title)}
-            </div>
-            <button
-              onClick={handleClose}
-              aria-label="Fechar"
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors text-2xl leading-none ml-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-              &times;
-            </button>
-          </div>
+          <ModalHeader>
+            {/* Se title for string (novo suporte), renderiza texto. Se for componente/node, renderiza slot */}
+            {typeof options.title === 'string' ? <ModalTitle>{options.title}</ModalTitle> : renderSlot(options.title, options.props?.title)}
+          </ModalHeader>
         )}
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto min-h-0 text-gray-600 dark:text-gray-300 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
-          {renderSlot(options.content, options.props?.content)}
-        </div>
+        {/* 2. Content */}
+        {/* Se tiver título ou footer, encapsula. Se não, renderiza cru (full control) */}
+        {options.title || options.footer || options.actions ? (
+          <ModalContent>{renderSlot(options.content, options.props?.content)}</ModalContent>
+        ) : (
+          renderSlot(options.content, options.props?.content)
+        )}
 
-        {/* Footer / Actions */}
-        {(options.actions || options.footer) && (
-          <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-xl shrink-0 flex justify-end gap-2">
-            {renderSlot(options.actions || options.footer, options.props?.actions)}
-          </div>
+        {/* 3. Footer / Actions */}
+        {(options.footer || options.actions) && (
+          <ModalFooter>{renderSlot(options.footer || options.actions, options.props?.footer || options.props?.actions)}</ModalFooter>
         )}
       </div>
     </div>

@@ -3,12 +3,14 @@ import {
   AlertTriangle,
   Bell,
   CheckCircle,
+  CheckCircle2,
   ChevronRight,
   CreditCard,
   FileText,
   Layers,
   LayoutTemplate,
   Lock,
+  Mail,
   MessageSquare,
   Settings,
   Shield,
@@ -18,7 +20,13 @@ import {
   Wand2,
 } from 'lucide-react';
 
+import Badge from '../../componentes/badge';
+import Button from '../../componentes/button';
+import { Input } from '../../componentes/input';
+import { showModal } from '../../componentes/modal';
+import { ModalContent, ModalDescription, ModalFooter, ModalHeader, ModalTitle } from '../../componentes/modal/modal';
 import type { IModalOptions } from '../../componentes/modal/types';
+import { Select } from '../../componentes/select';
 
 // =============================================================================
 // 1. COMPONENTES DE UI REUTILIZÁVEIS (PEDAÇOS DO MODAL)
@@ -311,6 +319,188 @@ const ReportContent = () => (
 // =============================================================================
 // 3. ORQUESTRADOR DE EXEMPLOS
 // =============================================================================
+const ModalInjectionExampleAtualizado: React.FC = () => {
+  // CENÁRIO 1: MODAL DE CONFIRMAÇÃO (COMPOUND)
+  // Usamos a estrutura composta para criar um layout customizado sem props fixas
+  const openDeleteModal = () => {
+    showModal({
+      size: 'sm',
+      content: ({ onClose }: { onClose: () => void }) => (
+        <>
+          <ModalHeader className="items-center text-center pb-2">
+            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-full flex items-center justify-center mb-4">
+              <Trash2 size={24} />
+            </div>
+            <ModalTitle>Excluir Registro?</ModalTitle>
+            <ModalDescription>Esta ação é irreversível. O registro será removido permanentemente do banco de dados.</ModalDescription>
+          </ModalHeader>
+
+          {/* CORREÇÃO: Botões lado a lado (horizontal) para melhor UX */}
+          <ModalFooter className="justify-center sm:justify-end gap-2 pt-2">
+            <Button variant="ghost" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                alert('Excluído!');
+                onClose();
+              }}>
+              Confirmar
+            </Button>
+          </ModalFooter>
+        </>
+      ),
+    });
+  };
+
+  // CENÁRIO 2: FORMULÁRIO COMPLEXO (COMPOUND)
+  // Demonstra inputs, selects e layout grid dentro do modal
+  const openFormModal = () => {
+    showModal({
+      size: 'lg',
+      content: ({ onClose }: { onClose: () => void }) => (
+        <>
+          <ModalHeader>
+            <ModalTitle className="flex items-center gap-2">
+              <User className="text-blue-600" /> Novo Usuário
+            </ModalTitle>
+            <ModalDescription>Preencha as informações abaixo para cadastrar um novo membro.</ModalDescription>
+          </ModalHeader>
+
+          <ModalContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="Nome" placeholder="João" variant="filled" name={''} />
+              <Input label="Sobrenome" placeholder="Silva" variant="filled" name={''} />
+            </div>
+
+            <Input label="E-mail" type="email" leftIcon={<Mail size={18} />} placeholder="joao@empresa.com" name={''} />
+
+            <div className="grid grid-cols-2 gap-4">
+              <Select label="Departamento" variant="outlined" name={''}>
+                <option>TI</option>
+                <option>RH</option>
+                <option>Vendas</option>
+              </Select>
+              <Select label="Status" variant="outlined" name={''}>
+                <option>Ativo</option>
+                <option>Pendente</option>
+              </Select>
+            </div>
+          </ModalContent>
+
+          <ModalFooter className="bg-gray-50 dark:bg-gray-900/50 rounded-b-xl">
+            <Button variant="ghost" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                alert('Salvo!');
+                onClose();
+              }}>
+              Salvar Usuário
+            </Button>
+          </ModalFooter>
+        </>
+      ),
+    });
+  };
+
+  // CENÁRIO 3: MODAL SIMPLES (LEGADO / RÁPIDO)
+  // Usa as props 'title' e 'content' simples. O componente Modal gerencia o layout.
+  const openSimpleModal = () => {
+    showModal({
+      title: 'Operação Realizada',
+      size: 'sm',
+      content: (
+        <div className="text-center space-y-4">
+          <div className="flex justify-center text-green-500">
+            <CheckCircle2 size={48} />
+          </div>
+          <p className="text-gray-600 dark:text-gray-300">O processamento foi concluído com sucesso. Você pode fechar esta janela agora.</p>
+          <div className="flex justify-center">
+            <Badge variant="success" size="md">
+              Status: OK
+            </Badge>
+          </div>
+        </div>
+      ),
+      footer: ({ onClose }: any) => (
+        <ModalFooter>
+          <Button onClick={onClose} fullWidth>
+            Fechar
+          </Button>
+        </ModalFooter>
+      ),
+    });
+  };
+
+  return (
+    <div className="p-8 max-w-6xl mx-auto space-y-8 pb-20">
+      <div className="text-center border-b pb-6 dark:border-gray-700">
+        <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">Sistema de Modais</h2>
+        <p className="text-gray-500">
+          Utilizando componentes compostos (<code>ModalHeader</code>, <code>ModalContent</code>...) injetados via Hook.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Card Delete */}
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col items-center text-center space-y-4 hover:shadow-md transition-shadow">
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-full text-red-500">
+            <Trash2 size={32} />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg">Confirmação</h3>
+            <p className="text-sm text-gray-500">Modal destrutivo pequeno.</p>
+          </div>
+          <Button variant="outline" onClick={openDeleteModal} fullWidth className="mt-auto">
+            Testar
+          </Button>
+        </div>
+
+        {/* Card Form */}
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col items-center text-center space-y-4 hover:shadow-md transition-shadow">
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-full text-blue-500">
+            <Settings size={32} />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg">Formulário</h3>
+            <p className="text-sm text-gray-500">Modal largo com inputs.</p>
+          </div>
+          <Button variant="outline" onClick={openFormModal} fullWidth className="mt-auto">
+            Testar
+          </Button>
+        </div>
+
+        {/* Card Simple */}
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col items-center text-center space-y-4 hover:shadow-md transition-shadow">
+          <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-full text-green-500">
+            <Shield size={32} />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg">Simples</h3>
+            <p className="text-sm text-gray-500">Uso legado com props.</p>
+          </div>
+          <Button variant="outline" onClick={openSimpleModal} fullWidth className="mt-auto">
+            Testar
+          </Button>
+        </div>
+      </div>
+
+      <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg text-sm text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+        <p>
+          <strong>Nota Técnica:</strong> O novo componente <code>Modal</code> suporta injeção de componentes puros (funções) ou Nodes JSX.
+        </p>
+        <p>
+          Isso elimina a necessidade de criar componentes wrapper intermediários como <code>CustomTitle</code> ou <code>ActionFooter</code>{' '}
+          dentro dos arquivos de teste.
+        </p>
+      </div>
+    </div>
+  );
+};
 
 const ModalInjectionExample = ({ showModal }: { showModal: <H, C, A>(opts: IModalOptions<H, C, A>) => void }) => {
   // Handlers
@@ -441,6 +631,7 @@ const ModalInjectionExample = ({ showModal }: { showModal: <H, C, A>(opts: IModa
         <CardButton title="Full Screen" desc="Relatórios" onClick={openFull} icon={FileText} color="blue" />
         <CardButton title="Stacked" desc="Sobreposição" onClick={openStacked} icon={Layers} color="indigo" />
       </div>
+      <ModalInjectionExampleAtualizado />
     </div>
   );
 };
