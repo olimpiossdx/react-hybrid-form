@@ -1,19 +1,21 @@
-import { useEffect } from 'react';
-import { Briefcase, Calendar, CheckSquare, Clock, CreditCard, Eye, Globe, Hash, Lock, Mail, Phone, Search, User } from 'lucide-react';
+import React from 'react';
+import { Calendar, CheckSquare, Clock, Edit3, Globe, Hash, LayoutList, Lock, Mail, Monitor, Phone, Search, User } from 'lucide-react';
 
 import Button from '../../componentes/button';
 import { Input } from '../../componentes/input';
 import { showModal } from '../../componentes/modal';
 import useForm from '../../hooks/use-form';
 
-const TabInputTypes = () => {
+const TabInputTypes: React.FC = () => {
   const onSubmit = (data: any) => {
     showModal({
       title: 'Formulário Enviado',
       content: (
         <div className="p-4">
           <p className="mb-4 text-green-600 font-medium">Todos os campos estão válidos!</p>
-          <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-60">{JSON.stringify(data, null, 2)}</pre>
+          <pre className="bg-gray-100 dark:bg-gray-900 p-2 rounded text-xs overflow-auto max-h-60 text-gray-800 dark:text-gray-200">
+            {JSON.stringify(data, null, 2)}
+          </pre>
         </div>
       ),
     });
@@ -25,164 +27,257 @@ const TabInputTypes = () => {
   });
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 p-6 pb-20">
-      <div className="text-center border-b pb-4 dark:border-gray-700">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Catálogo de Tipos de Input</h2>
-        <p className="text-gray-500 mt-2">
-          Demonstração do componente <code>&lt;Input /&gt;</code> lidando com diversos atributos HTML5 e validações nativas.
+    <div className="max-w-5xl mx-auto space-y-10 p-6 pb-20">
+      <div className="text-center border-b pb-6 dark:border-gray-700">
+        <h2 className="text-3xl font-bold text-gray-800 dark:text-white">Design System: Inputs</h2>
+        <p className="text-gray-500 mt-2 max-w-2xl mx-auto">
+          Catálogo completo demonstrando variantes, tamanhos, floating labels e tipos de dados suportados pelo componente{' '}
+          <code>&lt;Input /&gt;</code>.
         </p>
       </div>
 
-      <form {...formProps} noValidate={false} className="space-y-8">
-        {/* SEÇÃO 1: TEXTO E IDENTIFICAÇÃO */}
-        <section className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-blue-600">
-            <User size={20} /> Campos de Texto Comuns
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input name="username" label="Username (Simples)" placeholder="jdoe123" required />
-
-            <Input
-              name="fullname"
-              label="Nome Completo (Com Ícone)"
-              placeholder="John Doe"
-              leftIcon={<User size={18} />}
-              required
-              minLength={3}
-            />
-
-            <Input
-              name="email"
-              type="email"
-              label="E-mail (Validação de Tipo)"
-              placeholder="nome@empresa.com"
-              leftIcon={<Mail size={18} />}
-              required
-            />
-
-            <Input
-              name="password"
-              type="password"
-              label="Senha (Toggle Automático)"
-              placeholder="••••••••"
-              leftIcon={<Lock size={18} />}
-              required
-              minLength={6}
-            />
+      <form {...formProps} noValidate={false} className="space-y-10">
+        {/* --- SEÇÃO 1: VARIANTES VISUAIS --- */}
+        <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="mb-6 border-l-4 border-blue-500 pl-4">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+              <Edit3 size={24} className="text-blue-500" /> Variantes Visuais
+            </h3>
+            <p className="text-sm text-gray-500">Três estilos principais para diferentes contextos de UI.</p>
           </div>
-        </section>
 
-        {/* SEÇÃO 2: NÚMEROS E MÁSCARAS NATIVAS */}
-        <section className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-green-600">
-            <Hash size={20} /> Números e Padrões
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Input
-              name="age"
-              label="Idade (Number)"
-              type="number"
-              min={18}
-              max={120}
-              placeholder="18+"
-              required
-              title="A idade deve ser entre 18 e 120"
-            />
-
-            <Input
-              name="price"
-              label="Preço (Step 0.01)"
-              type="number"
-              step="0.01"
-              leftIcon={<span className="text-xs font-bold">R$</span>}
-              placeholder="0.00"
-            />
-
-            <Input
-              name="zipcode"
-              label="CEP (Pattern RegEx)"
-              placeholder="12345-678"
-              pattern="\d{5}-\d{3}"
-              title="Formato: 12345-678"
-              maxLength={9}
-              rightIcon={<Search size={16} className="text-gray-400" />}
-            />
-          </div>
-        </section>
-
-        {/* SEÇÃO 3: DATA E HORA */}
-        <section className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-purple-600">
-            <Calendar size={20} /> Datas e Horários
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Input name="birthdate" label="Data de Nascimento" type="date" required leftIcon={<Calendar size={18} />} />
-
-            <Input name="appointment" label="Data e Hora Local" type="datetime-local" required />
-
-            <Input name="meetingTime" label="Horário (Time)" type="time" leftIcon={<Clock size={18} />} />
-          </div>
-        </section>
-
-        {/* SEÇÃO 4: TIPOS ESPECIAIS (WEB) */}
-        <section className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-orange-600">
-            <Globe size={20} /> Tipos Web Especiais
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              name="website"
-              label="Website (URL)"
-              type="url"
-              placeholder="https://exemplo.com"
-              pattern="https://.*"
-              title="Deve começar com https://"
-              leftIcon={<Globe size={18} />}
-            />
-
-            <Input name="phone" label="Telefone (Tel)" type="tel" placeholder="(xx) 9xxxx-xxxx" leftIcon={<Phone size={18} />} />
-
-            <Input name="search" label="Busca (Search)" type="search" placeholder="Buscar..." rightIcon={<Search size={18} />} />
-
-            <div className="flex gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="space-y-2">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Outlined (Padrão)</span>
               <Input
-                name="color"
-                label="Cor Favorita"
-                type="color"
-                className="h-10 p-1 w-full cursor-pointer"
-                containerClassName="flex-1"
+                name="variant_outlined"
+                label="Nome do Usuário"
+                placeholder="Ex: jdoe"
+                variant="outlined"
+                leftIcon={<User size={18} />}
               />
-              <Input name="range" label="Nível (Range)" type="range" min="0" max="10" className="mt-2" containerClassName="flex-1" />
+              <p className="text-xs text-gray-400">Ideal para formulários com fundo branco/limpo.</p>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Filled</span>
+              <Input
+                name="variant_filled"
+                label="Endereço de Email"
+                placeholder="email@exemplo.com"
+                variant="filled"
+                leftIcon={<Mail size={18} />}
+              />
+              <p className="text-xs text-gray-400">Alto contraste, fundo cinza sutil.</p>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Ghost</span>
+              <Input
+                name="variant_ghost"
+                label="Buscar..."
+                placeholder="Digite para buscar"
+                variant="ghost"
+                leftIcon={<Search size={18} />}
+              />
+              <p className="text-xs text-gray-400">Transparente até focar. Perfeito para barras de ferramentas.</p>
             </div>
           </div>
         </section>
 
-        {/* SEÇÃO 5: SELEÇÃO E OPÇÕES */}
-        <section className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-pink-600">
-            <CheckSquare size={20} /> Seleção e Opções
-          </h3>
+        {/* --- SEÇÃO 2: FLOATING LABELS (MATERIAL STYLE) --- */}
+        <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="mb-6 border-l-4 border-purple-500 pl-4">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+              <Monitor size={24} className="text-purple-500" /> Floating Labels
+            </h3>
+            <p className="text-sm text-gray-500">Estilo Material Design onde o rótulo flutua ao focar, economizando espaço vertical.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+            <Input name="floating_simple" label="Floating Label Simples" floatingLabel variant="outlined" />
+
+            <Input name="floating_filled" label="Floating Filled" floatingLabel variant="filled" />
+
+            <Input
+              name="floating_icon"
+              label="Com Ícone (Recuo Automático)"
+              floatingLabel
+              leftIcon={<Globe size={18} />}
+              variant="outlined"
+            />
+
+            <Input
+              name="floating_password"
+              type="password"
+              label="Senha Flutuante"
+              floatingLabel
+              leftIcon={<Lock size={18} />}
+              variant="outlined"
+            />
+          </div>
+        </section>
+
+        {/* --- SEÇÃO 3: DENSIDADE E TAMANHOS --- */}
+        <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="mb-6 border-l-4 border-green-500 pl-4">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+              <LayoutList size={24} className="text-green-500" /> Tamanhos e Densidade
+            </h3>
+            <p className="text-sm text-gray-500">Controle de altura e padding para diferentes necessidades de informação.</p>
+          </div>
+
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="w-24 text-right text-xs font-bold text-gray-400">Small (sm)</div>
+              <div className="flex-1">
+                <Input name="size_sm" size="sm" placeholder="Input Compacto (32px)" />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="w-24 text-right text-xs font-bold text-gray-400">Medium (md)</div>
+              <div className="flex-1">
+                <Input name="size_md" size="md" placeholder="Input Padrão (40px)" />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="w-24 text-right text-xs font-bold text-gray-400">Large (lg)</div>
+              <div className="flex-1">
+                <Input name="size_lg" size="lg" placeholder="Input Expandido (48px)" leftIcon={<Search size={20} />} />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* --- SEÇÃO 4: APLICAÇÃO EM TABELAS (GHOST + COMPACT) --- */}
+        <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="mb-6 border-l-4 border-orange-500 pl-4">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+              <LayoutList size={24} className="text-orange-500" /> Caso de Uso: Tabela Editável
+            </h3>
+            <p className="text-sm text-gray-500">
+              Combinação de <code>variant="ghost"</code> e <code>size="sm"</code> para edição inline limpa.
+            </p>
+          </div>
+
+          <div className="border rounded-lg overflow-hidden dark:border-gray-700">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-50 dark:bg-gray-900 text-gray-500 uppercase text-xs">
+                <tr>
+                  <th className="px-4 py-3">Produto</th>
+                  <th className="px-4 py-3 w-32">Qtd</th>
+                  <th className="px-4 py-3 w-40">Preço (R$)</th>
+                  <th className="px-4 py-3 w-48">Código</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                <tr>
+                  <td className="p-0">
+                    <Input name="prod_1" variant="ghost" size="sm" placeholder="Nome do produto" containerClassName="rounded-none" />
+                  </td>
+                  <td className="p-0">
+                    <Input name="qtd_1" type="number" variant="ghost" size="sm" placeholder="0" containerClassName="rounded-none" />
+                  </td>
+                  <td className="p-0">
+                    <Input
+                      name="price_1"
+                      variant="ghost"
+                      size="sm"
+                      leftIcon={<span className="text-xs">R$</span>}
+                      placeholder="0.00"
+                      containerClassName="rounded-none"
+                    />
+                  </td>
+                  <td className="p-0">
+                    <Input
+                      name="code_1"
+                      variant="ghost"
+                      size="sm"
+                      placeholder="COD-000"
+                      className="font-mono text-xs uppercase"
+                      containerClassName="rounded-none"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="p-0">
+                    <Input
+                      name="prod_2"
+                      variant="ghost"
+                      size="sm"
+                      placeholder="Nome do produto"
+                      containerClassName="rounded-none"
+                      defaultValue="Teclado Mecânico"
+                    />
+                  </td>
+                  <td className="p-0">
+                    <Input
+                      name="qtd_2"
+                      type="number"
+                      variant="ghost"
+                      size="sm"
+                      placeholder="0"
+                      containerClassName="rounded-none"
+                      defaultValue={1}
+                    />
+                  </td>
+                  <td className="p-0">
+                    <Input
+                      name="price_2"
+                      variant="ghost"
+                      size="sm"
+                      leftIcon={<span className="text-xs">R$</span>}
+                      placeholder="0.00"
+                      containerClassName="rounded-none"
+                      defaultValue="350.00"
+                    />
+                  </td>
+                  <td className="p-0">
+                    <Input
+                      name="code_2"
+                      variant="ghost"
+                      size="sm"
+                      placeholder="COD-000"
+                      className="font-mono text-xs uppercase"
+                      containerClassName="rounded-none"
+                      defaultValue="TEC-99"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* --- SEÇÃO 5: SELEÇÃO E OPÇÕES (CHECKBOX/RADIO) --- */}
+        <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="mb-6 border-l-4 border-pink-500 pl-4">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+              <CheckSquare size={24} className="text-pink-500" /> Seleção e Opções
+            </h3>
+            <p className="text-sm text-gray-500">Estilos unificados para inputs de seleção nativos.</p>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Checkbox */}
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-gray-500">Checkbox Simples</h4>
-              <div className="flex items-center gap-4">
+              <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Checkboxes</h4>
+              <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg space-y-3 border border-gray-100 dark:border-gray-700">
                 <Input
-                  name="terms"
+                  name="terms_v2"
+                  id="terms_v2"
                   type="checkbox"
-                  className="w-5 h-5 accent-blue-600 cursor-pointer"
-                  containerClassName="w-auto flex-row-reverse gap-2 items-center"
+                  containerClassName="flex-row-reverse justify-end gap-3 items-center w-auto"
                   label="Aceito os termos e condições"
                   required
                 />
-              </div>
-              <div className="flex items-center gap-4">
                 <Input
-                  name="newsletter"
+                  name="newsletter_v2"
+                  id="newsletter_v2"
                   type="checkbox"
-                  className="w-5 h-5 accent-blue-600 cursor-pointer"
-                  containerClassName="w-auto flex-row-reverse gap-2 items-center"
+                  containerClassName="flex-row-reverse justify-end gap-3 items-center w-auto"
                   label="Receber novidades por email"
                 />
               </div>
@@ -190,77 +285,75 @@ const TabInputTypes = () => {
 
             {/* Radio Button */}
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-gray-500">Radio Group (Nativo)</h4>
-              <div className="space-y-2">
+              <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Radio Group</h4>
+              <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg space-y-3 border border-gray-100 dark:border-gray-700">
                 <Input
-                  name="plan"
+                  name="plan_v2"
+                  id="plan_free_v2"
                   type="radio"
                   value="free"
-                  className="w-5 h-5 accent-blue-600 cursor-pointer"
-                  containerClassName="w-auto flex-row-reverse gap-2 items-center"
+                  containerClassName="flex-row-reverse justify-end gap-3 items-center w-auto"
                   label="Plano Gratuito"
                   required
                 />
                 <Input
-                  name="plan"
+                  name="plan_v2"
+                  id="plan_pro_v2"
                   type="radio"
                   value="pro"
-                  className="w-5 h-5 accent-blue-600 cursor-pointer"
-                  containerClassName="w-auto flex-row-reverse gap-2 items-center"
-                  label="Plano Pro"
-                  required
-                />
-                <Input
-                  name="plan"
-                  type="radio"
-                  value="enterprise"
-                  className="w-5 h-5 accent-blue-600 cursor-pointer"
-                  containerClassName="w-auto flex-row-reverse gap-2 items-center"
-                  label="Plano Enterprise"
+                  containerClassName="flex-row-reverse justify-end gap-3 items-center w-auto"
+                  label="Plano Profissional"
                   required
                 />
               </div>
             </div>
           </div>
-          <p className="text-xs text-gray-400 mt-4">
-            Nota: Para checkboxes, o input usa a propriedade <code>containerClassName</code> com <code>flex-row-reverse</code> para
-            posicionar o label à direita do input.
-          </p>
         </section>
 
-        {/* SEÇÃO 6: ESTADOS (DISABLED / READONLY) */}
-        <section className="bg-gray-50 dark:bg-gray-900 p-6 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-500">
-            <Lock size={20} /> Estados Especiais
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              name="disabledInput"
-              label="Desabilitado (Disabled)"
-              placeholder="Não editável"
-              disabled
-              leftIcon={<Lock size={18} />}
-              value="Valor Fixo"
-            />
+        {/* --- SEÇÃO 6: TIPOS ESPECIAIS (DATA, TEL, ETC) --- */}
+        <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="mb-6 border-l-4 border-indigo-500 pl-4">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+              <Calendar size={24} className="text-indigo-500" /> Tipos Especiais HTML5
+            </h3>
+            <p className="text-sm text-gray-500">Suporte completo a atributos nativos de data, hora e máscaras.</p>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Input name="special_date" label="Data de Evento" type="date" variant="filled" required />
+            <Input name="special_time" label="Horário" type="time" variant="filled" leftIcon={<Clock size={18} />} />
             <Input
-              name="readonlyInput"
-              label="Apenas Leitura (ReadOnly)"
-              placeholder="Apenas leitura"
-              readOnly
-              value="ID: #839201"
-              rightIcon={<CreditCard size={18} />}
+              name="special_phone"
+              label="Telefone"
+              type="tel"
+              placeholder="(00) 00000-0000"
+              variant="filled"
+              leftIcon={<Phone size={18} />}
             />
+            <Input
+              name="special_number"
+              label="Idade"
+              type="number"
+              min={18}
+              variant="filled"
+              rightIcon={<Hash size={16} className="text-gray-400" />}
+            />
+            <Input name="special_url" label="Website" type="url" placeholder="https://" variant="filled" leftIcon={<Globe size={18} />} />
+            <Input name="special_color" label="Cor do Tema" type="color" variant="filled" className="h-[42px] p-1 cursor-pointer" />
           </div>
         </section>
 
-        <div className="sticky bottom-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur p-4 border rounded-lg shadow-lg flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={() => window.location.reload()}>
-            Limpar
-          </Button>
-          <Button type="submit" variant="primary" className="px-8 font-bold">
-            Validar Todos
-          </Button>
+        {/* --- FOOTER DE AÇÃO --- */}
+        <div className="sticky bottom-6 mx-auto max-w-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-md p-4 border border-gray-200 dark:border-gray-700 rounded-full shadow-2xl flex justify-between items-center gap-4 z-50">
+          <span className="text-xs text-gray-500 ml-4 hidden sm:inline">Preencha os campos obrigatórios para testar a validação</span>
+          <div className="flex gap-3 w-full sm:w-auto">
+            <Button type="button" variant="outline" onClick={() => window.location.reload()} className="flex-1 sm:flex-none rounded-full">
+              Limpar
+            </Button>
+            <Button type="submit" variant="primary" className="flex-1 sm:flex-none px-8 font-bold rounded-full">
+              Validar Tudo
+            </Button>
+          </div>
         </div>
       </form>
     </div>
