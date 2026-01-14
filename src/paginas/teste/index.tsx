@@ -12,6 +12,7 @@ import CheckboxGroupForm from './tab-checkbox-group-form';
 import CurriculumForm from './tab-curriculum';
 import TabDataTableExample from './tab-data-table';
 import HybridFormSimple from './tab-hibryd-form-simple';
+import TabInputTypes from './tab-input';
 import LoginForm from './tab-login';
 import TabMaskExample from './tab-mask';
 import TabModal from './tab-modal';
@@ -80,6 +81,7 @@ const Homologacao: React.FC = () => {
     tabTextArea: <TabTextArea />,
     tabRadioGroup: <TabRadioGroup />,
     tabButtonExample: <TabButtonExample />,
+    tabInputTypes: <TabInputTypes />,
   };
 
   return (
@@ -156,6 +158,7 @@ const Homologacao: React.FC = () => {
           <TabButton tabId="tabTextArea" label="TextArea" isActive={activeTab === 'tabTextArea'} onClick={setActiveTab} />
           <TabButton tabId="tabRadioGroup" label="Radio Group" isActive={activeTab === 'tabRadioGroup'} onClick={setActiveTab} />
           <TabButton tabId="tabButtonExample" label="Button" isActive={activeTab === 'tabButtonExample'} onClick={setActiveTab} />
+          <TabButton tabId="tabInputTypes" label="Input Types" isActive={activeTab === 'tabInputTypes'} onClick={setActiveTab} />
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
