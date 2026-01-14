@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, CheckSquare, Clock, Edit3, Globe, Hash, LayoutList, Lock, Mail, Monitor, Phone, Search, User } from 'lucide-react';
+import { CheckSquare, CreditCard, Edit3, Globe, LayoutList, Lock, Mail, Monitor, Search, ShieldAlert, User } from 'lucide-react';
 
 import Button from '../../componentes/button';
 import { Input } from '../../componentes/input';
@@ -21,10 +21,37 @@ const TabInputTypes: React.FC = () => {
     });
   };
 
-  const { formProps } = useForm({
+  const { formProps, setValidators } = useForm({
     id: 'all-types-form',
     onSubmit,
   });
+
+  // Configuração das Validações Customizadas e Cruzadas
+  React.useEffect(() => {
+    setValidators({
+      // Validação Customizada Simples
+      validarUsuario: (val: string) => {
+        if (val && val.length < 3) {
+          return { message: 'Mínimo 3 letras.', type: 'error' };
+        }
+        if (val && !/^[a-z0-9]+$/i.test(val)) {
+          return { message: 'Apenas letras e números.', type: 'error' };
+        }
+      },
+      // Validação Cruzada (Depende de outro campo)
+      validarConfirmacao: (val: string, _, model) => {
+        if (val !== model.senha_complexa) {
+          return { message: 'As senhas não conferem.', type: 'error' };
+        }
+      },
+      // Validação de Formato (Simulação de CPF)
+      validarCPF: (val: string) => {
+        if (val && !/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(val)) {
+          return { message: 'Formato inválido (000.000.000-00)', type: 'error' };
+        }
+      },
+    });
+  }, [setValidators]); // Dependência crucial para validação cruzada reativa
 
   return (
     <div className="max-w-5xl mx-auto space-y-10 p-6 pb-20">
@@ -37,7 +64,69 @@ const TabInputTypes: React.FC = () => {
       </div>
 
       <form {...formProps} noValidate={false} className="space-y-10">
-        {/* --- SEÇÃO 1: VARIANTES VISUAIS --- */}
+        {/* --- SEÇÃO 1: VALIDAÇÃO CRUZADA E CUSTOMIZADA --- */}
+        <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-red-100 dark:border-red-900/30">
+          <div className="mb-6 border-l-4 border-red-500 pl-4">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+              <ShieldAlert size={24} className="text-red-500" /> Validações Avançadas
+            </h3>
+            <p className="text-sm text-gray-500">
+              Integração do Hook <code>use-form</code> com feedback visual nativo do Input.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Input
+              name="usuario_custom"
+              label="Usuário (Custom)"
+              placeholder="Ex: user123"
+              variant="outlined"
+              leftIcon={<User size={18} />}
+              required
+              // Conecta com a função 'validarUsuario' no useEffect
+              data-validation="validarUsuario"
+              title="Apenas letras e números, min 3 chars."
+            />
+
+            <Input
+              name="cpf_simulado"
+              label="CPF (Regex Custom)"
+              placeholder="000.000.000-00"
+              variant="outlined"
+              leftIcon={<CreditCard size={18} />}
+              required
+              data-validation="validarCPF"
+            />
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+            <Input
+              name="senha_complexa"
+              type="password"
+              label="Senha Original"
+              placeholder="Digite uma senha"
+              variant="filled"
+              leftIcon={<Lock size={18} />}
+              required
+              minLength={6}
+            />
+
+            <Input
+              name="confirmar_senha"
+              type="password"
+              label="Confirmar Senha (Cruzada)"
+              placeholder="Repita a senha"
+              variant="filled"
+              leftIcon={<Lock size={18} />}
+              required
+              // Conecta com 'validarConfirmacao' que compara com 'values.senha_complexa'
+              data-validation="validarConfirmacao"
+            />
+          </div>
+          <p className="text-xs text-gray-400 mt-2">* Tente digitar senhas diferentes para ver o erro de confirmação.</p>
+        </section>
+
+        {/* --- SEÇÃO 2: VARIANTES VISUAIS --- */}
         <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="mb-6 border-l-4 border-blue-500 pl-4">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
@@ -56,7 +145,6 @@ const TabInputTypes: React.FC = () => {
                 variant="outlined"
                 leftIcon={<User size={18} />}
               />
-              <p className="text-xs text-gray-400">Ideal para formulários com fundo branco/limpo.</p>
             </div>
 
             <div className="space-y-2">
@@ -68,7 +156,6 @@ const TabInputTypes: React.FC = () => {
                 variant="filled"
                 leftIcon={<Mail size={18} />}
               />
-              <p className="text-xs text-gray-400">Alto contraste, fundo cinza sutil.</p>
             </div>
 
             <div className="space-y-2">
@@ -80,12 +167,11 @@ const TabInputTypes: React.FC = () => {
                 variant="ghost"
                 leftIcon={<Search size={18} />}
               />
-              <p className="text-xs text-gray-400">Transparente até focar. Perfeito para barras de ferramentas.</p>
             </div>
           </div>
         </section>
 
-        {/* --- SEÇÃO 2: FLOATING LABELS (MATERIAL STYLE) --- */}
+        {/* --- SEÇÃO 3: FLOATING LABELS (MATERIAL STYLE) --- */}
         <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="mb-6 border-l-4 border-purple-500 pl-4">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
@@ -118,7 +204,7 @@ const TabInputTypes: React.FC = () => {
           </div>
         </section>
 
-        {/* --- SEÇÃO 3: DENSIDADE E TAMANHOS --- */}
+        {/* --- SEÇÃO 4: DENSIDADE E TAMANHOS --- */}
         <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="mb-6 border-l-4 border-green-500 pl-4">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
@@ -151,7 +237,7 @@ const TabInputTypes: React.FC = () => {
           </div>
         </section>
 
-        {/* --- SEÇÃO 4: APLICAÇÃO EM TABELAS (GHOST + COMPACT) --- */}
+        {/* --- SEÇÃO 5: APLICAÇÃO EM TABELAS (GHOST + COMPACT) --- */}
         <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
           <div className="mb-6 border-l-4 border-orange-500 pl-4">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
@@ -251,7 +337,7 @@ const TabInputTypes: React.FC = () => {
           </div>
         </section>
 
-        {/* --- SEÇÃO 5: SELEÇÃO E OPÇÕES (CHECKBOX/RADIO) --- */}
+        {/* --- SEÇÃO 6: SELEÇÃO E OPÇÕES (CHECKBOX/RADIO) --- */}
         <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="mb-6 border-l-4 border-pink-500 pl-4">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
@@ -307,39 +393,6 @@ const TabInputTypes: React.FC = () => {
                 />
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* --- SEÇÃO 6: TIPOS ESPECIAIS (DATA, TEL, ETC) --- */}
-        <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <div className="mb-6 border-l-4 border-indigo-500 pl-4">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-              <Calendar size={24} className="text-indigo-500" /> Tipos Especiais HTML5
-            </h3>
-            <p className="text-sm text-gray-500">Suporte completo a atributos nativos de data, hora e máscaras.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Input name="special_date" label="Data de Evento" type="date" variant="filled" required />
-            <Input name="special_time" label="Horário" type="time" variant="filled" leftIcon={<Clock size={18} />} />
-            <Input
-              name="special_phone"
-              label="Telefone"
-              type="tel"
-              placeholder="(00) 00000-0000"
-              variant="filled"
-              leftIcon={<Phone size={18} />}
-            />
-            <Input
-              name="special_number"
-              label="Idade"
-              type="number"
-              min={18}
-              variant="filled"
-              rightIcon={<Hash size={16} className="text-gray-400" />}
-            />
-            <Input name="special_url" label="Website" type="url" placeholder="https://" variant="filled" leftIcon={<Globe size={18} />} />
-            <Input name="special_color" label="Cor do Tema" type="color" variant="filled" className="h-[42px] p-1 cursor-pointer" />
           </div>
         </section>
 
