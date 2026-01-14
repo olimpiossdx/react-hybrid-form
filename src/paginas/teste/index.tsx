@@ -7,6 +7,7 @@ import ListPatternsExample from './list-patterns';
 import TabAlertExample from './tab-alert';
 import TabAsyncAutocompleteExample from './tab-autocomplete';
 import BudgetProjectForm from './tab-budget-project-form';
+import TabButtonExample from './tab-button';
 import CheckboxGroupForm from './tab-checkbox-group-form';
 import CurriculumForm from './tab-curriculum';
 import TabDataTableExample from './tab-data-table';
@@ -78,6 +79,7 @@ const Homologacao: React.FC = () => {
     tabTransferList: <TabTransferList />,
     tabTextArea: <TabTextArea />,
     tabRadioGroup: <TabRadioGroup />,
+    tabButtonExample: <TabButtonExample />,
   };
 
   return (
@@ -153,6 +155,7 @@ const Homologacao: React.FC = () => {
           <TabButton tabId="tabPagination" label="Paginação" isActive={activeTab === 'tabPagination'} onClick={setActiveTab} />
           <TabButton tabId="tabTextArea" label="TextArea" isActive={activeTab === 'tabTextArea'} onClick={setActiveTab} />
           <TabButton tabId="tabRadioGroup" label="Radio Group" isActive={activeTab === 'tabRadioGroup'} onClick={setActiveTab} />
+          <TabButton tabId="tabButtonExample" label="Button" isActive={activeTab === 'tabButtonExample'} onClick={setActiveTab} />
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
