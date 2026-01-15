@@ -42,6 +42,7 @@ import TabWizard from './tab-wizard-tabs';
 import NestedLevelForm from '../../componentes/nested-level-form';
 import TabButton from '../../componentes/tab-button';
 import { ThemeToggle } from '../../componentes/theme';
+import { TabTable } from '../tab-table';
 
 // Foca no nova tab/formulário-ativo
 const Homologacao: React.FC = () => {
@@ -90,6 +91,7 @@ const Homologacao: React.FC = () => {
     tabSpinner: <TabSpinner />,
     tabCard: <TabCard />,
     tabBadge: <TabBadge />,
+    tabTable: <TabTable />,
   };
 
   return (
@@ -171,6 +173,7 @@ const Homologacao: React.FC = () => {
           <TabButton tabId="tabSpinner" label="Spinner" isActive={activeTab === 'tabSpinner'} onClick={setActiveTab} />
           <TabButton tabId="tabCard" label="Card" isActive={activeTab === 'tabCard'} onClick={setActiveTab} />
           <TabButton tabId="tabBadge" label="Badge" isActive={activeTab === 'tabBadge'} onClick={setActiveTab} />
+          <TabButton tabId="tabTable" label="Table" isActive={activeTab === 'tabTable'} onClick={setActiveTab} />
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 

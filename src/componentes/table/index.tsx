@@ -1,114 +1,123 @@
-import React, { forwardRef } from 'react';
+import * as React from 'react';
 
-// --- 1. CONTAINER (Wrapper de Scroll) ---
-// Responsável pelo scroll (X e Y) e pelo isolamento do contexto de layout.
-// Aceita ref para conectar com virtualizadores.
-interface ContainerProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: React.ReactNode;
+// --- Contexto de Densidade ---
+type typeTableDensity = 'sm' | 'md' | 'lg';
+
+interface TableContextValue {
+  density: typeTableDensity;
 }
 
-export const Container = forwardRef<HTMLDivElement, ContainerProps>(({ children, className = '', ...props }, ref) => (
+const TableContext = React.createContext<TableContextValue>({
+  density: 'md',
+});
+
+// --- Componentes ---
+
+interface TableContainerProps extends React.HTMLAttributes<HTMLDivElement> {
+  className?: string;
+}
+
+const TableContainer = React.forwardRef<HTMLDivElement, TableContainerProps>(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={`w-full overflow-auto relative custom-scrollbar bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 ${className}`}
-    {...props}>
-    {children}
-  </div>
+    className={`w-full overflow-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm ${
+      className || ''
+    }`}
+    {...props}
+  />
 ));
-Container.displayName = 'Table.Container';
+TableContainer.displayName = 'TableContainer';
 
-// --- 2. ROOT (A Tabela em si) ---
-export const Root = forwardRef<HTMLTableElement, React.TableHTMLAttributes<HTMLTableElement>>(
-  ({ children, className = '', ...props }, ref) => (
-    <table ref={ref} className={`w-full text-sm text-left text-gray-500 dark:text-gray-400 border-collapse ${className}`} {...props}>
-      {children}
-    </table>
+interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> {
+  density?: typeTableDensity;
+}
+
+const Table = React.forwardRef<HTMLTableElement, TableProps>(({ className, density = 'md', ...props }, ref) => {
+  return (
+    <TableContext.Provider value={{ density }}>
+      <table ref={ref} className={`w-full caption-bottom text-sm text-left ${className || ''}`} {...props} />
+    </TableContext.Provider>
+  );
+});
+Table.displayName = 'Table';
+
+// CORREÇÃO: TableHeader renderiza APENAS 'thead'.
+// Removemos qualquer 'tr' que pudesse estar hardcoded aqui.
+const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
+  ({ className, ...props }, ref) => (
+    <thead ref={ref} className={`bg-gray-50/50 dark:bg-gray-900/20 [&_tr]:border-b ${className || ''}`} {...props} />
   ),
 );
-Root.displayName = 'Table.Root';
+TableHeader.displayName = 'TableHeader';
 
-// --- 3. SEÇÕES SEMÂNTICAS ---
-
-export const Header = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
-  <thead
-    className={`
-      text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-900/50 dark:text-gray-400 
-      sticky top-0 z-10 shadow-sm
-      ${className}
-    `}
-    {...props}>
-    {children}
-  </thead>
+const TableBody = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
+  ({ className, ...props }, ref) => <tbody ref={ref} className={`[&_tr:last-child]:border-0 ${className || ''}`} {...props} />,
 );
+TableBody.displayName = 'TableBody';
 
-export const Body = forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
-  ({ children, className = '', ...props }, ref) => (
-    <tbody ref={ref} className={`divide-y divide-gray-200 dark:divide-gray-700 ${className}`} {...props}>
-      {children}
-    </tbody>
+const TableFooter = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
+  ({ className, ...props }, ref) => (
+    <tfoot
+      ref={ref}
+      className={`border-t bg-gray-50/50 font-medium [&>tr]:last:border-b-0 dark:bg-gray-900/50 ${className || ''}`}
+      {...props}
+    />
   ),
 );
-Body.displayName = 'Table.Body';
+TableFooter.displayName = 'TableFooter';
 
-export const Footer = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
-  <tfoot className={`bg-gray-50 dark:bg-gray-800 border-t-2 border-gray-200 dark:border-gray-700 ${className}`} {...props}>
-    {children}
-  </tfoot>
-);
-
-// --- 4. COLUNAS E LINHAS ---
-
-export const ColGroup = ({ children }: { children: React.ReactNode }) => <colgroup>{children}</colgroup>;
-
-export const Col = (props: React.ColHTMLAttributes<HTMLTableColElement>) => <col {...props} />;
-
-export const Row = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLTableRowElement>) => (
+const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTMLTableRowElement>>(({ className, ...props }, ref) => (
   <tr
-    className={`
-      bg-white dark:bg-gray-800 
-      hover:bg-gray-50 dark:hover:bg-gray-700/50 
-      transition-colors duration-150
-      ${className}
-    `}
-    {...props}>
-    {children}
-  </tr>
+    ref={ref}
+    className={`border-b border-gray-200 dark:border-gray-700 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/50 data-[state=selected]:bg-gray-100 dark:data-[state=selected]:bg-gray-800 ${
+      className || ''
+    }`}
+    {...props}
+  />
+));
+TableRow.displayName = 'TableRow';
+
+const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<HTMLTableCellElement>>(({ className, ...props }, ref) => {
+  const { density } = React.useContext(TableContext);
+
+  // Altura e padding dinâmicos baseados na densidade
+  const heightClass = density === 'sm' ? 'h-8' : density === 'lg' ? 'h-14' : 'h-10';
+  const paddingClass = density === 'sm' ? 'px-2' : density === 'lg' ? 'px-6' : 'px-4';
+
+  return (
+    <th
+      ref={ref}
+      className={`${heightClass} ${paddingClass} text-left align-middle font-medium text-gray-500 dark:text-gray-400 [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5 ${
+        className || ''
+      }`}
+      {...props}
+    />
+  );
+});
+TableHead.displayName = 'TableHead';
+
+const TableCell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttributes<HTMLTableCellElement>>(({ className, ...props }, ref) => {
+  const { density } = React.useContext(TableContext);
+
+  const paddingClass = density === 'sm' ? 'p-2' : density === 'lg' ? 'p-6' : 'p-4';
+
+  return (
+    <td
+      ref={ref}
+      className={`${paddingClass} align-middle text-gray-900 dark:text-gray-100 [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5 ${
+        className || ''
+      }`}
+      {...props}
+    />
+  );
+});
+TableCell.displayName = 'TableCell';
+
+const TableCaption = React.forwardRef<HTMLTableCaptionElement, React.HTMLAttributes<HTMLTableCaptionElement>>(
+  ({ className, ...props }, ref) => (
+    <caption ref={ref} className={`mt-4 text-sm text-gray-500 dark:text-gray-400 ${className || ''}`} {...props} />
+  ),
 );
+TableCaption.displayName = 'TableCaption';
 
-// --- 5. CÉLULAS ---
-
-export const HeadCell = ({ children, className = '', align = 'left', ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) => (
-  <th scope="col" className={`px-6 py-3 font-bold whitespace-nowrap text-${align} ${className}`} {...props}>
-    {children}
-  </th>
-);
-
-export const Cell = ({ children, className = '', align = 'left', ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) => (
-  <td className={`px-6 py-4 whitespace-nowrap text-${align} ${className}`} {...props}>
-    {children}
-  </td>
-);
-
-// --- 6. HELPERS VISUAIS (Opcionais) ---
-
-export const Caption = ({ children, className = '' }: React.HTMLAttributes<HTMLTableCaptionElement>) => (
-  <caption
-    className={`p-4 text-lg font-semibold text-left text-gray-900 dark:text-white bg-white dark:bg-gray-800 caption-top ${className}`}>
-    {children}
-  </caption>
-);
-
-// Namespace de Exportação
-export const Table = {
-  Container,
-  Root,
-  Header,
-  Body,
-  Footer,
-  ColGroup,
-  Col,
-  Row,
-  HeadCell,
-  Cell,
-  Caption,
-};
+export { Table, TableBody, TableCaption, TableCell, TableContainer, TableFooter, TableHead, TableHeader, TableRow };
