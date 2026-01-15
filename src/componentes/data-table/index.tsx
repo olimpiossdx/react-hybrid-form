@@ -1,249 +1,322 @@
-import React, { createContext, forwardRef } from 'react';
-import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ChevronDown, ChevronsUpDown, ChevronUp, Search } from 'lucide-react';
 
+import { Input } from '../input';
 import Pagination from '../pagination';
+import { Select } from '../select';
+import { Spinner } from '../spinner';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from '../table';
 
-// Contexto para compartilhar configurações entre componentes da tabela
-const TableContext = createContext<{
-  responsiveMode?: 'scroll' | 'stack' | 'collapse';
-}>({
-  responsiveMode: 'scroll',
-});
+// --- Interfaces ---
 
-interface RootProps extends React.HTMLAttributes<HTMLDivElement> {
-  instance?: {
-    responsiveMode?: 'scroll' | 'stack' | 'collapse';
-    [key: string]: any;
-  };
-  children: React.ReactNode;
-}
-
-// 1. ROOT (Wrapper Principal + Contexto)
-// Renderiza uma DIV para encapsular a tabela e a paginação/toolbar.
-export const TableRoot = forwardRef<HTMLDivElement, RootProps>(({ instance, children, className = '', ...props }, ref) => {
-  const responsiveMode = instance?.responsiveMode || 'scroll';
-
-  return (
-    <TableContext.Provider value={{ responsiveMode }}>
-      <div
-        ref={ref}
-        role="region"
-        aria-label="Tabela de Dados"
-        className={`flex flex-col bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden ${className}`}
-        {...props}>
-        {children}
-      </div>
-    </TableContext.Provider>
-  );
-});
-TableRoot.displayName = 'Table.Root';
-
-// 2. CONTAINER (Wrapper de Scroll)
-// Responsável pelo scroll (X e Y). Deve envolver a <Table>.
-export const TableContainer = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ children, className = '', ...props }, ref) => (
-    <div ref={ref} className={`w-full overflow-auto relative custom-scrollbar ${className}`} {...props}>
-      {children}
-    </div>
-  ),
-);
-TableContainer.displayName = 'Table.Container';
-
-// 3. TABLE (A Tag Tabela Real - Obrigatória)
-// Deve ser filha direta de Container ou Root.
-export const TableMain = forwardRef<HTMLTableElement, React.TableHTMLAttributes<HTMLTableElement>>(
-  ({ children, className = '', ...props }, ref) => {
-    const { responsiveMode } = React.useContext(TableContext);
-
-    // Classes para transformar a tabela em Cards no mobile (Modo Stack)
-    const stackClasses =
-      responsiveMode === 'stack'
-        ? `
-      md:table 
-      [&_thead]:hidden md:[&_thead]:table-header-group 
-      [&_tbody]:block md:[&_tbody]:table-row-group 
-      [&_tr]:block md:[&_tr]:table-row 
-      [&_td]:block md:[&_td]:table-cell 
-      [&_td]:text-right md:[&_td]:text-left
-      [&_td]:flex md:[&_td]:table-cell
-      [&_td]:justify-between md:[&_td]:justify-start
-      [&_td]:items-center md:[&_td]:items-start
-      [&_td::before]:content-[attr(data-label)] 
-      [&_td::before]:font-bold [&_td::before]:text-gray-500 [&_td::before]:mr-auto md:[&_td::before]:hidden
-    `
-        : 'table';
-
-    return (
-      <table ref={ref} className={`w-full text-sm text-left border-collapse ${stackClasses} ${className}`} {...props}>
-        {children}
-      </table>
-    );
-  },
-);
-TableMain.displayName = 'Table.Main';
-
-// 4. HEADER (THEAD)
-// Deve ser filho de <Table>.
-export const TableHeader = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
-  <thead
-    className={`
-      text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-900/50 dark:text-gray-400 
-      sticky top-0 z-10 shadow-sm
-      ${className}
-    `}
-    {...props}>
-    <tr>{children}</tr>
-  </thead>
-);
-
-// 5. BODY (TBODY)
-// Deve ser filho de <Table>. Aceita ref para virtualização.
-export const TableBody = forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
-  ({ children, className = '', ...props }, ref) => (
-    <tbody ref={ref} className={`divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800 ${className}`} {...props}>
-      {children}
-    </tbody>
-  ),
-);
-TableBody.displayName = 'Table.Body';
-
-// 6. CAPTION
-export const TableCaption = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLTableCaptionElement>) => (
-  <caption
-    className={`p-4 text-lg font-semibold text-left text-gray-900 dark:text-white bg-white dark:bg-gray-800 caption-top border-b border-gray-200 dark:border-gray-700 ${className}`}
-    {...props}>
-    {children}
-  </caption>
-);
-
-// 7. COLGROUP & COL
-export const TableColGroup = ({ children }: { children: React.ReactNode }) => <colgroup>{children}</colgroup>;
-export const TableCol = (props: React.ColHTMLAttributes<HTMLTableColElement>) => <col {...props} />;
-
-// 8. ROW (TR)
-interface RowProps extends React.HTMLAttributes<HTMLTableRowElement> {
-  onClick?: () => void;
-}
-export const TableRow: React.FC<RowProps> = ({ children, className = '', onClick, ...props }) => (
-  <tr
-    onClick={onClick}
-    className={`
-      hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors duration-150
-      ${onClick ? 'cursor-pointer active:bg-gray-100 dark:active:bg-gray-700' : ''} 
-      ${className}
-    `}
-    {...props}>
-    {children}
-  </tr>
-);
-
-// 9. HEAD CELL (TH)
-interface HeadCellProps extends React.ThHTMLAttributes<HTMLTableCellElement> {
+export interface DataTableColumn<T = any> {
+  accessorKey: keyof T | string;
+  header: string;
+  width?: string;
   sortable?: boolean;
-  direction?: 'asc' | 'desc' | null;
-  onSort?: () => void;
+  align?: 'left' | 'center' | 'right';
+  cell?: (row: T) => React.ReactNode;
 }
-export const TableHeadCell: React.FC<HeadCellProps> = ({
-  children,
-  className = '',
-  align = 'left',
-  sortable,
-  direction,
-  onSort,
-  ...props
-}) => (
-  <th
-    scope="col"
-    onClick={sortable ? onSort : undefined}
-    className={`
-        px-6 py-3 font-bold whitespace-nowrap bg-gray-50 dark:bg-gray-900/90
-        text-${align} 
-        ${sortable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group' : ''}
-        ${className}
-    `}
-    {...props}>
-    <div
-      className={`flex items-center gap-1 ${align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start'}`}>
-      {children}
-      {sortable && (
-        <span className="text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200">
-          {direction === 'asc' ? <ArrowUp size={14} /> : direction === 'desc' ? <ArrowDown size={14} /> : <ChevronsUpDown size={14} />}
-        </span>
-      )}
-    </div>
-  </th>
-);
 
-// 10. CELL (TD)
-export const TableCell: React.FC<
-  React.TdHTMLAttributes<HTMLTableCellElement> & {
-    columnIndex?: number;
-    label?: string;
-  }
-> = ({ children, className = '', align = 'left', columnIndex, label, ...props }) => (
-  <td
-    data-label={label}
-    className={`
-        px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-200 
-        text-${align} 
-        ${className}
-    `}
-    {...props}>
-    {children}
-  </td>
-);
-
-// 11. FOOTER (TFOOT)
-export const TableFooter = ({ children, className = '', ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
-  <tfoot
-    className={`bg-gray-50 dark:bg-gray-900 border-t-2 border-gray-200 dark:border-gray-700 font-semibold text-gray-900 dark:text-white ${className}`}
-    {...props}>
-    {children}
-  </tfoot>
-);
-
-// 12. PAGINATION WRAPPER
-interface TablePaginationProps {
-  instance: any;
-  mode?: 'range' | 'simple' | 'extended';
-  className?: string;
+export interface PaginationState {
+  pageIndex: number; // 0-based
+  pageSize: number;
 }
-export const TablePagination: React.FC<TablePaginationProps> = ({ instance, mode, className }) => {
-  // Safe check
-  if (!instance?.pagination) {
-    return null;
-  }
 
-  const {
-    pagination: { pageIndex, setPageIndex, pageSize, setPageSize },
-    totalRows,
-  } = instance;
+export interface SortingState {
+  column: string | null;
+  direction: 'asc' | 'desc';
+}
+
+export interface DataTableProps<T> {
+  data: T[];
+  columns: DataTableColumn<T>[];
+  isLoading?: boolean;
+
+  // Configuração
+  density?: 'sm' | 'md' | 'lg';
+  selectable?: boolean;
+  searchable?: boolean;
+
+  // Callbacks
+  onRowSelect?: (selectedIds: (string | number)[]) => void;
+
+  // --- Server-Side / Controle Externo ---
+  manualPagination?: boolean;
+  rowCount?: number;
+  onPaginationChange?: (pagination: PaginationState) => void;
+
+  manualSorting?: boolean;
+  onSortingChange?: (sorting: SortingState) => void;
+
+  // NOVO: Callback de busca para Server-Side Search
+  onSearchChange?: (term: string) => void;
+}
+
+export function DataTable<T extends { id: string | number } & Record<string, any>>({
+  data,
+  columns,
+  isLoading = false,
+  density = 'md',
+  selectable = false,
+  searchable = false,
+  onRowSelect,
+  manualPagination = false,
+  rowCount = 0,
+  onPaginationChange,
+  manualSorting = false,
+  onSortingChange,
+  onSearchChange, // Recebendo o callback
+}: DataTableProps<T>) {
+  // Estados Internos
+  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
+  const [sorting, setSorting] = useState<SortingState>({ column: null, direction: 'asc' });
+  const [selectedRows, setSelectedRows] = useState<Set<string | number>>(new Set());
+  const [globalFilter, setGlobalFilter] = useState('');
+
+  // Debounce para a busca (evita chamadas excessivas na API)
+  useEffect(() => {
+    if (onSearchChange) {
+      const timeoutId = setTimeout(() => {
+        onSearchChange(globalFilter);
+      }, 500); // 500ms delay
+      return () => clearTimeout(timeoutId);
+    }
+  }, [globalFilter, onSearchChange]);
+
+  // Handlers
+  const handlePaginationChange = (newPagination: PaginationState) => {
+    setPagination(newPagination);
+    if (onPaginationChange) {
+      onPaginationChange(newPagination);
+    }
+  };
+
+  const handleSort = (columnKey: string) => {
+    const newDirection = sorting.column === columnKey && sorting.direction === 'asc' ? 'desc' : 'asc';
+    const newSorting: SortingState = { column: columnKey, direction: newDirection };
+
+    setSorting(newSorting);
+    if (onSortingChange) {
+      onSortingChange(newSorting);
+    }
+  };
+
+  // --- Processamento de Dados ---
+
+  // 1. Filtragem (Client-Side fallback)
+  const filteredData = useMemo(() => {
+    // Se tiver callback de busca externo (Server-Side), ignoramos o filtro local
+    if (onSearchChange || !globalFilter) {
+      return data;
+    }
+
+    const lowerFilter = globalFilter.toLowerCase();
+    return data.filter((row) => Object.values(row).some((val) => String(val).toLowerCase().includes(lowerFilter)));
+  }, [data, globalFilter, onSearchChange]);
+
+  // 2. Ordenação
+  const sortedData = useMemo(() => {
+    if (manualSorting || !sorting.column) {
+      return filteredData;
+    }
+
+    return [...filteredData].sort((a, b) => {
+      const valA = a[sorting.column as keyof T];
+      const valB = b[sorting.column as keyof T];
+
+      if (valA < valB) {
+        return sorting.direction === 'asc' ? -1 : 1;
+      }
+      if (valA > valB) {
+        return sorting.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [filteredData, sorting, manualSorting]);
+
+  // 3. Paginação
+  const paginatedData = useMemo(() => {
+    if (manualPagination) {
+      return sortedData;
+    }
+
+    const start = pagination.pageIndex * pagination.pageSize;
+    return sortedData.slice(start, start + pagination.pageSize);
+  }, [sortedData, pagination, manualPagination]);
+
+  const totalCount = manualPagination ? rowCount : filteredData.length;
+
+  // Seleção
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = paginatedData.map((row) => row.id);
+      setSelectedRows(new Set(allIds));
+    } else {
+      setSelectedRows(new Set());
+    }
+  };
+
+  const handleSelectRow = (id: string | number, checked: boolean) => {
+    const newSelected = new Set(selectedRows);
+    if (checked) {
+      newSelected.add(id);
+    } else {
+      newSelected.delete(id);
+    }
+    setSelectedRows(newSelected);
+  };
+
+  useEffect(() => {
+    if (onRowSelect) {
+      onRowSelect(Array.from(selectedRows));
+    }
+  }, [selectedRows, onRowSelect]);
+
   return (
-    <Pagination
-      currentPage={pageIndex}
-      totalCount={totalRows}
-      pageSize={pageSize}
-      onPageChange={setPageIndex}
-      onPageSizeChange={setPageSize}
-      mode={mode}
-      className={`border-t border-gray-200 dark:border-gray-700 ${className}`}
-    />
-  );
-};
+    <div className="space-y-4 w-full">
+      {searchable && (
+        <div className="flex items-center justify-between">
+          <div className="w-full max-w-sm">
+            <Input
+              name="global_search"
+              aria-label="Filtrar dados"
+              placeholder="Buscar..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              leftIcon={<Search size={16} />}
+              size="sm"
+            />
+          </div>
+        </div>
+      )}
 
-// EXPORTAÇÃO FINAL
-export const DataTable = {
-  Root: TableRoot,
-  Container: TableContainer,
-  Table: TableMain, // Essencial para HTML válido
-  Header: TableHeader,
-  HeadCell: TableHeadCell,
-  Body: TableBody,
-  Row: TableRow,
-  Cell: TableCell,
-  Footer: TableFooter,
-  Caption: TableCaption,
-  ColGroup: TableColGroup,
-  Col: TableCol,
-  Pagination: TablePagination,
-};
+      <TableContainer>
+        <Table density={density}>
+          <TableHeader>
+            <TableRow>
+              {selectable && (
+                <TableHead className="w-[50px]">
+                  <Input
+                    name="select_all_rows"
+                    type="checkbox"
+                    variant="ghost"
+                    containerClassName="justify-center"
+                    checked={paginatedData.length > 0 && selectedRows.size === paginatedData.length}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                  />
+                </TableHead>
+              )}
+
+              {columns.map((col) => (
+                <TableHead
+                  key={String(col.accessorKey)}
+                  style={{ width: col.width, textAlign: col.align || 'left' }}
+                  className={col.sortable ? 'cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-800' : ''}
+                  onClick={() => col.sortable && handleSort(String(col.accessorKey))}>
+                  <div
+                    className={`flex items-center gap-2 ${col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : ''}`}>
+                    {col.header}
+                    {col.sortable && (
+                      <span className="text-gray-400">
+                        {sorting.column === col.accessorKey ? (
+                          sorting.direction === 'asc' ? (
+                            <ChevronUp size={14} />
+                          ) : (
+                            <ChevronDown size={14} />
+                          )
+                        ) : (
+                          <ChevronsUpDown size={14} />
+                        )}
+                      </span>
+                    )}
+                  </div>
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+
+          <TableBody>
+            {isLoading && (
+              <TableRow>
+                <TableCell colSpan={columns.length + (selectable ? 1 : 0)} className="h-24 text-center">
+                  <div className="flex justify-center items-center gap-2 text-gray-500">
+                    <Spinner size="md" /> Carregando dados...
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+
+            {!isLoading && paginatedData.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={columns.length + (selectable ? 1 : 0)} className="h-24 text-center text-gray-500">
+                  Nenhum resultado encontrado.
+                </TableCell>
+              </TableRow>
+            )}
+
+            {!isLoading &&
+              paginatedData.map((row) => (
+                <TableRow key={row.id} data-state={selectedRows.has(row.id) ? 'selected' : undefined}>
+                  {selectable && (
+                    <TableCell className="text-center p-0">
+                      <Input
+                        name={`select_row_${row.id}`}
+                        type="checkbox"
+                        variant="ghost"
+                        containerClassName="justify-center"
+                        checked={selectedRows.has(row.id)}
+                        onChange={(e) => handleSelectRow(row.id, e.target.checked)}
+                      />
+                    </TableCell>
+                  )}
+
+                  {columns.map((col) => (
+                    <TableCell
+                      key={`${row.id}-${String(col.accessorKey)}`}
+                      className={col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''}>
+                      {col.cell ? col.cell(row) : row[col.accessorKey]}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <div className="flex items-center justify-between px-2">
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          {selectable && selectedRows.size > 0 && (
+            <span className="mr-4 text-blue-600 font-medium">{selectedRows.size} selecionado(s)</span>
+          )}
+          <span>Total: {totalCount} registros</span>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">Linhas:</span>
+            <Select
+              name="rows_per_page"
+              value={pagination.pageSize}
+              onChange={(e) => handlePaginationChange({ ...pagination, pageSize: Number(e.target.value), pageIndex: 0 })}
+              sized="sm"
+              variant="ghost"
+              containerClassName="w-20">
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </Select>
+          </div>
+
+          <Pagination
+            currentPage={pagination.pageIndex + 1}
+            totalCount={totalCount}
+            pageSize={pagination.pageSize}
+            onPageChange={(page) => handlePaginationChange({ ...pagination, pageIndex: page - 1 })}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}

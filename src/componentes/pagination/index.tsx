@@ -2,21 +2,29 @@ import React from 'react';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 import { DOTS, usePaginationRange } from '../../hooks/use-pagination-range';
+import Button from '../button';
+import { Select } from '../select';
 
 export type PaginationMode = 'range' | 'simple' | 'extended';
 
-interface IPaginationProps {
+export interface PaginationProps {
   currentPage: number;
   totalCount: number;
   pageSize: number;
   onPageChange: (page: number) => void;
+  // Opcional: callback para mudar o tamanho da página. Se fornecido, mostra o Select.
   onPageSizeChange?: (size: number) => void;
   pageSizeOptions?: number[];
+
   mode?: PaginationMode;
   className?: string;
+
+  // Novas props visuais
+  variant?: 'outline' | 'ghost'; // Estilo base dos botões
+  size?: 'sm' | 'md'; // Tamanho dos botões
 }
 
-const Pagination: React.FC<IPaginationProps> = ({
+export const Pagination: React.FC<PaginationProps> = ({
   currentPage,
   totalCount,
   pageSize,
@@ -25,16 +33,19 @@ const Pagination: React.FC<IPaginationProps> = ({
   pageSizeOptions = [10, 20, 50, 100],
   mode = 'range',
   className = '',
+  variant = 'outline',
+  size = 'sm', // Padrão sm para tabelas
 }) => {
-  // CORREÇÃO: Cast explícito para garantir que o TS entenda que é um array
   const paginationRange = usePaginationRange({
     currentPage,
     totalCount,
     pageSize,
   }) as (number | string)[];
 
-  // Se não tem páginas ou só tem 1, não renderiza (opcional)
+  // Se não houver páginas suficientes, não renderiza nada (exceto se for para mostrar o PageSize selector sempre)
   if (currentPage === 0 || (paginationRange && paginationRange.length < 2 && mode === 'range')) {
+    // Se quisermos mostrar o seletor de tamanho mesmo com 1 página, descomente abaixo.
+    // Por padrão, muitas tabelas escondem pagination se só tem 1 página.
     return null;
   }
 
@@ -42,88 +53,116 @@ const Pagination: React.FC<IPaginationProps> = ({
   const isFirst = currentPage === 1;
   const isLast = currentPage === totalPages;
 
-  // Estilos Base (Estrutura)
-  const btnBase = 'p-2 rounded-lg border transition-colors flex items-center justify-center min-w-[32px] h-8 text-xs font-bold';
-
-  // Estilos de Estado (Cores)
-  const btnActive = 'bg-cyan-600 text-white border-cyan-600 shadow-sm hover:bg-cyan-700';
-  const btnInactive =
-    'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed';
-
   return (
-    <div
-      className={`flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 ${className}`}>
-      {/* 1. Info e Page Size */}
-      <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-        <span>
-          Mostrando <strong>{Math.min((currentPage - 1) * pageSize + 1, totalCount)}</strong> a{' '}
-          <strong>{Math.min(currentPage * pageSize, totalCount)}</strong> de <strong>{totalCount}</strong>
-        </span>
+    <div className={`flex items-center gap-4 ${className}`}>
+      {/* Seletor de Tamanho da Página (Opcional) */}
+      {onPageSizeChange && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500 whitespace-nowrap">Linhas:</span>
+          <Select
+            name="pageSize"
+            value={pageSize}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            variant="ghost"
+            sized="sm"
+            containerClassName="w-20">
+            {pageSizeOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </Select>
+        </div>
+      )}
 
-        {onPageSizeChange && (
-          <div className="hidden sm:flex items-center gap-2">
-            <span className="text-xs">Exibir:</span>
-            <select
-              value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="form-input py-1 px-2 text-xs w-auto h-auto bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
-              {pageSizeOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-      </div>
-
-      {/* 2. Controles de Navegação */}
-      <div className="flex gap-1">
+      {/* Navegação */}
+      <div className="flex items-center gap-1">
         {/* First / Prev */}
-        {(mode === 'extended' || mode === 'simple') && (
+        {(mode === 'extended' || mode === 'simple' || mode === 'range') && (
           <>
-            <button className={`${btnBase} ${btnInactive}`} onClick={() => onPageChange(1)} disabled={isFirst} title="Primeira">
-              <ChevronsLeft size={16} />
-            </button>
-            <button
-              className={`${btnBase} ${btnInactive}`}
+            {/* First Page (Só no extended) */}
+            {mode === 'extended' && (
+              <Button
+                variant={variant}
+                size="icon"
+                // Ajuste fino de tamanho para alinhar com 'sm'
+                className={size === 'sm' ? 'h-8 w-8' : 'h-10 w-10'}
+                onClick={() => onPageChange(1)}
+                disabled={isFirst}
+                title="Primeira Página">
+                <ChevronsLeft size={16} />
+              </Button>
+            )}
+
+            <Button
+              variant={variant}
+              size="icon"
+              className={size === 'sm' ? 'h-8 w-8' : 'h-10 w-10'}
               onClick={() => onPageChange(currentPage - 1)}
               disabled={isFirst}
               title="Anterior">
               <ChevronLeft size={16} />
-            </button>
+            </Button>
           </>
         )}
 
-        {/* Range de Números */}
+        {/* Números das Páginas */}
         {mode !== 'simple' &&
-          paginationRange?.map((pageNumber, idx) => {
+          paginationRange.map((pageNumber, idx) => {
             if (pageNumber === DOTS) {
               return (
-                <span key={idx} className="px-2 py-1 text-gray-400 font-bold">
+                <span key={idx} className="px-2 text-gray-400 select-none">
                   ...
                 </span>
               );
             }
+
+            const isActive = pageNumber === currentPage;
+
             return (
-              <button
+              <Button
                 key={idx}
-                className={`${btnBase} ${pageNumber === currentPage ? btnActive : btnInactive}`}
+                // Botão Ativo ganha destaque (primary ou secondary)
+                variant={isActive ? 'primary' : 'ghost'}
+                size="icon"
+                className={`${size === 'sm' ? 'h-8 w-8 text-xs' : 'h-10 w-10 text-sm'} font-medium`}
                 onClick={() => onPageChange(Number(pageNumber))}>
                 {pageNumber}
-              </button>
+              </Button>
             );
           })}
 
+        {/* Textual Info para modo Simple */}
+        {mode === 'simple' && (
+          <span className="text-sm text-gray-500 px-2">
+            Página {currentPage} de {totalPages}
+          </span>
+        )}
+
         {/* Next / Last */}
-        {(mode === 'extended' || mode === 'simple') && (
+        {(mode === 'extended' || mode === 'simple' || mode === 'range') && (
           <>
-            <button className={`${btnBase} ${btnInactive}`} onClick={() => onPageChange(currentPage + 1)} disabled={isLast} title="Próxima">
+            <Button
+              variant={variant}
+              size="icon"
+              className={size === 'sm' ? 'h-8 w-8' : 'h-10 w-10'}
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={isLast}
+              title="Próxima">
               <ChevronRight size={16} />
-            </button>
-            <button className={`${btnBase} ${btnInactive}`} onClick={() => onPageChange(totalPages)} disabled={isLast} title="Última">
-              <ChevronsRight size={16} />
-            </button>
+            </Button>
+
+            {mode === 'extended' && (
+              <Button
+                variant={variant}
+                size="icon"
+                className={size === 'sm' ? 'h-8 w-8' : 'h-10 w-10'}
+                onClick={() => onPageChange(totalPages)}
+                disabled={isLast}
+                title="Última">
+                <ChevronsRight size={16} />
+              </Button>
+            )}
           </>
         )}
       </div>

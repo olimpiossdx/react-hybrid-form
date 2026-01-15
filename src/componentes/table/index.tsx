@@ -1,10 +1,10 @@
 import * as React from 'react';
 
 // --- Contexto de Densidade ---
-type typeTableDensity = 'sm' | 'md' | 'lg';
+type TableDensity = 'sm' | 'md' | 'lg';
 
 interface TableContextValue {
-  density: typeTableDensity;
+  density: TableDensity;
 }
 
 const TableContext = React.createContext<TableContextValue>({
@@ -29,7 +29,7 @@ const TableContainer = React.forwardRef<HTMLDivElement, TableContainerProps>(({ 
 TableContainer.displayName = 'TableContainer';
 
 interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> {
-  density?: typeTableDensity;
+  density?: TableDensity;
 }
 
 const Table = React.forwardRef<HTMLTableElement, TableProps>(({ className, density = 'md', ...props }, ref) => {
@@ -41,8 +41,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(({ className, densi
 });
 Table.displayName = 'Table';
 
-// CORREÇÃO: TableHeader renderiza APENAS 'thead'.
-// Removemos qualquer 'tr' que pudesse estar hardcoded aqui.
+// RENDERIZA APENAS THEAD
 const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
   ({ className, ...props }, ref) => (
     <thead ref={ref} className={`bg-gray-50/50 dark:bg-gray-900/20 [&_tr]:border-b ${className || ''}`} {...props} />
@@ -66,6 +65,7 @@ const TableFooter = React.forwardRef<HTMLTableSectionElement, React.HTMLAttribut
 );
 TableFooter.displayName = 'TableFooter';
 
+// RENDERIZA APENAS TR
 const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTMLTableRowElement>>(({ className, ...props }, ref) => (
   <tr
     ref={ref}
@@ -80,7 +80,6 @@ TableRow.displayName = 'TableRow';
 const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<HTMLTableCellElement>>(({ className, ...props }, ref) => {
   const { density } = React.useContext(TableContext);
 
-  // Altura e padding dinâmicos baseados na densidade
   const heightClass = density === 'sm' ? 'h-8' : density === 'lg' ? 'h-14' : 'h-10';
   const paddingClass = density === 'sm' ? 'px-2' : density === 'lg' ? 'px-6' : 'px-4';
 

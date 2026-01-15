@@ -1,10 +1,10 @@
 import { Edit2, FileText, Trash2 } from 'lucide-react';
 
-import Badge from '../componentes/badge';
-import Button from '../componentes/button';
-import { TableBody, TableCaption, TableCell, TableContainer, TableFooter, TableHeader, TableRow } from '../componentes/data-table';
-import { Input } from '../componentes/input';
-import { Table, TableHead } from '../componentes/table';
+import Badge from '../../componentes/badge';
+import Button from '../../componentes/button';
+import { Input } from '../../componentes/input';
+import { TableBody, TableCaption, TableCell, TableContainer, TableFooter, TableHeader, TableRow } from '../../componentes/table';
+import { Table, TableHead } from '../../componentes/table';
 
 const invoices = [
   {
@@ -60,13 +60,15 @@ export const TabTable = () => {
           <Table>
             <TableCaption>Lista de faturas recentes.</TableCaption>
 
-            {/* CORREÇÃO: Removemos TableRow pois TableHeader já renderiza a linha (tr) */}
+            {/* ESTRUTURA CORRETA E OBRIGATÓRIA: thead -> tr -> th */}
             <TableHeader>
-              <TableHead className="w-[100px]">Fatura</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Método</TableHead>
-              <TableHead className="text-right">Valor</TableHead>
-              <TableHead className="w-[100px] text-center">Ações</TableHead>
+              <TableRow>
+                <TableHead className="w-[100px]">Fatura</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Método</TableHead>
+                <TableHead className="text-right">Valor</TableHead>
+                <TableHead className="w-[100px] text-center">Ações</TableHead>
+              </TableRow>
             </TableHeader>
 
             <TableBody>
@@ -114,17 +116,19 @@ export const TabTable = () => {
         <TableContainer>
           <Table density="sm">
             <TableHeader>
-              <TableHead className="w-[250px]">Produto</TableHead>
-              <TableHead className="w-3.5">Qtd</TableHead>
-              <TableHead className="text-right">Preço Unit.</TableHead>
-              <TableHead className="text-right w-[50px]">Ação</TableHead>
+              <TableRow>
+                <TableHead className="w-[150px]">Produto</TableHead>
+                <TableHead className="w-[100px]">Qtd</TableHead>
+                <TableHead>Preço Unit.</TableHead>
+                <TableHead className="text-right w-[50px]"></TableHead>
+              </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow>
                 <TableCell className="p-0">
                   <Input variant="ghost" size="sm" defaultValue="Teclado Mecânico" containerClassName="rounded-none" name={''} />
                 </TableCell>
-                <TableCell className="p-0 w-[100px]">
+                <TableCell className="p-0">
                   <Input type="number" variant="ghost" size="sm" defaultValue={1} containerClassName="rounded-none" name={''} />
                 </TableCell>
                 <TableCell className="p-0">
@@ -140,7 +144,7 @@ export const TabTable = () => {
                 <TableCell className="p-0">
                   <Input variant="ghost" size="sm" defaultValue="Mouse Gamer" containerClassName="rounded-none" name={''} />
                 </TableCell>
-                <TableCell className="p-0 w-[100px]">
+                <TableCell className="p-0">
                   <Input type="number" variant="ghost" size="sm" defaultValue={2} containerClassName="rounded-none" name={''} />
                 </TableCell>
                 <TableCell className="p-0">

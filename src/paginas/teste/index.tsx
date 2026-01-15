@@ -30,6 +30,7 @@ import TabSelect from './tab-select';
 import TabServiceExample from './tab-service';
 import TabSpinner from './tab-spinner';
 import TabSwitchExample from './tab-switch';
+import { TabTable } from './tab-table';
 import TabTableCollapse from './tab-table-collapse';
 import TabTableStackCRUD from './tab-table-stack-crud';
 import TabTextArea from './tab-textarea';
@@ -42,7 +43,6 @@ import TabWizard from './tab-wizard-tabs';
 import NestedLevelForm from '../../componentes/nested-level-form';
 import TabButton from '../../componentes/tab-button';
 import { ThemeToggle } from '../../componentes/theme';
-import { TabTable } from '../tab-table';
 
 // Foca no nova tab/formulário-ativo
 const Homologacao: React.FC = () => {
