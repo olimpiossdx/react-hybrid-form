@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Activity, CheckSquare, ExternalLink, Eye, LayoutList, List, RefreshCw, Search, Shield, Sword, X, Zap } from 'lucide-react';
+import { Activity, ExternalLink, Eye, LayoutList, List, RefreshCw, Search, Shield, Sword, Zap } from 'lucide-react';
 
 import Badge from '../../componentes/badge';
 import Button from '../../componentes/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../componentes/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../componentes/card';
 import { DataTable, type DataTableColumn, type PaginationState } from '../../componentes/data-table';
 import { Input } from '../../componentes/input';
 import showModal from '../../componentes/modal/hook';
@@ -50,7 +50,7 @@ type PokemonDetail = {
 // ============================================================================
 
 export const TabPagination = () => {
-  // --- Estado: Exemplo Local (Paginação Manual/Visual) ---
+  // Estado Local
   const [localPage, setLocalPage] = useState(1);
   const [localPageSize, setLocalPageSize] = useState(10);
 
@@ -60,19 +60,19 @@ export const TabPagination = () => {
     return mockData.slice(start, end);
   }, [localPage, localPageSize]);
 
-  // --- Estado: Exemplo Data Table com API (PokeAPI Híbrida) ---
-  const [masterList, setMasterList] = useState<PokemonReference[]>([]); // Lista completa de nomes
-  const [isInitializing, setIsInitializing] = useState(true); // Loading da lista mestre
+  // Estado API (Híbrida)
+  const [masterList, setMasterList] = useState<PokemonReference[]>([]);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   const [pokePagination, setPokePagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 5 });
-  const [pokeSelected, setPokeSelected] = useState<(string | number)[]>([]);
+  const [, setPokeSelected] = useState<(string | number)[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // --- Estados: Playground Visual ---
+  // Estados Visuais
   const [pageSimple, setPageSimple] = useState(1);
   const [pageExtended, setPageExtended] = useState(1);
 
-  // 1. Inicialização: Busca a lista de TODOS os pokémons uma única vez.
+  // Inicialização
   useEffect(() => {
     const initMasterList = async () => {
       setIsInitializing(true);
@@ -82,7 +82,7 @@ export const TabPagination = () => {
           setMasterList(res.data.results);
         }
       } catch (error) {
-        console.error('Falha ao carregar Pokédex', error);
+        console.error(error);
       } finally {
         setIsInitializing(false);
       }
@@ -90,21 +90,16 @@ export const TabPagination = () => {
     initMasterList();
   }, []);
 
-  // 2. Processamento em Memória (Filtro "Like" + Paginação)
+  // Processamento Híbrido
   const { processedData, totalFiltered } = useMemo(() => {
-    // A. Filtro
     let filtered = masterList;
     if (searchTerm) {
       const lowerTerm = searchTerm.toLowerCase();
       filtered = masterList.filter((p) => p.name.includes(lowerTerm));
     }
-
-    // B. Paginação
     const start = pokePagination.pageIndex * pokePagination.pageSize;
     const end = start + pokePagination.pageSize;
     const sliced = filtered.slice(start, end);
-
-    // C. Enriquecimento (Calcula ID e Imagem)
     const enriched = sliced.map((p) => {
       const id = Number(p.url.split('/').filter(Boolean).pop());
       return {
@@ -114,29 +109,18 @@ export const TabPagination = () => {
         image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`,
       };
     });
-
     return { processedData: enriched, totalFiltered: filtered.length };
   }, [masterList, searchTerm, pokePagination.pageIndex, pokePagination.pageSize]);
 
-  // Resetar página ao buscar
   useEffect(() => {
     setPokePagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, [searchTerm]);
 
-  // Handlers
-  const handlePokeRowSelect = useCallback((ids: (string | number)[]) => {
-    setPokeSelected(ids);
-  }, []);
+  const handlePokeRowSelect = useCallback((ids: (string | number)[]) => setPokeSelected(ids), []);
+  const handlePokePaginationChange = useCallback((pagination: PaginationState) => setPokePagination(pagination), []);
+  const handleSearchChange = useCallback((term: string) => setSearchTerm(term), []);
 
-  const handlePokePaginationChange = useCallback((pagination: PaginationState) => {
-    setPokePagination(pagination);
-  }, []);
-
-  const handleSearchChange = useCallback((term: string) => {
-    setSearchTerm(term);
-  }, []);
-
-  // --- Lógica do Modal de Detalhes ---
+  // Modal Detail
   const handleViewDetails = (pokemon: PokemonListItem) => {
     showModal({
       size: 'md',
@@ -267,7 +251,6 @@ export const TabPagination = () => {
     );
   };
 
-  // --- Colunas PokeAPI ---
   const pokeColumns: DataTableColumn<PokemonListItem>[] = [
     {
       accessorKey: 'id',
@@ -324,21 +307,13 @@ export const TabPagination = () => {
         <h2 className="text-3xl font-bold text-gray-800 dark:text-white flex items-center justify-center gap-3">
           <List className="text-blue-600" /> Paginação & Dados
         </h2>
-        <p className="text-gray-500 mt-2">Demonstração completa: Componente Visual, Tabela Simples e Data Table com API Híbrida.</p>
+        <p className="text-gray-500 mt-2">Demonstração Responsiva.</p>
       </div>
 
-      {/* ================================================================================== */}
-      {/* SEÇÃO 1: DATA TABLE COM API (BUSCA EM TEMPO REAL) */}
-      {/* ================================================================================== */}
+      {/* SEÇÃO 1: DATA TABLE */}
       <section className="space-y-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Badge variant="info">Cenário Real (Híbrido)</Badge>
-          <span className="text-sm text-gray-500">
-            Carrega lista mestra uma vez, permitindo busca "Like" instantânea e paginação local eficiente.
-          </span>
-        </div>
-
-        <Card>
+        {/* Adicionado 'w-full overflow-hidden' ao Card para garantir contenção */}
+        <Card className="w-full overflow-hidden">
           <CardHeader className="flex">
             <div>
               <CardTitle>Pokédex Nacional</CardTitle>
@@ -368,15 +343,14 @@ export const TabPagination = () => {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+
+          <CardContent className="p-0">
+            {/* O próprio DataTable renderiza sua paginação interna responsiva */}
             <DataTable
               data={processedData}
               columns={pokeColumns}
               isLoading={isInitializing}
-              // Habilitamos a busca e conectamos ao nosso state
-              // searchable
               onSearchChange={handleSearchChange}
-              // Paginação Manual (pois estamos cortando o array 'filtered' manualmente no useMemo)
               manualPagination={true}
               rowCount={totalFiltered}
               onPaginationChange={handlePokePaginationChange}
@@ -386,55 +360,35 @@ export const TabPagination = () => {
             />
           </CardContent>
         </Card>
-
-        {/* Floating Actions */}
-        {pokeSelected.length > 0 && (
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
-            <div className="bg-gray-900 text-white px-4 py-2 rounded-full shadow-xl flex items-center gap-4">
-              <span className="text-sm font-bold flex items-center gap-2">
-                <CheckSquare size={16} /> {pokeSelected.length} selecionados
-              </span>
-              <div className="h-4 w-px bg-gray-700"></div>
-              <button onClick={() => setPokeSelected([])} className="hover:text-gray-300">
-                <X size={16} />
-              </button>
-            </div>
-          </div>
-        )}
       </section>
 
-      {/* ================================================================================== */}
-      {/* SEÇÃO 2: USO PADRÃO (TABELA SIMPLES) */}
-      {/* ================================================================================== */}
+      {/* SEÇÃO 2: USO PADRÃO (TABELA SIMPLES + PAGINAÇÃO NO FOOTER) */}
       <section className="space-y-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Badge variant="warning">Uso Manual</Badge>
-          <span className="text-sm text-gray-500">
-            Usando o componente <code>Pagination</code> separado de uma tabela HTML simples.
-          </span>
-        </div>
-
-        <Card>
+        <Card className="w-full overflow-hidden">
           <CardHeader>
             <CardTitle>Tabela HTML Simples</CardTitle>
-            <CardDescription>Controle de paginação manual (Client-Side).</CardDescription>
+            <CardDescription>Paginação desacoplada no CardFooter.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="border rounded-lg overflow-hidden dark:border-gray-700">
-              <table className="w-full text-sm text-left">
+
+          <CardContent className="p-0">
+            {/* Wrapper essencial para responsividade de tabelas HTML puras */}
+            <div className="w-full overflow-x-auto">
+              <table className="w-full text-sm text-left border-t border-b dark:border-gray-700 min-w-[500px]">
+                {' '}
+                {/* min-w garante que não esmague em mobile */}
                 <thead className="bg-gray-50 dark:bg-gray-900 text-gray-500 uppercase text-xs">
                   <tr>
-                    <th className="px-4 py-3 w-16">ID</th>
-                    <th className="px-4 py-3">Nome</th>
-                    <th className="px-4 py-3 w-32">Status</th>
+                    <th className="px-6 py-3 w-20">ID</th>
+                    <th className="px-6 py-3">Nome</th>
+                    <th className="px-6 py-3 w-32">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {paginatedLocalData.map((row) => (
                     <tr key={row.id}>
-                      <td className="px-4 py-2 font-mono text-xs text-gray-400">#{row.id}</td>
-                      <td className="px-4 py-2 font-medium">{row.name}</td>
-                      <td className="px-4 py-2">
+                      <td className="px-6 py-3 font-mono text-xs text-gray-400">#{row.id}</td>
+                      <td className="px-6 py-3 font-medium">{row.name}</td>
+                      <td className="px-6 py-3">
                         <Badge size="sm" variant={row.status === 'Ativo' ? 'success' : 'warning'}>
                           {row.status}
                         </Badge>
@@ -444,56 +398,54 @@ export const TabPagination = () => {
                 </tbody>
               </table>
             </div>
-
-            <div className="flex justify-center pt-2">
-              <Pagination
-                currentPage={localPage}
-                totalCount={mockData.length}
-                pageSize={localPageSize}
-                onPageChange={setLocalPage}
-                onPageSizeChange={setLocalPageSize}
-                pageSizeOptions={[5, 10, 20]}
-                variant="ghost"
-              />
-            </div>
           </CardContent>
+
+          {/* FIX: Flex-wrap garante que a paginação quebre linha se o container for pequeno */}
+          <CardFooter className="bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 py-4 flex flex-wrap justify-center sm:justify-end gap-4 w-full">
+            <Pagination
+              className="w-full sm:w-auto justify-center sm:justify-end"
+              currentPage={localPage}
+              totalCount={mockData.length}
+              pageSize={localPageSize}
+              onPageChange={setLocalPage}
+              onPageSizeChange={setLocalPageSize}
+              pageSizeOptions={[5, 10, 20]}
+              variant="outline"
+              size="sm"
+            />
+          </CardFooter>
         </Card>
       </section>
 
-      {/* ================================================================================== */}
-      {/* SEÇÃO 3: VISUAL PLAYGROUND (MODOS) */}
-      {/* ================================================================================== */}
-      <section className="space-y-4">
-        <h3 className="text-xl font-bold text-gray-800 dark:text-white">Modos de Visualização</h3>
+      {/* SEÇÃO 3: MODOS (SIMPLES / EXTENDIDO) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Modo Simples</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center py-8 gap-4">
+            <div className="text-4xl font-bold text-gray-300">{pageSimple}</div>
+            <Pagination
+              currentPage={pageSimple}
+              totalCount={50}
+              pageSize={10}
+              onPageChange={setPageSimple}
+              mode="simple"
+              variant="ghost"
+              className="justify-center"
+            />
+          </CardContent>
+        </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Modo Simples */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Modo Simple</CardTitle>
-              <CardDescription>Compacto para widgets.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center gap-4 py-8">
-              <div className="text-4xl font-bold text-gray-300">{pageSimple}</div>
-              <Pagination
-                currentPage={pageSimple}
-                totalCount={50}
-                pageSize={10}
-                onPageChange={setPageSimple}
-                mode="simple"
-                variant="ghost"
-              />
-            </CardContent>
-          </Card>
-
-          {/* Modo Estendido */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Modo Extended</CardTitle>
-              <CardDescription>Navegação completa (Primeira/Última).</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center gap-4 py-8">
-              <div className="text-4xl font-bold text-gray-300">{pageExtended}</div>
+        {/* MODO ESTENDIDO - AQUI ESTAVA O PROBLEMA */}
+        <Card className="w-full overflow-hidden">
+          <CardHeader>
+            <CardTitle>Modo Estendido</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center py-8 gap-4 px-2">
+            <div className="text-4xl font-bold text-gray-300">{pageExtended}</div>
+            {/* Adicionado w-full e flex-wrap para garantir que quebre linha se o card ficar pequeno */}
+            <div className="w-full flex justify-center">
               <Pagination
                 currentPage={pageExtended}
                 totalCount={100}
@@ -501,11 +453,12 @@ export const TabPagination = () => {
                 onPageChange={setPageExtended}
                 mode="extended"
                 variant="outline"
+                className="justify-center flex-wrap"
               />
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

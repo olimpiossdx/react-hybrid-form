@@ -12,16 +12,12 @@ export interface PaginationProps {
   totalCount: number;
   pageSize: number;
   onPageChange: (page: number) => void;
-  // Opcional: callback para mudar o tamanho da página. Se fornecido, mostra o Select.
   onPageSizeChange?: (size: number) => void;
   pageSizeOptions?: number[];
-
   mode?: PaginationMode;
   className?: string;
-
-  // Novas props visuais
-  variant?: 'outline' | 'ghost'; // Estilo base dos botões
-  size?: 'sm' | 'md'; // Tamanho dos botões
+  variant?: 'outline' | 'ghost';
+  size?: 'sm' | 'md';
 }
 
 export const Pagination: React.FC<PaginationProps> = ({
@@ -34,7 +30,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   mode = 'range',
   className = '',
   variant = 'outline',
-  size = 'sm', // Padrão sm para tabelas
+  size = 'sm',
 }) => {
   const paginationRange = usePaginationRange({
     currentPage,
@@ -42,10 +38,8 @@ export const Pagination: React.FC<PaginationProps> = ({
     pageSize,
   }) as (number | string)[];
 
-  // Se não houver páginas suficientes, não renderiza nada (exceto se for para mostrar o PageSize selector sempre)
+  // Se não houver páginas suficientes, não renderiza (opcional)
   if (currentPage === 0 || (paginationRange && paginationRange.length < 2 && mode === 'range')) {
-    // Se quisermos mostrar o seletor de tamanho mesmo com 1 página, descomente abaixo.
-    // Por padrão, muitas tabelas escondem pagination se só tem 1 página.
     return null;
   }
 
@@ -54,8 +48,8 @@ export const Pagination: React.FC<PaginationProps> = ({
   const isLast = currentPage === totalPages;
 
   return (
-    <div className={`flex items-center gap-4 ${className}`}>
-      {/* Seletor de Tamanho da Página (Opcional) */}
+    <div className={`flex flex-wrap items-center gap-4 ${className}`}>
+      {/* Seletor de Tamanho */}
       {onPageSizeChange && (
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-500 whitespace-nowrap">Linhas:</span>
@@ -65,7 +59,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
             variant="ghost"
             sized="sm"
-            containerClassName="w-20">
+            containerClassName="w-16">
             {pageSizeOptions.map((opt) => (
               <option key={opt} value={opt}>
                 {opt}
@@ -75,17 +69,16 @@ export const Pagination: React.FC<PaginationProps> = ({
         </div>
       )}
 
-      {/* Navegação */}
-      <div className="flex items-center gap-1">
-        {/* First / Prev */}
+      {/* Navegação e Números */}
+      {/* Adicionado 'flex-wrap' e 'justify-center' aqui também para permitir que os botões quebrem linha */}
+      <div className="flex flex-wrap items-center gap-1 justify-center">
+        {/* Setas Esquerda */}
         {(mode === 'extended' || mode === 'simple' || mode === 'range') && (
           <>
-            {/* First Page (Só no extended) */}
             {mode === 'extended' && (
               <Button
                 variant={variant}
                 size="icon"
-                // Ajuste fino de tamanho para alinhar com 'sm'
                 className={size === 'sm' ? 'h-8 w-8' : 'h-10 w-10'}
                 onClick={() => onPageChange(1)}
                 disabled={isFirst}
@@ -107,39 +100,44 @@ export const Pagination: React.FC<PaginationProps> = ({
         )}
 
         {/* Números das Páginas */}
-        {mode !== 'simple' &&
-          paginationRange.map((pageNumber, idx) => {
-            if (pageNumber === DOTS) {
-              return (
-                <span key={idx} className="px-2 text-gray-400 select-none">
-                  ...
-                </span>
-              );
-            }
+        {mode !== 'simple' && (
+          <>
+            {/* Em telas muito pequenas (mobile), esconde os números intermediários para economizar espaço */}
+            <div className="flex flex-wrap items-center gap-1">
+              {paginationRange.map((pageNumber, idx) => {
+                if (pageNumber === DOTS) {
+                  return (
+                    <span key={idx} className="px-1 text-gray-400 select-none text-xs">
+                      ...
+                    </span>
+                  );
+                }
 
-            const isActive = pageNumber === currentPage;
+                const isActive = pageNumber === currentPage;
 
-            return (
-              <Button
-                key={idx}
-                // Botão Ativo ganha destaque (primary ou secondary)
-                variant={isActive ? 'primary' : 'ghost'}
-                size="icon"
-                className={`${size === 'sm' ? 'h-8 w-8 text-xs' : 'h-10 w-10 text-sm'} font-medium`}
-                onClick={() => onPageChange(Number(pageNumber))}>
-                {pageNumber}
-              </Button>
-            );
-          })}
+                return (
+                  <Button
+                    key={idx}
+                    variant={isActive ? 'primary' : 'ghost'}
+                    size="icon"
+                    className={`${size === 'sm' ? 'h-10 w-10 text-xs' : 'h-10 w-10 text-sm'} font-medium`}
+                    onClick={() => onPageChange(Number(pageNumber))}>
+                    {pageNumber}
+                  </Button>
+                );
+              })}
+            </div>
+          </>
+        )}
 
-        {/* Textual Info para modo Simple */}
+        {/* Info Textual (Modo Simples ou Fallback Mobile) */}
         {mode === 'simple' && (
-          <span className="text-sm text-gray-500 px-2">
-            Página {currentPage} de {totalPages}
+          <span className="text-sm text-gray-500 px-2 whitespace-nowrap">
+            {currentPage} / {totalPages}
           </span>
         )}
 
-        {/* Next / Last */}
+        {/* Setas Direita */}
         {(mode === 'extended' || mode === 'simple' || mode === 'range') && (
           <>
             <Button

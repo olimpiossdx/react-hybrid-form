@@ -1,5 +1,6 @@
 import { type ButtonHTMLAttributes, forwardRef, type ReactNode, useImperativeHandle, useRef, useState } from 'react';
 
+import { cn } from '../../utils/cn';
 import { Spinner } from '../spinner';
 
 // --- Interfaces ---
@@ -107,7 +108,7 @@ const Button = forwardRef<ButtonElement, ButtonProps>(
       'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:pointer-events-none disabled:opacity-50 select-none';
 
     const variants = {
-      primary: 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm border border-transparent',
+      primary: 'bg-blue-500 text-white hover:bg-blue-600 shadow-sm border border-transparent',
       secondary:
         'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 border border-transparent',
       outline:
@@ -125,20 +126,17 @@ const Button = forwardRef<ButtonElement, ButtonProps>(
     };
 
     const widthClass = fullWidth ? 'w-full' : '';
+    // Combinando classes usando cn (tailwind-merge)
+    const finalClassName = cn(
+      baseStyles,
+      variants[variant],
+      sizes[size],
+      widthClass,
+      className, // Classes externas ganham prioridade
+    );
 
     return (
-      <button
-        ref={internalRef}
-        type={type}
-        className={`
-          ${baseStyles} 
-          ${variants[variant]} 
-          ${sizes[size]} 
-          ${widthClass} 
-          ${className || ''}
-        `}
-        disabled={isEffectiveLoading || disabled}
-        {...props}>
+      <button ref={internalRef} type={type} className={finalClassName} disabled={isEffectiveLoading || disabled} {...props}>
         {isEffectiveLoading ? (
           <>
             {/* Mantém a largura ou substitui conteúdo? 
