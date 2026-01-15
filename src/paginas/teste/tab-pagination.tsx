@@ -409,7 +409,7 @@ export const TabPagination = () => {
               pageSize={localPageSize}
               onPageChange={setLocalPage}
               onPageSizeChange={setLocalPageSize}
-              pageSizeOptions={[5, 10, 20]}
+              pageSizeOptions={[5, 10, 20, 30, 50, 100]}
               variant="outline"
               size="sm"
             />

@@ -26,7 +26,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   pageSize,
   onPageChange,
   onPageSizeChange,
-  pageSizeOptions = [10, 20, 50, 100],
+  pageSizeOptions = [5, 10, 20, 30, 50, 100],
   mode = 'range',
   className = '',
   variant = 'outline',
