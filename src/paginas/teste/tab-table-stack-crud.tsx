@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Activity, CheckCircle2, MoreVertical, Save, Shield, User as UserIcon } from 'lucide-react';
 
 import Badge from '../../componentes/badge';
@@ -34,8 +34,8 @@ const ROLES_OPTIONS = [
   { label: 'Viewer', value: 'Viewer' },
 ];
 
-export const TabTableStackCrud = () => {
-  const [data, setData] = useState<User[]>(INITIAL_DATA);
+export const TabTableStackCrud: React.FC = () => {
+  const [data, setData] = React.useState<User[]>(INITIAL_DATA);
 
   // --- AÇÕES DO CRUD ---
 
@@ -66,7 +66,7 @@ export const TabTableStackCrud = () => {
 
   // Componente interno do Modal para gerenciar o estado do formulário isoladamente
   const EditUserModal = ({ initialData, onSave, onClose }: { initialData: User; onSave: (u: User) => void; onClose: () => void }) => {
-    const [formState, setFormState] = useState(initialData);
+    const [formState, setFormState] = React.useState(initialData);
 
     return (
       <>

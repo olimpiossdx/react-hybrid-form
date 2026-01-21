@@ -374,7 +374,6 @@ export const TabPagination = () => {
             {/* Wrapper essencial para responsividade de tabelas HTML puras */}
             <div className="w-full overflow-x-auto">
               <table className="w-full text-sm text-left border-t border-b dark:border-gray-700 min-w-125">
-                {' '}
                 {/* min-w garante que não esmague em mobile */}
                 <thead className="bg-gray-50 dark:bg-gray-900 text-gray-500 uppercase text-xs">
                   <tr>
