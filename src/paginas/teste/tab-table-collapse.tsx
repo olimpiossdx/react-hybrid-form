@@ -1,9 +1,11 @@
 import React from 'react';
-import { Calendar, ChevronDown, ChevronRight, FileText } from 'lucide-react';
+import { Calendar, FileText, LayoutList } from 'lucide-react';
 
-import { DataTable } from '../../componentes/data-table';
-import { showModal } from '../../componentes/modal';
-import useList from '../../hooks/list';
+import Badge from '../../componentes/badge';
+import Button from '../../componentes/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../componentes/card';
+import { DataTable, type DataTableColumn } from '../../componentes/data-table';
+import showModal from '../../componentes/modal/hook';
 
 // --- MOCK DATA ---
 const DATA = [
@@ -13,7 +15,11 @@ const DATA = [
     date: '2023-10-01',
     amount: 5000,
     status: 'Pago',
-    details: 'Consultoria de Software - Q3',
+    details: 'Consultoria de Software - Q3. Entregáveis: Relatório de Arquitetura e Protótipo de Alta Fidelidade.',
+    items: [
+      { desc: 'Consultoria Técnica', qtd: 40, unit: 100 },
+      { desc: 'Licença Software', qtd: 1, unit: 1000 },
+    ],
   },
   {
     id: 'INV-002',
@@ -21,7 +27,8 @@ const DATA = [
     date: '2023-10-05',
     amount: 12000,
     status: 'Pendente',
-    details: 'Licença Anual Enterprise',
+    details: 'Licença Anual Enterprise + Suporte Premium 24/7.',
+    items: [{ desc: 'Plano Enterprise', qtd: 1, unit: 12000 }],
   },
   {
     id: 'INV-003',
@@ -29,7 +36,8 @@ const DATA = [
     date: '2023-10-10',
     amount: 350,
     status: 'Pago',
-    details: 'Catering Evento de Lançamento',
+    details: 'Catering Evento de Lançamento. Coffee Break para 50 pessoas.',
+    items: [{ desc: 'Kit Café', qtd: 50, unit: 7 }],
   },
   {
     id: 'INV-004',
@@ -37,181 +45,147 @@ const DATA = [
     date: '2023-10-12',
     amount: 2500,
     status: 'Atrasado',
-    details: 'Design System MVP',
-  },
-  {
-    id: 'INV-005',
-    client: 'Mega Corp',
-    date: '2023-10-15',
-    amount: 50000,
-    status: 'Pago',
-    details: 'Servidores Dedicados',
+    details: 'Design System MVP. Criação de tokens e componentes base.',
+    items: [{ desc: 'Design UI', qtd: 20, unit: 125 }],
   },
 ];
 
-const TabTableCollapse = () => {
-  const { items } = useList(DATA);
-  const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set());
-
-  const toggleRow = (id: string) => {
-    setExpandedRows((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
-  const handleDetails = (item: any) => {
+export const TabTableCollapse: React.FC = () => {
+  const handleDetails = (data: any) => {
     showModal({
-      title: `Fatura ${item.id}`,
-      size: 'sm',
-      content: <div className="p-4 text-gray-600 dark:text-gray-300">{item.details}</div>,
+      title: `Detalhes da Fatura ${data.id}`,
+      size: 'md',
+      content: (
+        <div className="space-y-4 py-2">
+          <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-sm text-gray-600 dark:text-gray-300">
+            <p>
+              <strong>Cliente:</strong> {data.client}
+            </p>
+            <p>
+              <strong>Data:</strong> {data.date}
+            </p>
+            <p className="mt-2">{data.details}</p>
+          </div>
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={() => alert('Download PDF iniciado...')}>
+              <FileText size={16} className="mr-2" /> Download PDF
+            </Button>
+          </div>
+        </div>
+      ),
+      footer: ({ onClose }: any) => (
+        <Button onClick={onClose} fullWidth>
+          Fechar
+        </Button>
+      ),
     });
   };
+
+  const columns: DataTableColumn<(typeof DATA)[0]>[] = [
+    { accessorKey: 'id', header: 'Fatura', width: '100px', cell: (row) => <span className="font-mono text-xs">{row.id}</span> },
+    { accessorKey: 'client', header: 'Cliente', sortable: true, cell: (row) => <span className="font-medium">{row.client}</span> },
+    {
+      accessorKey: 'date',
+      header: 'Data',
+      cell: (row) => (
+        <div className="flex items-center gap-2 text-gray-500 text-sm">
+          <Calendar size={14} /> {row.date}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'amount',
+      header: 'Valor',
+      align: 'right',
+      cell: (row) => (
+        <span className="font-mono font-medium">{row.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+      ),
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      align: 'center',
+      width: '100px',
+      cell: (row) => {
+        const variants = { Pago: 'success', Pendente: 'warning', Atrasado: 'error' };
+        return (
+          <Badge variant={variants[row.status as keyof typeof variants] as any} size="sm">
+            {row.status}
+          </Badge>
+        );
+      },
+    },
+  ];
 
   return (
-    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 h-[600px] flex flex-col transition-colors">
-      <div className="mb-6 border-b border-gray-100 dark:border-gray-700 pb-4 shrink-0">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-          <FileText className="text-purple-600 dark:text-purple-400" />
-          Faturas (Modo Collapse)
+    <div className="max-w-6xl mx-auto space-y-10 p-6 pb-20">
+      <div className="text-center border-b pb-6 dark:border-gray-700">
+        <h2 className="text-3xl font-bold text-gray-800 dark:text-white flex items-center justify-center gap-3">
+          <LayoutList className="text-blue-600" /> Tabela Expansível
         </h2>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Redimensione a tela. As colunas "Data" e "Status" somem no mobile e aparecem ao expandir.
+        <p className="text-gray-500 mt-2">
+          Demonstração de linhas expansíveis usando a nova prop <code>renderSubComponent</code>.
         </p>
       </div>
 
-      {/* ESTRUTURA HIERÁRQUICA CORRETA */}
-      <DataTable.Root className="flex-1 overflow-hidden">
-        <DataTable.Container>
-          <DataTable.Table>
-            <DataTable.ColGroup>
-              <DataTable.Col style={{ width: '40px' }} />
-              <DataTable.Col style={{ width: '100px' }} />
-              <DataTable.Col />
-              <DataTable.Col className="hidden md:table-column" style={{ width: '120px' }} />
-              <DataTable.Col className="hidden md:table-column" style={{ width: '100px' }} />
-              <DataTable.Col style={{ width: '120px' }} />
-            </DataTable.ColGroup>
+      <Card>
+        <CardHeader>
+          <CardTitle>Faturas Recentes</CardTitle>
+          <CardDescription>Clique na seta para ver os itens da fatura.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            data={DATA}
+            columns={columns}
+            searchable
+            // PROP MÁGICA: Renderiza o conteúdo expandido
+            renderSubComponent={(row) => (
+              <div className="flex flex-col md:flex-row gap-6 p-2">
+                {/* Detalhes do Lado Esquerdo */}
+                <div className="flex-1 space-y-3">
+                  <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 border-b pb-1 mb-2">Descrição do Serviço</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{row.details}</p>
+                  <Button variant="link" size="sm" className="p-0 h-auto text-blue-600" onClick={() => handleDetails(row)}>
+                    Ver fatura original complet &rarr;
+                  </Button>
+                </div>
 
-            <DataTable.Header>
-              <DataTable.HeadCell></DataTable.HeadCell>
-              <DataTable.HeadCell>ID</DataTable.HeadCell>
-              <DataTable.HeadCell>Cliente</DataTable.HeadCell>
-              <DataTable.HeadCell className="hidden md:table-cell">Data</DataTable.HeadCell>
-              <DataTable.HeadCell className="hidden md:table-cell">Status</DataTable.HeadCell>
-              <DataTable.HeadCell align="right">Valor</DataTable.HeadCell>
-            </DataTable.Header>
-
-            <DataTable.Body>
-              {items.map((item) => {
-                const isExpanded = expandedRows.has(item.id);
-                const statusColors: any = {
-                  Pago: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800',
-                  Pendente:
-                    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
-                  Atrasado: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
-                };
-
-                return (
-                  <React.Fragment key={item.id}>
-                    <DataTable.Row
-                      className={`transition-all ${isExpanded ? 'bg-gray-50 dark:bg-gray-900/40' : ''}`}
-                      onClick={() => toggleRow(item.id)}>
-                      <DataTable.Cell>
-                        <button className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition-colors">
-                          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                        </button>
-                      </DataTable.Cell>
-
-                      <DataTable.Cell>
-                        <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{item.data.id}</span>
-                      </DataTable.Cell>
-
-                      <DataTable.Cell>
-                        <span className="font-bold text-gray-900 dark:text-white">{item.data.client}</span>
-                      </DataTable.Cell>
-
-                      <DataTable.Cell className="hidden md:table-cell">{item.data.date}</DataTable.Cell>
-
-                      <DataTable.Cell className="hidden md:table-cell">
-                        <span className={`text-[10px] px-2 py-0.5 rounded border ${statusColors[item.data.status]}`}>
-                          {item.data.status}
-                        </span>
-                      </DataTable.Cell>
-
-                      <DataTable.Cell align="right">
-                        <span className="font-mono font-medium text-gray-900 dark:text-white">
-                          R${' '}
-                          {item.data.amount.toLocaleString('pt-BR', {
-                            minimumFractionDigits: 2,
-                          })}
-                        </span>
-                      </DataTable.Cell>
-                    </DataTable.Row>
-
-                    {isExpanded && (
-                      <DataTable.Row className="bg-gray-50 dark:bg-gray-900/20 hover:bg-gray-50 dark:hover:bg-gray-900/20">
-                        <DataTable.Cell colSpan={6} className="p-0">
-                          <div className="p-4 pl-12 text-sm animate-in slide-in-from-top-2 fade-in">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {/* Info Mobile */}
-                              <div className="md:hidden space-y-3 p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
-                                <div>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Data de Emissão</p>
-                                  <p className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                                    <Calendar size={14} className="text-cyan-500" /> {item.data.date}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Status Atual</p>
-                                  <span className={`text-xs px-2 py-1 rounded inline-block border ${statusColors[item.data.status]}`}>
-                                    {item.data.status}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Detalhes */}
-                              <div className="md:col-span-2">
-                                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Descrição do Serviço</p>
-                                <div className="text-gray-700 dark:text-gray-300 leading-relaxed border-l-2 border-gray-300 dark:border-gray-600 pl-3 py-1">
-                                  {item.data.details}
-                                </div>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDetails(item.data);
-                                  }}
-                                  className="mt-3 text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 font-bold">
-                                  <FileText size={12} /> Ver Fatura Original
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </DataTable.Cell>
-                      </DataTable.Row>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </DataTable.Body>
-
-            <DataTable.Footer>
-              <DataTable.Row>
-                <DataTable.Cell colSpan={3}>Total</DataTable.Cell>
-                <DataTable.Cell className="hidden md:table-cell" colSpan={2}></DataTable.Cell>
-                <DataTable.Cell align="right">
-                  R$ {items.reduce((acc, curr) => acc + curr.data.amount, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </DataTable.Cell>
-              </DataTable.Row>
-            </DataTable.Footer>
-          </DataTable.Table>
-        </DataTable.Container>
-      </DataTable.Root>
+                {/* Tabela de Itens (Nested) Lado Direito */}
+                <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-gray-50 dark:bg-gray-900 text-gray-500">
+                      <tr>
+                        <th className="px-3 py-2">Item</th>
+                        <th className="px-3 py-2 text-right">Qtd</th>
+                        <th className="px-3 py-2 text-right">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                      {row.items.map((item, idx) => (
+                        <tr key={idx}>
+                          <td className="px-3 py-2">{item.desc}</td>
+                          <td className="px-3 py-2 text-right">{item.qtd}</td>
+                          <td className="px-3 py-2 text-right">
+                            {(item.qtd * item.unit).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </td>
+                        </tr>
+                      ))}
+                      <tr className="bg-gray-50/50 font-bold">
+                        <td className="px-3 py-2" colSpan={2}>
+                          Total
+                        </td>
+                        <td className="px-3 py-2 text-right">
+                          {row.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };

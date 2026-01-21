@@ -1,13 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, ChevronsUpDown, ChevronUp, Search } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronsUpDown, ChevronUp, Search } from 'lucide-react';
 
+import Button from '../button';
 import { Input } from '../input';
-import Pagination from '../pagination';
-import { Select } from '../select';
+import { Pagination } from '../pagination';
 import { Spinner } from '../spinner';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from '../table';
+import { Table as SimpleTable, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableHeader, TableRow } from '../table';
 
-// --- Interfaces ---
+// ============================================================================
+// PARTE 1: IMPLEMENTAÇÃO "SMART" (Para novos exemplos simples)
+// ============================================================================
 
 export interface DataTableColumn<T = any> {
   accessorKey: keyof T | string;
@@ -19,7 +21,7 @@ export interface DataTableColumn<T = any> {
 }
 
 export interface PaginationState {
-  pageIndex: number; // 0-based
+  pageIndex: number;
   pageSize: number;
 }
 
@@ -32,28 +34,20 @@ export interface DataTableProps<T> {
   data: T[];
   columns: DataTableColumn<T>[];
   isLoading?: boolean;
-
-  // Configuração
   density?: 'sm' | 'md' | 'lg';
   selectable?: boolean;
   searchable?: boolean;
-
-  // Callbacks
   onRowSelect?: (selectedIds: (string | number)[]) => void;
-
-  // --- Server-Side / Controle Externo ---
   manualPagination?: boolean;
   rowCount?: number;
   onPaginationChange?: (pagination: PaginationState) => void;
-
   manualSorting?: boolean;
   onSortingChange?: (sorting: SortingState) => void;
-
-  // NOVO: Callback de busca para Server-Side Search
   onSearchChange?: (term: string) => void;
+  renderSubComponent?: (row: T) => React.ReactNode;
 }
 
-export function DataTable<T extends { id: string | number } & Record<string, any>>({
+function DataTableSmart<T extends { id: string | number } & Record<string, any>>({
   data,
   columns,
   isLoading = false,
@@ -66,25 +60,25 @@ export function DataTable<T extends { id: string | number } & Record<string, any
   onPaginationChange,
   manualSorting = false,
   onSortingChange,
-  onSearchChange, // Recebendo o callback
+  onSearchChange,
+  renderSubComponent,
 }: DataTableProps<T>) {
-  // Estados Internos
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   const [sorting, setSorting] = useState<SortingState>({ column: null, direction: 'asc' });
   const [selectedRows, setSelectedRows] = useState<Set<string | number>>(new Set());
+  const [expandedRows, setExpandedRows] = useState<Set<string | number>>(new Set());
   const [globalFilter, setGlobalFilter] = useState('');
 
-  // Debounce para a busca (evita chamadas excessivas na API)
+  // Debounce Busca
   useEffect(() => {
     if (onSearchChange) {
       const timeoutId = setTimeout(() => {
         onSearchChange(globalFilter);
-      }, 500); // 500ms delay
+      }, 500);
       return () => clearTimeout(timeoutId);
     }
   }, [globalFilter, onSearchChange]);
 
-  // Handlers
   const handlePaginationChange = (newPagination: PaginationState) => {
     setPagination(newPagination);
     if (onPaginationChange) {
@@ -102,29 +96,31 @@ export function DataTable<T extends { id: string | number } & Record<string, any
     }
   };
 
-  // --- Processamento de Dados ---
+  const toggleRowExpansion = (id: string | number) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedRows(newExpanded);
+  };
 
-  // 1. Filtragem (Client-Side fallback)
   const filteredData = useMemo(() => {
-    // Se tiver callback de busca externo (Server-Side), ignoramos o filtro local
     if (onSearchChange || !globalFilter) {
       return data;
     }
-
     const lowerFilter = globalFilter.toLowerCase();
     return data.filter((row) => Object.values(row).some((val) => String(val).toLowerCase().includes(lowerFilter)));
   }, [data, globalFilter, onSearchChange]);
 
-  // 2. Ordenação
   const sortedData = useMemo(() => {
     if (manualSorting || !sorting.column) {
       return filteredData;
     }
-
     return [...filteredData].sort((a, b) => {
       const valA = a[sorting.column as keyof T];
       const valB = b[sorting.column as keyof T];
-
       if (valA < valB) {
         return sorting.direction === 'asc' ? -1 : 1;
       }
@@ -135,25 +131,28 @@ export function DataTable<T extends { id: string | number } & Record<string, any
     });
   }, [filteredData, sorting, manualSorting]);
 
-  // 3. Paginação
   const paginatedData = useMemo(() => {
     if (manualPagination) {
       return sortedData;
     }
-
     const start = pagination.pageIndex * pagination.pageSize;
     return sortedData.slice(start, start + pagination.pageSize);
   }, [sortedData, pagination, manualPagination]);
 
   const totalCount = manualPagination ? rowCount : filteredData.length;
 
-  // Seleção
   const handleSelectAll = (checked: boolean) => {
+    let newSelected: Set<string | number>;
     if (checked) {
       const allIds = paginatedData.map((row) => row.id);
-      setSelectedRows(new Set(allIds));
+      newSelected = new Set([...Array.from(selectedRows), ...allIds]);
     } else {
-      setSelectedRows(new Set());
+      newSelected = new Set(selectedRows);
+      paginatedData.forEach((row) => newSelected.delete(row.id));
+    }
+    setSelectedRows(newSelected);
+    if (onRowSelect) {
+      onRowSelect(Array.from(newSelected));
     }
   };
 
@@ -165,13 +164,18 @@ export function DataTable<T extends { id: string | number } & Record<string, any
       newSelected.delete(id);
     }
     setSelectedRows(newSelected);
+    if (onRowSelect) {
+      onRowSelect(Array.from(newSelected));
+    }
   };
 
   useEffect(() => {
-    if (onRowSelect) {
-      onRowSelect(Array.from(selectedRows));
+    if (!manualPagination) {
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     }
-  }, [selectedRows, onRowSelect]);
+  }, [globalFilter, manualPagination]);
+
+  const isAllPageSelected = paginatedData.length > 0 && paginatedData.every((row) => selectedRows.has(row.id));
 
   return (
     <div className="space-y-4 w-full">
@@ -192,9 +196,11 @@ export function DataTable<T extends { id: string | number } & Record<string, any
       )}
 
       <TableContainer>
-        <Table density={density}>
+        <SimpleTable density={density}>
           <TableHeader>
             <TableRow>
+              {renderSubComponent && <TableHead className="w-[40px]"></TableHead>}
+
               {selectable && (
                 <TableHead className="w-[50px]">
                   <Input
@@ -202,7 +208,7 @@ export function DataTable<T extends { id: string | number } & Record<string, any
                     type="checkbox"
                     variant="ghost"
                     containerClassName="justify-center"
-                    checked={paginatedData.length > 0 && selectedRows.size === paginatedData.length}
+                    checked={isAllPageSelected}
                     onChange={(e) => handleSelectAll(e.target.checked)}
                   />
                 </TableHead>
@@ -239,7 +245,7 @@ export function DataTable<T extends { id: string | number } & Record<string, any
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={columns.length + (selectable ? 1 : 0)} className="h-24 text-center">
+                <TableCell colSpan={columns.length + (selectable ? 1 : 0) + (renderSubComponent ? 1 : 0)} className="h-24 text-center">
                   <div className="flex justify-center items-center gap-2 text-gray-500">
                     <Spinner size="md" /> Carregando dados...
                   </div>
@@ -249,7 +255,9 @@ export function DataTable<T extends { id: string | number } & Record<string, any
 
             {!isLoading && paginatedData.length === 0 && (
               <TableRow>
-                <TableCell colSpan={columns.length + (selectable ? 1 : 0)} className="h-24 text-center text-gray-500">
+                <TableCell
+                  colSpan={columns.length + (selectable ? 1 : 0) + (renderSubComponent ? 1 : 0)}
+                  className="h-24 text-center text-gray-500">
                   Nenhum resultado encontrado.
                 </TableCell>
               </TableRow>
@@ -257,34 +265,55 @@ export function DataTable<T extends { id: string | number } & Record<string, any
 
             {!isLoading &&
               paginatedData.map((row) => (
-                <TableRow key={row.id} data-state={selectedRows.has(row.id) ? 'selected' : undefined}>
-                  {selectable && (
-                    <TableCell className="text-center p-0">
-                      <Input
-                        name={`select_row_${row.id}`}
-                        type="checkbox"
-                        variant="ghost"
-                        containerClassName="justify-center"
-                        checked={selectedRows.has(row.id)}
-                        onChange={(e) => handleSelectRow(row.id, e.target.checked)}
-                      />
-                    </TableCell>
-                  )}
+                <React.Fragment key={row.id}>
+                  <TableRow data-state={selectedRows.has(row.id) ? 'selected' : expandedRows.has(row.id) ? 'expanded' : undefined}>
+                    {renderSubComponent && (
+                      <TableCell className="p-0 text-center w-[40px]">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleRowExpansion(row.id)}>
+                          <ChevronRight
+                            size={16}
+                            className={`transition-transform duration-200 ${expandedRows.has(row.id) ? 'rotate-90' : ''}`}
+                          />
+                        </Button>
+                      </TableCell>
+                    )}
 
-                  {columns.map((col) => (
-                    <TableCell
-                      key={`${row.id}-${String(col.accessorKey)}`}
-                      className={col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''}>
-                      {col.cell ? col.cell(row) : row[col.accessorKey]}
-                    </TableCell>
-                  ))}
-                </TableRow>
+                    {selectable && (
+                      <TableCell className="text-center p-0">
+                        <Input
+                          name={`select_row_${row.id}`}
+                          type="checkbox"
+                          variant="ghost"
+                          containerClassName="justify-center"
+                          checked={selectedRows.has(row.id)}
+                          onChange={(e) => handleSelectRow(row.id, e.target.checked)}
+                        />
+                      </TableCell>
+                    )}
+
+                    {columns.map((col) => (
+                      <TableCell
+                        key={`${row.id}-${String(col.accessorKey)}`}
+                        className={col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''}>
+                        {col.cell ? col.cell(row) : row[col.accessorKey]}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+
+                  {renderSubComponent && expandedRows.has(row.id) && (
+                    <TableRow className="bg-gray-50/50 dark:bg-gray-900/30 hover:bg-gray-50/50">
+                      <TableCell colSpan={columns.length + (selectable ? 1 : 0) + 1} className="p-0">
+                        <div className="p-4 animate-in slide-in-from-top-2 duration-200">{renderSubComponent(row)}</div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
               ))}
           </TableBody>
-        </Table>
+        </SimpleTable>
       </TableContainer>
 
-      <div className="flex items-center justify-between px-2">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
         <div className="flex items-center gap-2 text-sm text-gray-500">
           {selectable && selectedRows.size > 0 && (
             <span className="mr-4 text-blue-600 font-medium">{selectedRows.size} selecionado(s)</span>
@@ -292,33 +321,121 @@ export function DataTable<T extends { id: string | number } & Record<string, any
           <span>Total: {totalCount} registros</span>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">Linhas:</span>
-            <Select
-              name="rows_per_page"
-              value={pagination.pageSize}
-              onChange={(e) => handlePaginationChange({ ...pagination, pageSize: Number(e.target.value), pageIndex: 0 })}
-              sized="sm"
-              variant="ghost"
-              containerClassName="w-20">
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={30}>30</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </Select>
-          </div>
-
-          <Pagination
-            currentPage={pagination.pageIndex + 1}
-            totalCount={totalCount}
-            pageSize={pagination.pageSize}
-            onPageChange={(page) => handlePaginationChange({ ...pagination, pageIndex: page - 1 })}
-          />
-        </div>
+        <Pagination
+          currentPage={pagination.pageIndex + 1}
+          totalCount={totalCount}
+          pageSize={pagination.pageSize}
+          onPageChange={(page) => handlePaginationChange({ ...pagination, pageIndex: page - 1 })}
+          onPageSizeChange={(size) => handlePaginationChange({ ...pagination, pageSize: size, pageIndex: 0 })}
+          pageSizeOptions={[5, 10, 20, 50]}
+          size="sm"
+          variant="ghost"
+          className="w-full sm:w-auto justify-center sm:justify-end"
+        />
       </div>
     </div>
   );
 }
+
+// ============================================================================
+// PARTE 2: IMPLEMENTAÇÃO "COMPOUND" (Restaurada para TabDataTable legado)
+// ============================================================================
+
+const DataTableContext = React.createContext<{ instance?: any }>({});
+
+const Root = ({ children, instance, className }: { children: React.ReactNode; instance?: any; className?: string }) => (
+  <DataTableContext.Provider value={{ instance }}>
+    <div className={`w-full flex flex-col ${className || ''}`}>{children}</div>
+  </DataTableContext.Provider>
+);
+
+const Container = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <TableContainer className={`border-0 shadow-none rounded-none ${className || ''}`}>{children}</TableContainer>
+);
+
+const TableComponent = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <SimpleTable className={className}>{children}</SimpleTable>
+);
+
+// CORREÇÃO CRÍTICA: O Header agora apenas repassa os filhos.
+// A responsabilidade de criar a <TableRow> é do consumidor (TabDataTable),
+// para garantir que ele possa customizar a linha do cabeçalho.
+const Header = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <TableHeader className={className}>{children}</TableHeader>
+);
+
+const HeadCell = ({ children, className, onClick, style }: any) => (
+  <TableHead className={className} onClick={onClick} style={style}>
+    {children}
+  </TableHead>
+);
+
+const Body = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <TableBody className={className}>{children}</TableBody>
+);
+
+const Row = ({ children, className, onClick, style }: any) => (
+  <TableRow className={className} onClick={onClick} style={style}>
+    {children}
+  </TableRow>
+);
+
+const Cell = ({ children, className, colSpan, align, style }: any) => (
+  <TableCell className={className} colSpan={colSpan} style={{ textAlign: align, ...style }}>
+    {children}
+  </TableCell>
+);
+
+const Footer = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <TableFooter className={className}>{children}</TableFooter>
+);
+
+const PaginationComponent = ({
+  instance,
+  mode = 'range',
+  className,
+}: {
+  instance?: any;
+  mode?: 'range' | 'simple' | 'extended';
+  className?: string;
+}) => {
+  const context = React.useContext(DataTableContext);
+  const table = instance || context.instance;
+  if (!table || !table.pagination) {
+    return null;
+  }
+  const { page, pageSize, total, setPage, setPageSize } = table.pagination;
+  return (
+    <div
+      className={`flex items-center justify-between px-4 py-3 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 ${className || ''}`}>
+      <div className="hidden sm:block text-sm text-gray-500">Total: {total} registros</div>
+      <Pagination
+        currentPage={page}
+        totalCount={total}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        size="sm"
+        variant="outline"
+        mode={mode}
+      />
+    </div>
+  );
+};
+
+// ============================================================================
+// EXPORTAÇÃO HÍBRIDA
+// ============================================================================
+
+export const DataTable = Object.assign(DataTableSmart, {
+  Root,
+  Container,
+  Table: TableComponent,
+  Header,
+  HeadCell,
+  Body,
+  Row,
+  Cell,
+  Footer,
+  Pagination: PaginationComponent,
+});
