@@ -1,7 +1,11 @@
 import * as React from 'react';
 
+import { cn } from '../../utils/cn';
+
 // --- Contexto de Densidade ---
 type TableDensity = 'sm' | 'md' | 'lg';
+
+export type TableResponsiveMode = 'none' | 'scroll' | 'shorten' | 'stack' | 'cards' | 'compare' | 'accordion';
 
 interface TableContextValue {
   density: TableDensity;
@@ -11,31 +15,41 @@ const TableContext = React.createContext<TableContextValue>({
   density: 'md',
 });
 
-// --- Componentes ---
+// -----------------------------------------------------------------------------
+// TableContainer
+// -----------------------------------------------------------------------------
 
 interface TableContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
 
-const TableContainer = React.forwardRef<HTMLDivElement, TableContainerProps>(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={`w-full overflow-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm ${
-      className || ''
-    }`}
-    {...props}
-  />
-));
+const TableContainer = React.forwardRef<HTMLDivElement, TableContainerProps>(({ className, ...props }, ref) => {
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        'w-full overflow-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm',
+        className,
+      )}
+      {...props}
+    />
+  );
+});
 TableContainer.displayName = 'TableContainer';
+
+// -----------------------------------------------------------------------------
+// Table
+// -----------------------------------------------------------------------------
 
 interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> {
   density?: TableDensity;
+  responsiveMode?: TableResponsiveMode;
 }
 
-const Table = React.forwardRef<HTMLTableElement, TableProps>(({ className, density = 'md', ...props }, ref) => {
+const Table = React.forwardRef<HTMLTableElement, TableProps>(({ className, density = 'md', responsiveMode = 'none', ...props }, ref) => {
   return (
     <TableContext.Provider value={{ density }}>
-      <table ref={ref} className={`w-full caption-bottom text-sm text-left ${className || ''}`} {...props} />
+      <table ref={ref} data-responsive={responsiveMode} className={cn('w-full caption-bottom text-sm text-left', className)} {...props} />
     </TableContext.Provider>
   );
 });

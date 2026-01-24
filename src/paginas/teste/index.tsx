@@ -32,6 +32,8 @@ import TabSpinner from './tab-spinner';
 import TabSwitchExample from './tab-switch';
 import { TabTable } from './tab-table';
 import TabTableCollapse from './tab-table-collapse';
+import TabTableComplexo from './tab-table-complexo';
+import TabTableResponsiveAll from './tab-table-responsive-all';
 import TabTableStackCRUD from './tab-table-stack-crud';
 import TabTextArea from './tab-textarea';
 import ToastContainerExample from './tab-toast-container';
@@ -92,6 +94,8 @@ const Homologacao: React.FC = () => {
     tabCard: <TabCard />,
     tabBadge: <TabBadge />,
     tabTable: <TabTable />,
+    tabTableComplexo: <TabTableComplexo />,
+    tabTableResponsiveAll: <TabTableResponsiveAll />,
   };
 
   return (
@@ -174,6 +178,13 @@ const Homologacao: React.FC = () => {
           <TabButton tabId="tabCard" label="Card" isActive={activeTab === 'tabCard'} onClick={setActiveTab} />
           <TabButton tabId="tabBadge" label="Badge" isActive={activeTab === 'tabBadge'} onClick={setActiveTab} />
           <TabButton tabId="tabTable" label="Table" isActive={activeTab === 'tabTable'} onClick={setActiveTab} />
+          <TabButton tabId="tabTableComplexo" label="Table Complexo" isActive={activeTab === 'tabTableComplexo'} onClick={setActiveTab} />
+          <TabButton
+            tabId="tabTableResponsiveAll"
+            label="Table Responsivo"
+            isActive={activeTab === 'tabTableResponsiveAll'}
+            onClick={setActiveTab}
+          />
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 

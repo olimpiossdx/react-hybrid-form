@@ -117,3 +117,46 @@
     animation: shake 0.2s ease-in-out 0s 2;
   }
 }
+
+@layer components {
+  @media (max-width: 768px) {
+    /* STACK / CARDS / ACCORDION - estilo CodePen / No More Tables */
+    table[data-responsive="stack"] thead,
+    table[data-responsive="cards"] thead,
+    table[data-responsive="accordion"] thead {
+      @apply hidden;
+    }
+
+    table[data-responsive="stack"] tbody tr,
+    table[data-responsive="cards"] tbody tr,
+    table[data-responsive="accordion"] tbody tr {
+      display: block;
+      @apply mb-4 overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg;
+    }
+
+    table[data-responsive="cards"] tbody tr {
+      @apply bg-white dark:bg-gray-900 shadow-sm;
+    }
+
+    table[data-responsive="stack"] tbody td,
+    table[data-responsive="cards"] tbody td,
+    table[data-responsive="accordion"] tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      @apply px-3 py-2 text-sm;
+    }
+
+    table[data-responsive="stack"] tbody td::before,
+    table[data-responsive="cards"] tbody td::before,
+    table[data-responsive="accordion"] tbody td::before {
+      content: attr(data-label);
+      @apply font-medium text-gray-500 mr-4;
+    }
+  }
+
+  /* SCROLL – reforça tabela larga */
+  table[data-responsive="scroll"] {
+    @apply min-w-[700px];
+  }
+}

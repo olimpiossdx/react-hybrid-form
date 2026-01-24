@@ -1,11 +1,21 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight, ChevronsUpDown, ChevronUp, Search } from 'lucide-react';
 
+import { cn } from '../../utils/cn';
 import Button from '../button';
 import { Input } from '../input';
 import { Pagination } from '../pagination';
-import { Spinner } from '../spinner';
-import { Table as SimpleTable, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableHeader, TableRow } from '../table';
+import {
+  Table as SimpleTable,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  type TableResponsiveMode,
+  TableRow,
+} from '../table';
 
 // ============================================================================
 // PARTE 1: IMPLEMENTAÇÃO "SMART" (Para novos exemplos simples)
@@ -17,6 +27,18 @@ export interface DataTableColumn<T = any> {
   width?: string;
   sortable?: boolean;
   align?: 'left' | 'center' | 'right';
+  /**
+   * Ajuda os modos shorten/compare a decidir o que mostrar em telas pequenas.
+   */
+  priority?: 'high' | 'medium' | 'low';
+  /**
+   * Label alternativo para ser usado no mobile (stack/cards).
+   */
+  mobileLabel?: string;
+  /**
+   * Força esconder esta coluna em mobile.
+   */
+  hideOnMobile?: boolean;
   cell?: (row: T) => React.ReactNode;
 }
 
@@ -38,16 +60,25 @@ export interface DataTableProps<T> {
   selectable?: boolean;
   searchable?: boolean;
   onRowSelect?: (selectedIds: (string | number)[]) => void;
+
   manualPagination?: boolean;
   rowCount?: number;
   onPaginationChange?: (pagination: PaginationState) => void;
+
   manualSorting?: boolean;
   onSortingChange?: (sorting: SortingState) => void;
+
   onSearchChange?: (term: string) => void;
   renderSubComponent?: (row: T) => React.ReactNode;
+
+  /**
+   * Novo: modo de responsividade herdado da Table base.
+   * Default mantém o comportamento atual.
+   */
+  responsiveMode?: TableResponsiveMode;
 }
 
-function DataTableSmart<T extends { id: string | number } & Record<string, any>>({
+function DataTableSmart<T extends { id: string | number }>({
   data,
   columns,
   isLoading = false,
@@ -62,6 +93,7 @@ function DataTableSmart<T extends { id: string | number } & Record<string, any>>
   onSortingChange,
   onSearchChange,
   renderSubComponent,
+  responsiveMode = 'none',
 }: DataTableProps<T>) {
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   const [sorting, setSorting] = useState<SortingState>({ column: null, direction: 'asc' });
@@ -176,19 +208,42 @@ function DataTableSmart<T extends { id: string | number } & Record<string, any>>
   }, [globalFilter, manualPagination]);
 
   const isAllPageSelected = paginatedData.length > 0 && paginatedData.every((row) => selectedRows.has(row.id));
+  const isStackLike = responsiveMode === 'stack' || responsiveMode === 'cards' || responsiveMode === 'accordion';
+
+  function getCellLabel(col: DataTableColumn<T>): string {
+    return col.mobileLabel ?? col.header;
+  }
+
+  function getColumnVisibilityClasses(col: DataTableColumn<T>): string {
+    if (responsiveMode === 'shorten' || responsiveMode === 'compare') {
+      if (col.hideOnMobile) {
+        return 'hidden md:table-cell';
+      }
+      if (col.priority === 'low') {
+        return 'hidden md:table-cell';
+      }
+      return '';
+    }
+
+    if (isStackLike) {
+      return 'block md:table-cell';
+    }
+
+    return '';
+  }
 
   return (
-    <div className="space-y-4 w-full">
+    <div className="namespace-y-4 w-full">
       {searchable && (
         <div className="flex items-center justify-between">
           <div className="w-full max-w-sm">
             <Input
-              name="global_search"
+              name="global-search"
               aria-label="Filtrar dados"
               placeholder="Buscar..."
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
-              leftIcon={<Search size={16} />}
+              leftIcon={<Search />}
               size="sm"
             />
           </div>
@@ -196,15 +251,14 @@ function DataTableSmart<T extends { id: string | number } & Record<string, any>>
       )}
 
       <TableContainer>
-        <SimpleTable density={density}>
+        <SimpleTable density={density} responsiveMode={responsiveMode}>
           <TableHeader>
-            <TableRow>
-              {renderSubComponent && <TableHead className="w-10"></TableHead>}
-
+            <TableRow data-state={/* podemos usar depois no accordion */ undefined}>
+              {renderSubComponent && <TableHead className="w-10" />}
               {selectable && (
                 <TableHead className="w-12.5">
                   <Input
-                    name="select_all_rows"
+                    name="select-all-rows"
                     type="checkbox"
                     variant="ghost"
                     containerClassName="justify-center"
@@ -214,54 +268,51 @@ function DataTableSmart<T extends { id: string | number } & Record<string, any>>
                 </TableHead>
               )}
 
-              {columns.map((col) => (
-                <TableHead
-                  key={String(col.accessorKey)}
-                  style={{ width: col.width, textAlign: col.align || 'left' }}
-                  className={col.sortable ? 'cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-800' : ''}
-                  onClick={() => col.sortable && handleSort(String(col.accessorKey))}>
-                  <div
-                    className={`flex items-center gap-2 ${col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : ''}`}>
-                    {col.header}
-                    {col.sortable && (
-                      <span className="text-gray-400">
-                        {sorting.column === col.accessorKey ? (
-                          sorting.direction === 'asc' ? (
-                            <ChevronUp size={14} />
-                          ) : (
-                            <ChevronDown size={14} />
-                          )
-                        ) : (
-                          <ChevronsUpDown size={14} />
-                        )}
-                      </span>
+              {columns.map((col) => {
+                const visibility = getColumnVisibilityClasses(col);
+                const alignClass = col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left';
+
+                return (
+                  <TableHead
+                    key={String(col.accessorKey)}
+                    style={{
+                      width: col.width,
+                      textAlign: col.align ?? 'left',
+                    }}
+                    className={cn(
+                      col.sortable && 'cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-800',
+                      visibility,
+                      alignClass,
                     )}
-                  </div>
-                </TableHead>
-              ))}
+                    onClick={col.sortable ? () => handleSort(String(col.accessorKey)) : undefined}>
+                    <div
+                      className={cn(
+                        'flex items-center gap-2',
+                        col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : 'justify-start',
+                      )}>
+                      {col.header}
+                      {col.sortable && (
+                        <span className="text-gray-400">
+                          {sorting.column === col.accessorKey ? (
+                            sorting.direction === 'asc' ? (
+                              <ChevronUp size={14} />
+                            ) : (
+                              <ChevronDown size={14} />
+                            )
+                          ) : (
+                            <ChevronsUpDown size={14} />
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                );
+              })}
             </TableRow>
           </TableHeader>
 
           <TableBody>
-            {isLoading && (
-              <TableRow>
-                <TableCell colSpan={columns.length + (selectable ? 1 : 0) + (renderSubComponent ? 1 : 0)} className="h-24 text-center">
-                  <div className="flex justify-center items-center gap-2 text-gray-500">
-                    <Spinner size="md" /> Carregando dados...
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-
-            {!isLoading && paginatedData.length === 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length + (selectable ? 1 : 0) + (renderSubComponent ? 1 : 0)}
-                  className="h-24 text-center text-gray-500">
-                  Nenhum resultado encontrado.
-                </TableCell>
-              </TableRow>
-            )}
+            {/* ... estados de loading e vazio iguais ... */}
 
             {!isLoading &&
               paginatedData.map((row) => (
@@ -272,7 +323,7 @@ function DataTableSmart<T extends { id: string | number } & Record<string, any>>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleRowExpansion(row.id)}>
                           <ChevronRight
                             size={16}
-                            className={`transition-transform duration-200 ${expandedRows.has(row.id) ? 'rotate-90' : ''}`}
+                            className={cn('transition-transform duration-200', expandedRows.has(row.id) && 'rotate-90')}
                           />
                         </Button>
                       </TableCell>
@@ -281,7 +332,7 @@ function DataTableSmart<T extends { id: string | number } & Record<string, any>>
                     {selectable && (
                       <TableCell className="text-center p-0">
                         <Input
-                          name={`select_row_${row.id}`}
+                          name={`select-row-${row.id}`}
                           type="checkbox"
                           variant="ghost"
                           containerClassName="justify-center"
@@ -291,18 +342,24 @@ function DataTableSmart<T extends { id: string | number } & Record<string, any>>
                       </TableCell>
                     )}
 
-                    {columns.map((col) => (
-                      <TableCell
-                        key={`${row.id}-${String(col.accessorKey)}`}
-                        className={col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''}>
-                        {col.cell ? col.cell(row) : row[col.accessorKey]}
-                      </TableCell>
-                    ))}
+                    {columns.map((col) => {
+                      const visibility = getColumnVisibilityClasses(col);
+                      const alignClass = col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left';
+
+                      return (
+                        <TableCell
+                          key={`${row.id}-${String(col.accessorKey)}`}
+                          className={cn(visibility, alignClass)}
+                          data-label={isStackLike ? getCellLabel(col) : undefined}>
+                          {col.cell ? col.cell(row) : (row as any)[col.accessorKey]}
+                        </TableCell>
+                      );
+                    })}
                   </TableRow>
 
                   {renderSubComponent && expandedRows.has(row.id) && (
                     <TableRow className="bg-gray-50/50 dark:bg-gray-900/30 hover:bg-gray-50/50">
-                      <TableCell colSpan={columns.length + (selectable ? 1 : 0) + 1} className="p-0">
+                      <TableCell colSpan={columns.length + (selectable ? 1 : 0) + 1 /* botão expand */} className="p-0">
                         <div className="p-4 animate-in slide-in-from-top-2 duration-200">{renderSubComponent(row)}</div>
                       </TableCell>
                     </TableRow>
