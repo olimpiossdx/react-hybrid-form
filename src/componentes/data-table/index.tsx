@@ -199,10 +199,10 @@ function DataTableSmart<T extends { id: string | number } & Record<string, any>>
         <SimpleTable density={density}>
           <TableHeader>
             <TableRow>
-              {renderSubComponent && <TableHead className="w-[40px]"></TableHead>}
+              {renderSubComponent && <TableHead className="w-10"></TableHead>}
 
               {selectable && (
-                <TableHead className="w-[50px]">
+                <TableHead className="w-12.5">
                   <Input
                     name="select_all_rows"
                     type="checkbox"
@@ -268,7 +268,7 @@ function DataTableSmart<T extends { id: string | number } & Record<string, any>>
                 <React.Fragment key={row.id}>
                   <TableRow data-state={selectedRows.has(row.id) ? 'selected' : expandedRows.has(row.id) ? 'expanded' : undefined}>
                     {renderSubComponent && (
-                      <TableCell className="p-0 text-center w-[40px]">
+                      <TableCell className="p-0 text-center w-10">
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleRowExpansion(row.id)}>
                           <ChevronRight
                             size={16}
