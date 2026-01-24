@@ -54,7 +54,7 @@ const TableScrollCRUD = () => {
     setEditingId(null);
   };
 
-  const { formProps, handleSubmit } = useForm({ id: 'inline-crud', onSubmit });
+  const { formProps } = useForm({ id: 'inline-crud', onSubmit });
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -84,107 +84,122 @@ const TableScrollCRUD = () => {
 
   return (
     <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow h-full flex flex-col transition-colors">
-      <div className="flex justify-between mb-4 border-b border-gray-100 dark:border-gray-700 pb-4 shrink-0">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Package className="text-cyan-600 dark:text-cyan-400" />
-            Estoque (Inline Edit)
-          </h2>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Package className="text-blue-600" />
+          <h2 className="text-xl font-semibold">Estoque (Inline Edit)</h2>
         </div>
         <button
           type="button"
           onClick={handleAdd}
-          className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1.5 rounded text-sm transition-colors font-bold shadow-sm flex items-center gap-2">
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-blue-600 text-white text-sm">
           + Novo Produto
         </button>
       </div>
-
-      <form {...formProps} onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-hidden flex flex-col">
+      <form {...formProps} id="inline-crud" className="flex-1 overflow-hidden">
         <DataTable.Root instance={table} className="h-full">
-          <DataTable.Container>
-            <DataTable.Table>
-              <DataTable.Header>
-                {table.columns.map((col) => (
-                  <DataTable.HeadCell key={col.id}>{col.header}</DataTable.HeadCell>
-                ))}
-              </DataTable.Header>
+          <div className="w-full flex flex-col h-full">
+            <DataTable.Container>
+              <DataTable.Table>
+                <DataTable.Header>
+                  <DataTable.Row>
+                    {table.columns.map((col) => (
+                      <DataTable.HeadCell key={col.id} style={{ width: col.width }}>
+                        {col.header}
+                      </DataTable.HeadCell>
+                    ))}
+                  </DataTable.Row>
+                </DataTable.Header>
 
-              <DataTable.Body>
-                {items.map((item, index) => {
-                  const isEditing = editingId === item.id;
-                  return (
-                    <DataTable.Row key={item.id} className={isEditing ? 'bg-blue-50 dark:bg-blue-900/20' : ''}>
-                      <DataTable.Cell>
-                        {isEditing ? (
-                          <input
-                            name={`items[${index}].name`}
-                            defaultValue={item.data.name}
-                            className="form-input h-8 text-sm"
-                            autoFocus
-                            required
-                          />
-                        ) : (
-                          item.data.name || '(Sem nome)'
-                        )}
-                      </DataTable.Cell>
-                      <DataTable.Cell>
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            name={`items[${index}].price`}
-                            defaultValue={item.data.price}
-                            className="form-input h-8 text-sm"
-                          />
-                        ) : (
-                          `R$ ${Number(item.data.price).toFixed(2)}`
-                        )}
-                      </DataTable.Cell>
-                      <DataTable.Cell>
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            name={`items[${index}].stock`}
-                            defaultValue={item.data.stock}
-                            className="form-input h-8 text-sm"
-                          />
-                        ) : (
-                          item.data.stock
-                        )}
-                      </DataTable.Cell>
-                      <DataTable.Cell>
-                        <div className="flex gap-2">
+                <DataTable.Body>
+                  {items.map((item, index) => {
+                    const isEditing = editingId === item.id;
+
+                    return (
+                      <DataTable.Row key={item.id}>
+                        {/* Produto */}
+                        <DataTable.Cell>
+                          {isEditing ? (
+                            <input
+                              name={`items[${index}].name`}
+                              defaultValue={item.data.name}
+                              className="w-full px-2 py-1 text-sm border rounded"
+                            />
+                          ) : (
+                            item.data.name || '(Sem nome)'
+                          )}
+                        </DataTable.Cell>
+
+                        {/* Preço */}
+                        <DataTable.Cell>
+                          {isEditing ? (
+                            <input
+                              name={`items[${index}].price`}
+                              defaultValue={item.data.price}
+                              type="number"
+                              step="0.01"
+                              className="w-full px-2 py-1 text-sm border rounded"
+                            />
+                          ) : (
+                            `R$ ${Number(item.data.price).toFixed(2)}`
+                          )}
+                        </DataTable.Cell>
+
+                        {/* Estoque */}
+                        <DataTable.Cell>
+                          {isEditing ? (
+                            <input
+                              name={`items[${index}].stock`}
+                              defaultValue={item.data.stock}
+                              type="number"
+                              className="w-full px-2 py-1 text-sm border rounded"
+                            />
+                          ) : (
+                            item.data.stock
+                          )}
+                        </DataTable.Cell>
+
+                        {/* Ações */}
+                        <DataTable.Cell className="text-right">
                           {isEditing ? (
                             <>
-                              <button
-                                type="submit"
-                                className="p-1.5 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded">
+                              <button type="submit" className="p-1.5 text-green-600 hover:bg-green-50 rounded" title="Salvar">
                                 <Check size={16} />
                               </button>
                               <button
                                 type="button"
                                 onClick={handleCancel}
-                                className="p-1.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded">
+                                className="p-1.5 text-gray-500 hover:bg-gray-50 rounded"
+                                title="Cancelar">
                                 <X size={16} />
                               </button>
                             </>
                           ) : (
                             <>
-                              <button type="button" onClick={(e) => handleEdit(e, item.id)} className="p-1.5 text-blue-500 rounded">
+                              <button
+                                type="button"
+                                onClick={(e) => handleEdit(e, item.id)}
+                                className="p-1.5 text-blue-500 hover:bg-blue-50 rounded"
+                                title="Editar">
                                 <Edit2 size={16} />
                               </button>
-                              <button type="button" onClick={(e) => handleDelete(e, item.id)} className="p-1.5 text-red-500 rounded">
+                              <button
+                                type="button"
+                                onClick={(e) => handleDelete(e, item.id)}
+                                className="p-1.5 text-red-500 hover:bg-red-50 rounded"
+                                title="Excluir">
                                 <Trash2 size={16} />
                               </button>
                             </>
                           )}
-                        </div>
-                      </DataTable.Cell>
-                    </DataTable.Row>
-                  );
-                })}
-              </DataTable.Body>
-            </DataTable.Table>
-          </DataTable.Container>
+                        </DataTable.Cell>
+                      </DataTable.Row>
+                    );
+                  })}
+                </DataTable.Body>
+              </DataTable.Table>
+            </DataTable.Container>
+          </div>
         </DataTable.Root>
       </form>
     </div>

@@ -157,6 +157,6 @@
 
   /* SCROLL – reforça tabela larga */
   table[data-responsive="scroll"] {
-    @apply min-w-[700px];
+    @apply min-w-175;
   }
 }
