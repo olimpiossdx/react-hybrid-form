@@ -30,7 +30,7 @@ import TabSelect from './tab-select';
 import TabServiceExample from './tab-service';
 import TabSpinner from './tab-spinner';
 import TabSwitchExample from './tab-switch';
-import { TabTable } from './tab-table';
+import TabTable from './tab-table';
 import TabTableCollapse from './tab-table-collapse';
 import TabTableComplexo from './tab-table-complexo';
 import TabTableResponsiveAll from './tab-table-responsive-all';
@@ -42,16 +42,15 @@ import ValidationFeedbackExample from './tab-validacao';
 import TabValidationComplexExample from './tab-validation-complex';
 import TabVirtualList from './tab-virtualize';
 import TabWizard from './tab-wizard-tabs';
+import Box from '../../componentes/box';
+import Flex from '../../componentes/flex';
 import NestedLevelForm from '../../componentes/nested-level-form';
 import TabButton from '../../componentes/tab-button';
-import { ThemeToggle } from '../../componentes/theme';
+import ThemeToggle from '../../componentes/theme';
 
-// Foca no nova tab/formulário-ativo
 const Homologacao: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState('curriculum');
 
-  // Mapeamento: ID da Aba -> Componente
-  // Nota: Não passamos props pois os componentes usam hooks internos (useForm, useModal, etc)
   const scenarios: Record<string, React.ReactNode> = {
     login: <LoginForm />,
     registration: <RegistrationForm />,
@@ -99,30 +98,40 @@ const Homologacao: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen p-2 sm:p-4 font-sans transition-colors duration-300 bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-white">
-      <div className="max-w-8xl mx-auto">
+    <Box className="min-h-screen p-2 sm:p-4 font-sans transition-colors duration-300 bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-white">
+      <Box className="max-w-8xl mx-auto">
         {/* HEADER com Toggle */}
-        <header className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-gray-200 dark:border-gray-700 pb-6">
-          <div className="text-center md:text-left">
+        <Flex
+          as="header"
+          direction="col"
+          gap={4}
+          align="center"
+          justify="between"
+          className="mb-8 md:flex-row border-b border-gray-200 dark:border-gray-700 pb-6">
+          <Box className="text-center md:text-left">
             <h1 className="text-xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-cyan-600 to-blue-600 dark:from-cyan-400 dark:to-blue-500">
               useForm - v0.6.2
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-2">Ambiente de Homologação</p>
-          </div>
+          </Box>
 
-          <div className="flex items-center gap-4">
+          <Flex align="center" gap={4}>
             <ThemeToggle />
-          </div>
-        </header>
+          </Flex>
+        </Flex>
 
         {/* NAVEGAÇÃO: Card branco no light, cinza no dark */}
-        <div className="flex justify-center flex-wrap gap-2 mb-6 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
+        <Flex
+          justify="center"
+          wrap
+          gap={2}
+          className="mb-6 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
           {/* Grupo 1: Core */}
           <TabButton tabId="login" label="Login (Nativo)" isActive={activeTab === 'login'} onClick={setActiveTab} />
           <TabButton tabId="registration" label="Registro" isActive={activeTab === 'registration'} onClick={setActiveTab} />
           <TabButton tabId="hybrid" label="Híbrido" isActive={activeTab === 'hybrid'} onClick={setActiveTab} />
 
-          <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+          <Box className="w-px bg-gray-300 dark:bg-gray-600 mx-1" />
 
           {/* Grupo 2: Listas & Dados */}
           <TabButton tabId="nestedList" label="Listas" isActive={activeTab === 'nestedList'} onClick={setActiveTab} />
@@ -131,7 +140,7 @@ const Homologacao: React.FC = () => {
           <TabButton tabId="tabVirtualList" label="Virtual List (500k)" isActive={activeTab === 'tabVirtualList'} onClick={setActiveTab} />
           <TabButton tabId="tabEventBusForm" label="List Patterns" isActive={activeTab === 'tabEventBusForm'} onClick={setActiveTab} />
 
-          <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+          <Box className="w-px bg-gray-300 dark:bg-gray-600 mx-1" />
 
           {/* Grupo 3: Componentes */}
           <TabButton tabId="checkboxGroup" label="Checkboxes" isActive={activeTab === 'checkboxGroup'} onClick={setActiveTab} />
@@ -186,7 +195,7 @@ const Homologacao: React.FC = () => {
             onClick={setActiveTab}
           />
 
-          <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+          <Box className="w-px bg-gray-300 dark:bg-gray-600 mx-1" />
 
           {/* Grupo 4: Sistema */}
           <TabButton tabId="tabModal" label="Modais" isActive={activeTab === 'tabModal'} onClick={setActiveTab} />
@@ -211,7 +220,7 @@ const Homologacao: React.FC = () => {
             onClick={setActiveTab}
           />
 
-          <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+          <Box className="w-px bg-gray-300 dark:bg-gray-600 mx-1" />
 
           {/* Grupo 5: Infraestrutura */}
           <TabButton tabId="tabServiceExample" label="HTTP Service" isActive={activeTab === 'tabServiceExample'} onClick={setActiveTab} />
@@ -222,14 +231,14 @@ const Homologacao: React.FC = () => {
             onClick={setActiveTab}
           />
           <TabButton tabId="tabGraphExample" label="Event Bus" isActive={activeTab === 'tabGraphExample'} onClick={setActiveTab} />
-        </div>
+        </Flex>
 
         {/* ÁREA DE RENDERIZAÇÃO */}
-        <main className="transition-opacity duration-300 ease-in-out border-t border-gray-200 dark:border-gray-700 pt-6">
-          {scenarios[activeTab] || <div className="text-center text-gray-500">Cenário não encontrado.</div>}
-        </main>
-      </div>
-    </div>
+        <Box as="main" className="transition-opacity duration-300 ease-in-out border-t border-gray-200 dark:border-gray-700 pt-6">
+          {scenarios[activeTab] || <Box className="text-center text-gray-500">Cenário não encontrado.</Box>}
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

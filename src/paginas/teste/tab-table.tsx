@@ -44,7 +44,7 @@ const invoices = [
   },
 ];
 
-export const TabTable = () => {
+const TabTable = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-10 p-6 pb-20">
       <div className="text-center border-b pb-6 dark:border-gray-700">
@@ -63,11 +63,11 @@ export const TabTable = () => {
             {/* ESTRUTURA CORRETA E OBRIGATÓRIA: thead -> tr -> th */}
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[100px]">Fatura</TableHead>
+                <TableHead className="w-25">Fatura</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Método</TableHead>
                 <TableHead className="text-right">Valor</TableHead>
-                <TableHead className="w-[100px] text-center">Ações</TableHead>
+                <TableHead className="w-25 text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -117,10 +117,10 @@ export const TabTable = () => {
           <Table density="sm">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[150px]">Produto</TableHead>
-                <TableHead className="w-[100px]">Qtd</TableHead>
+                <TableHead className="w-37.5">Produto</TableHead>
+                <TableHead className="w-25">Qtd</TableHead>
                 <TableHead>Preço Unit.</TableHead>
-                <TableHead className="text-right w-[50px]"></TableHead>
+                <TableHead className="text-right w-12.5"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -163,3 +163,4 @@ export const TabTable = () => {
     </div>
   );
 };
+export default TabTable;

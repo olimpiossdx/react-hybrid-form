@@ -9,7 +9,7 @@ interface ThemeEvents {
   'sys:theme_change': { theme: 'light' | 'dark' };
 }
 
-export const ThemeToggle = () => {
+const ThemeToggle = () => {
   const { emit, on } = useGraphBus<ThemeEvents>();
   const [theme, setTheme] = React.useState<Theme>(getCurrentTheme());
 
@@ -41,3 +41,4 @@ export const ThemeToggle = () => {
     </button>
   );
 };
+export default ThemeToggle;
