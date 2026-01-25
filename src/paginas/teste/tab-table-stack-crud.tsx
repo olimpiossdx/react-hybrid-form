@@ -132,11 +132,12 @@ export const TabTableStackCrud: React.FC = () => {
   };
 
   // --- DEFINIÇÃO DAS COLUNAS ---
-
   const columns: DataTableColumn<User>[] = [
     {
       accessorKey: 'name',
       header: 'Usuário',
+      priority: 'high',
+      mobileLabel: 'Usuário',
       cell: (row) => (
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 font-bold text-xs">
@@ -150,42 +151,38 @@ export const TabTableStackCrud: React.FC = () => {
       ),
     },
     {
-      accessorKey: 'role',
-      header: 'Permissão',
-      width: '150px',
+      accessorKey: 'details',
+      header: 'Detalhes',
+      priority: 'high',
+      mobileLabel: 'Detalhes',
       cell: (row) => (
-        <div className="flex items-center gap-2">
-          {row.role === 'Admin' ? <Shield size={14} className="text-purple-500" /> : <UserIcon size={14} className="text-gray-400" />}
-          <span>{row.role}</span>
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          {/* Permissão */}
+          <div className="flex items-center gap-2">
+            {row.role === 'Admin' ? <Shield size={14} className="text-purple-500" /> : <UserIcon size={14} className="text-gray-400" />}
+            <span>{row.role}</span>
+          </div>
+
+          {/* Status */}
+          <div className="flex items-center">
+            <Badge variant={row.active ? 'success' : 'default'} size="sm" className="gap-1 pl-1">
+              {row.active ? <CheckCircle2 size={12} /> : <Activity size={12} />}
+              {row.active ? 'Ativo' : 'Inativo'}
+            </Badge>
+          </div>
+
+          {/* Ações */}
+          <div className="flex justify-end">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-gray-500 hover:text-blue-600"
+              onClick={() => handleEdit(row)}
+              title="Editar">
+              <MoreVertical size={16} />
+            </Button>
+          </div>
         </div>
-      ),
-    },
-    {
-      accessorKey: 'active',
-      header: 'Status',
-      align: 'center',
-      width: '120px',
-      cell: (row) => (
-        <Badge variant={row.active ? 'success' : 'default'} size="sm" className="gap-1 pl-1">
-          {row.active ? <CheckCircle2 size={12} /> : <Activity size={12} />}
-          {row.active ? 'Ativo' : 'Inativo'}
-        </Badge>
-      ),
-    },
-    {
-      accessorKey: 'actions',
-      header: '',
-      align: 'right',
-      width: '60px',
-      cell: (row) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-gray-500 hover:text-blue-600"
-          onClick={() => handleEdit(row)}
-          title="Editar">
-          <MoreVertical size={16} />
-        </Button>
       ),
     },
   ];
@@ -206,7 +203,7 @@ export const TabTableStackCrud: React.FC = () => {
         </CardHeader>
 
         <CardContent>
-          <DataTable data={data} columns={columns} searchable density="md" />
+          <DataTable data={data} columns={columns} searchable density="md" responsiveMode="cards" />
         </CardContent>
       </Card>
     </div>
