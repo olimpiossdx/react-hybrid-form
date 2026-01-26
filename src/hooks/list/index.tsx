@@ -1,6 +1,9 @@
 import { useCallback, useState } from 'react';
+import React from 'react';
 
 import type { ListRowComponent, ListRowProps } from './create-row';
+import createRowComponent from './create-row';
+import { useGraphBus } from '../native-bus';
 
 export interface ListItem<T> {
   _internalId: string;
@@ -43,12 +46,51 @@ export const useList = <T = any,>(initialDataOrCount: T[] | number = []): IUseLi
     data: data ?? ({} as T),
   });
 
+  const initialRef = React.useRef<ListItem<T>[]>([]);
   const [items, setItems] = useState<ListItem<T>[]>(() => {
     if (typeof initialDataOrCount === 'number') {
       return Array.from({ length: initialDataOrCount }, () => generateItem<T>());
     }
     return (initialDataOrCount || []).map((item) => generateItem<T>(item));
   });
+
+  const dirtyRef = React.useRef<Set<string>>(new Set());
+  const listIdRef = React.useRef<string | undefined>(undefined); // pode virar um param 
+  const { emit } = useGraphBus<{ 'list:dirty': { listId?: string; isDirty: boolean } }>();
+
+  const notifyDirtyChange = (isDirty: boolean) => {
+    emit('list:dirty', { listId: listIdRef.current, isDirty });
+  };
+
+  const markDirty = (id: string) => {
+    const prevSize = dirtyRef.current.size;
+    dirtyRef.current.add(id);
+    if (dirtyRef.current.size !== prevSize) {
+      notifyDirtyChange(true);
+    }
+  };
+
+  const clearDirty = () => {
+    if (dirtyRef.current.size > 0) {
+      dirtyRef.current.clear();
+      notifyDirtyChange(false);
+    }
+  };
+
+  const getDirtySnapshot = () => ({
+    isDirty: dirtyRef.current.size > 0,
+    dirtyIds: new Set(dirtyRef.current),
+  });
+
+
+  React.useEffect(() => {
+    if (initialRef.current.length === 0 && items.length > 0) {
+      initialRef.current = items.map((it) => ({
+        _internalId: it._internalId,
+        data: { ...it.data },
+      }));
+    }
+  }, [items]);
 
   const add = useCallback((payload?: T | T[]) => {
     setItems((prev) => {
@@ -71,8 +113,17 @@ export const useList = <T = any,>(initialDataOrCount: T[] | number = []): IUseLi
 
   // --- MÉTODO DE ATUALIZAÇÃO ---
   const update = useCallback((id: string, payload: Partial<T>) => {
-    setItems((prev) => prev.map((item) => (item._internalId === id ? { ...item, data: { ...item.data, ...payload } } : item)));
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item._internalId === id) {
+          markDirty(id);
+          return { ...item, data: { ...item.data, ...payload } };
+        }
+        return item;
+      }),
+    );
   }, []);
+
 
   const updateAt = useCallback((index: number, payload: Partial<T>) => {
     setItems((prev) => {
@@ -117,7 +168,44 @@ export const useList = <T = any,>(initialDataOrCount: T[] | number = []): IUseLi
 
   const clear = useCallback(() => setItems([]), []);
 
-  return { items, add, insertAt, update, updateAt, move, removeById, removeAt, set, clear };
+  const resetToInitial = useCallback(() => {
+    if (!initialRef.current.length) {
+      return;
+    }
+    const clone = initialRef.current.map((it) => ({
+      _internalId: it._internalId,
+      data: { ...it.data },
+    }));
+    setItems(clone);
+    // aqui depois vamos acoplar clearDirty()
+  }, []);
+
+  const setInitialSnapshot = useCallback((data: T[]) => {
+    const snapshot = data.map((d) => ({
+      _internalId: `item-${createId()}`, // ou reaproveitar ids atuais se preferir
+      data: { ...d },
+    }));
+    initialRef.current = snapshot;
+    setItems(snapshot);
+    // depois também vamos limpar dirty aqui
+  }, []);
+
+  return {
+    items,
+    add,
+    insertAt,
+    update,
+    updateAt,
+    move,
+    removeById,
+    removeAt,
+    set,
+    clear,
+    resetToInitial,
+    setInitialSnapshot,
+    createRowComponent,
+    getDirtySnapshot,
+  };
 };
 
 export default useList;

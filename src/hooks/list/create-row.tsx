@@ -1,5 +1,6 @@
-import React from 'react';
+import React from "react";
 
+// dentro do arquivo do useList.ts
 export type ListRowProps<T> = {
   internalId: string;
   index: number;
@@ -10,18 +11,15 @@ export type ListRowProps<T> = {
 
 export type ListRowComponent<T> = React.ComponentType<ListRowProps<T>>;
 
-const createRowComponent = React.useCallback(
-  (
-    Component: ListRowComponent<T>,
-    options?: {
-      areEqual?: (prev: ListRowProps<T>, next: ListRowProps<T>) => boolean;
-    },
-  ) => {
-    if (options?.areEqual) {
-      return React.memo(Component, options.areEqual);
-    }
-    return React.memo(Component);
+function createRowComponent<T>(
+  Component: ListRowComponent<T>,
+  options?: {
+    areEqual?: (prev: ListRowProps<T>, next: ListRowProps<T>) => boolean;
   },
-  [],
-);
-export default createRowComponent;
+): React.MemoExoticComponent<ListRowComponent<T>> {
+  if (options?.areEqual) {
+    return React.memo(Component, options.areEqual);
+  }
+  return React.memo(Component);
+}
+export default createRowComponent

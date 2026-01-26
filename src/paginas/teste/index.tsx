@@ -47,6 +47,7 @@ import Flex from '../../componentes/flex';
 import NestedLevelForm from '../../componentes/nested-level-form';
 import TabButton from '../../componentes/tab-button';
 import ThemeToggle from '../../componentes/theme';
+import ListTestPage from '../tab-use-list';
 
 const Homologacao: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState('curriculum');
@@ -95,6 +96,7 @@ const Homologacao: React.FC = () => {
     tabTable: <TabTable />,
     tabTableComplexo: <TabTableComplexo />,
     tabTableResponsiveAll: <TabTableResponsiveAll />,
+    listTestPage: <ListTestPage />,
   };
 
   return (
@@ -139,6 +141,7 @@ const Homologacao: React.FC = () => {
           <TabButton tabId="budgetProjectForm" label="Orçamento" isActive={activeTab === 'budgetProjectForm'} onClick={setActiveTab} />
           <TabButton tabId="tabVirtualList" label="Virtual List (500k)" isActive={activeTab === 'tabVirtualList'} onClick={setActiveTab} />
           <TabButton tabId="tabEventBusForm" label="List Patterns" isActive={activeTab === 'tabEventBusForm'} onClick={setActiveTab} />
+          <TabButton tabId="listTestPage" label="use list-atualizado" isActive={activeTab === 'listTestPage'} onClick={setActiveTab} />
 
           <Box className="w-px bg-gray-300 dark:bg-gray-600 mx-1" />
 
