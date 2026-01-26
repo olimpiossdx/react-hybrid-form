@@ -6,7 +6,7 @@ import Button from '../../componentes/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../componentes/card';
 // Componentes do Design System Moderno
 import { DataTable, type DataTableColumn } from '../../componentes/data-table';
-import { Input } from '../../componentes/input';
+import Input from '../../componentes/input';
 import showModal from '../../componentes/modal/hook';
 import { ModalContent, ModalDescription, ModalFooter, ModalHeader, ModalTitle } from '../../componentes/modal/modal';
 import { Select } from '../../componentes/select';

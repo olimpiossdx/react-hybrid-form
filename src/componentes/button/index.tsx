@@ -1,56 +1,12 @@
-import { type ButtonHTMLAttributes, forwardRef, type ReactNode, useImperativeHandle, useRef, useState } from 'react';
+import React from 'react';
 
+import type { IButtonElement, IButtonProps } from './propTypes';
 import { cn } from '../../utils/cn';
 import { Spinner } from '../spinner';
 
-// --- Interfaces ---
-
-// O "Super Ref": É um botão HTML nativo + nossos métodos customizados
-export interface ButtonElement extends HTMLButtonElement {
-  setLoading: (loading: boolean) => void;
-  loading: boolean;
-}
-
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /**
-   * Estilo visual do botão.
-   */
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'link';
-
-  /**
-   * Tamanho do botão (Alinhado com Inputs).
-   * - 'sm': 32px (Compacto)
-   * - 'md': 40px (Padrão)
-   * - 'lg': 48px (Expandido)
-   * - 'icon': Quadrado para ícones
-   */
-  size?: 'sm' | 'md' | 'lg' | 'icon';
-
-  /**
-   * Estado de carregamento (Controle Declarativo).
-   * Se definido, tem prioridade sobre o estado interno.
-   */
-  isLoading?: boolean;
-
-  /**
-   * Ícone à esquerda do texto.
-   */
-  leftIcon?: ReactNode;
-
-  /**
-   * Ícone à direita do texto.
-   */
-  rightIcon?: ReactNode;
-
-  /**
-   * Se true, ocupa 100% da largura do pai.
-   */
-  fullWidth?: boolean;
-}
-
 // --- Componente ---
 
-const Button = forwardRef<ButtonElement, ButtonProps>(
+const Button = React.forwardRef<IButtonElement, IButtonProps>(
   (
     {
       children,
@@ -68,26 +24,26 @@ const Button = forwardRef<ButtonElement, ButtonProps>(
     ref,
   ) => {
     // Referência interna ao elemento DOM real
-    const internalRef = useRef<HTMLButtonElement>(null);
+    const internalRef = React.useRef<HTMLButtonElement>(null);
 
     // Estado interno para controle imperativo (via ref.setLoading)
-    const [internalLoading, setInternalLoading] = useState(false);
+    const [internalLoading, setInternalLoading] = React.useState(false);
 
     // Estado Efetivo: Propriedade externa ganha se estiver definida, senão usa interno
     const isEffectiveLoading = propLoading !== undefined ? propLoading : internalLoading;
 
     // A mágica da Ref Híbrida:
     // Expõe o elemento DOM nativo MAS adiciona os métodos customizados nele
-    useImperativeHandle(ref, () => {
+    React.useImperativeHandle(ref, () => {
       const element = internalRef.current;
 
       if (!element) {
-        return null as unknown as ButtonElement;
+        return null as unknown as IButtonElement;
       }
 
       // Usamos Object.assign ou definimos propriedades diretamente na instância do elemento
       // Isso permite que 'ref.current.focus()' continue funcionando nativamente
-      const augmentedElement = element as ButtonElement;
+      const augmentedElement = element as IButtonElement;
 
       augmentedElement.setLoading = (val: boolean) => {
         setInternalLoading(val);

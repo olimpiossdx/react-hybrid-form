@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Lock, Mail, ShieldCheck } from 'lucide-react';
 
 import Button from '../../componentes/button';
-import { Input } from '../../componentes/input';
+import Input from '../../componentes/input';
 import { showModal } from '../../componentes/modal';
 import useForm from '../../hooks/use-form';
 
@@ -22,10 +22,7 @@ const ValidationFeedbackExample = () => {
     });
   };
 
-  const { formProps, setValidators } = useForm({
-    id: 'smart-validation-form',
-    onSubmit,
-  });
+  const { formProps, setValidators } = useForm({ id: 'smart-validation-form', onSubmit });
 
   // Restauramos a lógica de validação customizada (Business Logic)
   // O hook aplicará setCustomValidity internamente, o que disparará

@@ -16,7 +16,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   floatingLabel?: boolean;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
+const Input = forwardRef<HTMLInputElement, InputProps>(
   (
     {
       label,
@@ -297,3 +297,4 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 );
 
 Input.displayName = 'Input';
+export default Input;

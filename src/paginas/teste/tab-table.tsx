@@ -2,7 +2,7 @@ import { Edit2, FileText, Trash2 } from 'lucide-react';
 
 import Badge from '../../componentes/badge';
 import Button from '../../componentes/button';
-import { Input } from '../../componentes/input';
+import Input from '../../componentes/input';
 import { TableBody, TableCaption, TableCell, TableContainer, TableFooter, TableHeader, TableRow } from '../../componentes/table';
 import { Table, TableHead } from '../../componentes/table';
 

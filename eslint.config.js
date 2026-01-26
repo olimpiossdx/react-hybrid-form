@@ -16,10 +16,15 @@ export default tseslint.config(
   // Desativa regras do ESLint que conflitam com o Prettier
   prettierConfig,
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
+      sourceType: 'module',
       globals: globals.browser,
+      parserOptions: {
+        project: ['./tsconfig.app.json'],
+       ecmaFeatures: { jsx: true },
+    },
     },
     plugins: {
       'react-hooks': reactHooks,

@@ -22,7 +22,8 @@ interface UseFormConfig<FV> {
 const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormConfig<FV>) => {
   // Normalização da Configuração
   const config = typeof configOrId === 'string' ? { id: configOrId } : configOrId || {};
-  const formId = config.id || React.useId();
+  const newId = React.useId();
+  const formId = config.id || newId;
   const onSubmitCallback = config.onSubmit;
 
   // --- REFS DE ESTADO (Persistem entre renders) ---

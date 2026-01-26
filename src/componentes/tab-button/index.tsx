@@ -14,20 +14,22 @@ interface TabButtonProps {
 }
 
 const TabButton: React.FC<TabButtonProps> = ({ tabId, label, isActive, onClick, className = '' }) => {
+  const handleClick = () => {
+    onClick(tabId);
+  };
+
+  const baseClassName = 'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200';
+
+  const activeClassName = 'bg-cyan-600 text-white shadow-md scale-105';
+
+  const inactiveClassName =
+    'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 ' +
+    'dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white';
+
+  const finalClassName = `${baseClassName} ${isActive ? activeClassName : inactiveClassName} ${className}`;
+
   return (
-    <button
-      onClick={() => onClick(tabId)}
-      className={`
-        px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-        ${
-          isActive
-            ? 'bg-cyan-600 text-white shadow-md scale-105'
-            : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white'
-        }
-        ${className}
-      `}
-      type="button"
-      aria-pressed={isActive}>
+    <button onClick={handleClick} className={finalClassName} type="button" aria-pressed={isActive}>
       {label}
     </button>
   );

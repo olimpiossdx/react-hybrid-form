@@ -3,7 +3,7 @@ import { ChevronDown, ChevronRight, ChevronsUpDown, ChevronUp, Search } from 'lu
 
 import { cn } from '../../utils/cn';
 import Button from '../button';
-import { Input } from '../input';
+import Input from '../input';
 import { Pagination } from '../pagination';
 import {
   Table as SimpleTable,

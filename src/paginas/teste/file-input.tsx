@@ -65,7 +65,6 @@ const FileExample = () => {
   React.useEffect(() => {
     setValidators({
       // Passa 'field' como terceiro argumento
-      // CORREÇÃO: Converter null para undefined para satisfazer a interface
       validarNativo: (val: any, field: FormField | null) => validateFileField(val, { required: true }, field) || undefined,
       validarAvatar: (val: any, field: FormField | null) => validateFileField(val, { required: true }, field) || undefined,
       validarGaleria: (val: any, field: FormField | null) => validateFileField(val, { minFiles: 2, maxFiles: 5 }, field) || undefined,

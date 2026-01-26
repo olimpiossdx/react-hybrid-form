@@ -22,7 +22,7 @@ import {
 
 import Badge from '../../componentes/badge';
 import Button from '../../componentes/button';
-import { Input } from '../../componentes/input';
+import Input from '../../componentes/input';
 import { showModal } from '../../componentes/modal';
 import { ModalContent, ModalDescription, ModalFooter, ModalHeader, ModalTitle } from '../../componentes/modal/modal';
 import type { IModalOptions } from '../../componentes/modal/types';
@@ -141,7 +141,7 @@ const WizardContent: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
         })}
       </div>
 
-      <div className="grow py-2 min-h-[150px]">
+      <div className="grow py-2 min-h-37.5">
         {step === 1 && (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">Identificação</h3>
@@ -199,7 +199,7 @@ const SettingsContent = () => {
   ];
 
   return (
-    <div className="flex h-[300px] gap-6">
+    <div className="flex h-75 gap-6">
       <div className="w-1/3 flex flex-col gap-1 border-r border-gray-200 dark:border-gray-700 pr-2">
         {tabs.map((tab) => (
           <button

@@ -2,7 +2,7 @@ import React from 'react';
 import { CheckSquare, CreditCard, Edit3, Globe, LayoutList, Lock, Mail, Monitor, Search, ShieldAlert, User } from 'lucide-react';
 
 import Button from '../../componentes/button';
-import { Input } from '../../componentes/input';
+import Input from '../../componentes/input';
 import { showModal } from '../../componentes/modal';
 import useForm from '../../hooks/use-form';
 

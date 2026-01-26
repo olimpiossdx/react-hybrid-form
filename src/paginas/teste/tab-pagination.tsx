@@ -5,7 +5,7 @@ import Badge from '../../componentes/badge';
 import Button from '../../componentes/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../componentes/card';
 import { DataTable, type DataTableColumn, type PaginationState } from '../../componentes/data-table';
-import { Input } from '../../componentes/input';
+import Input from '../../componentes/input';
 import showModal from '../../componentes/modal/hook';
 import { ModalContent, ModalDescription, ModalFooter, ModalHeader, ModalTitle } from '../../componentes/modal/modal';
 import { Pagination } from '../../componentes/pagination';
