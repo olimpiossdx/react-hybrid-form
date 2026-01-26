@@ -1,15 +1,8 @@
 import React, { useCallback, useRef } from 'react';
 
-import type { FieldListenerMap, FormField, Path, PathValue, ValidatorMap } from './props';
+import type { FieldListenerMap, FormField, Path, PathValue, UseFormConfig, ValidatorMap } from './props';
 import { getFormFields, getNestedValue, getRelativePath, parseFieldValue, setNestedValue } from './utilities';
 import { initializeCheckboxMasters, setNativeChecked, setNativeValue, syncCheckboxGroup } from '../../utils/utilities';
-
-// Configuração do Hook
-interface UseFormConfig<FV> {
-  id?: string;
-  // Callback de submit que recebe os dados tipados e o evento original
-  onSubmit?: (data: FV, event: React.FormEvent<HTMLFormElement>) => void;
-}
 
 /**
  * Hook principal para gerenciamento de formulários com arquitetura Híbrida.
@@ -22,8 +15,7 @@ interface UseFormConfig<FV> {
 const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormConfig<FV>) => {
   // Normalização da Configuração
   const config = typeof configOrId === 'string' ? { id: configOrId } : configOrId || {};
-  const newId = React.useId();
-  const formId = config.id || newId;
+  const formId = config.id || crypto.randomUUID();
   const onSubmitCallback = config.onSubmit;
 
   // --- REFS DE ESTADO (Persistem entre renders) ---

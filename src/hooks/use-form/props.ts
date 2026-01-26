@@ -1,8 +1,10 @@
 // --- DEFINIÇÕES DE TIPO GERAIS ---
 
+// Configuração do Hook
 export interface UseFormConfig<FV> {
   id?: string;
-  onSubmit?: (data: FV) => void;
+  // Callback de submit que recebe os dados tipados e o evento original
+  onSubmit?: (data: FV, event: React.FormEvent<HTMLFormElement>) => void;
 }
 
 export interface IAnyObject {
