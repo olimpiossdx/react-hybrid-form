@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 // dentro do arquivo do useList.ts
 export type ListRowProps<T> = {
@@ -22,4 +22,4 @@ function createRowComponent<T>(
   }
   return React.memo(Component);
 }
-export default createRowComponent
+export default createRowComponent;

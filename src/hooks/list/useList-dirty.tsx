@@ -1,10 +1,7 @@
 import React from 'react';
 
+import type { ListDirtyEvent } from './proptypes';
 import { useGraphBus } from '../native-bus';
-
-interface ListDirtyEvent {
-  'list:dirty': { listId?: string; isDirty: boolean };
-}
 
 export const useListDirty = (listId?: string) => {
   const { on } = useGraphBus<ListDirtyEvent>();

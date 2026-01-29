@@ -1,46 +1,12 @@
 import { useCallback, useState } from 'react';
 import React from 'react';
 
-import type { ListRowComponent, ListRowProps } from './create-row';
 import createRowComponent from './create-row';
+import type { ListItem, UseListReturn } from './proptypes';
+import { createId } from '../../utils/utilities';
 import { useGraphBus } from '../native-bus';
 
-export interface ListItem<T> {
-  _internalId: string;
-  data: T;
-}
-
-export interface UseListReturn<T> {
-  items: ListItem<T>[];
-
-  add: (payload?: T | T[]) => void;
-  insertAt: (index: number, payload?: T) => void;
-  update: (id: string, payload: Partial<T>) => void;
-  updateAt: (index: number, payload: Partial<T>) => void;
-  move: (fromIndex: number, toIndex: number) => void;
-  removeById: (id: string) => void;
-  removeAt: (index: number) => void;
-  set: (dataOrCount: T[] | number) => void;
-  clear: () => void;
-
-  resetToInitial: () => void;
-  setInitialSnapshot: (items: T[]) => void;
-
-  createRowComponent: (
-    Component: ListRowComponent<T>,
-    options?: {
-      areEqual?: (prev: ListRowProps<T>, next: ListRowProps<T>) => boolean;
-    },
-  ) => React.MemoExoticComponent<ListRowComponent<T>>;
-}
-const createId = () => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  return Math.random().toString(36).slice(2);
-};
-
-export const useList = <T = any,>(initialDataOrCount: T[] | number = []): IUseListReturn<T> => {
+export const useList = <T = any,>(initialDataOrCount: T[] | number = []): UseListReturn<T> => {
   const generateItem = <T,>(data?: T): ListItem<T> => ({
     _internalId: `item-${createId()}`,
     data: data ?? ({} as T),
@@ -55,20 +21,23 @@ export const useList = <T = any,>(initialDataOrCount: T[] | number = []): IUseLi
   });
 
   const dirtyRef = React.useRef<Set<string>>(new Set());
-  const listIdRef = React.useRef<string | undefined>(undefined); // pode virar um param 
+  const listIdRef = React.useRef<string | undefined>(undefined); // pode virar um param
   const { emit } = useGraphBus<{ 'list:dirty': { listId?: string; isDirty: boolean } }>();
 
-  const notifyDirtyChange = (isDirty: boolean) => {
+  const notifyDirtyChange = React.useEffectEvent((isDirty: boolean) => {
     emit('list:dirty', { listId: listIdRef.current, isDirty });
-  };
+  });
 
-  const markDirty = (id: string) => {
-    const prevSize = dirtyRef.current.size;
-    dirtyRef.current.add(id);
-    if (dirtyRef.current.size !== prevSize) {
-      notifyDirtyChange(true);
-    }
-  };
+  const markDirty = React.useCallback(
+    (id: string) => {
+      const prevSize = dirtyRef.current.size;
+      dirtyRef.current.add(id);
+      if (dirtyRef.current.size !== prevSize) {
+        notifyDirtyChange(true);
+      }
+    },
+    [notifyDirtyChange],
+  );
 
   const clearDirty = () => {
     if (dirtyRef.current.size > 0) {
@@ -81,7 +50,6 @@ export const useList = <T = any,>(initialDataOrCount: T[] | number = []): IUseLi
     isDirty: dirtyRef.current.size > 0,
     dirtyIds: new Set(dirtyRef.current),
   });
-
 
   React.useEffect(() => {
     if (initialRef.current.length === 0 && items.length > 0) {
@@ -112,18 +80,20 @@ export const useList = <T = any,>(initialDataOrCount: T[] | number = []): IUseLi
   }, []);
 
   // --- MÉTODO DE ATUALIZAÇÃO ---
-  const update = useCallback((id: string, payload: Partial<T>) => {
-    setItems((prev) =>
-      prev.map((item) => {
-        if (item._internalId === id) {
-          markDirty(id);
-          return { ...item, data: { ...item.data, ...payload } };
-        }
-        return item;
-      }),
-    );
-  }, []);
-
+  const update = useCallback(
+    (id: string, payload: Partial<T>) => {
+      setItems((prev) =>
+        prev.map((item) => {
+          if (item._internalId === id) {
+            markDirty(id);
+            return { ...item, data: { ...item.data, ...payload } };
+          }
+          return item;
+        }),
+      );
+    },
+    [markDirty],
+  );
 
   const updateAt = useCallback((index: number, payload: Partial<T>) => {
     setItems((prev) => {
@@ -204,6 +174,7 @@ export const useList = <T = any,>(initialDataOrCount: T[] | number = []): IUseLi
     resetToInitial,
     setInitialSnapshot,
     createRowComponent,
+    clearDirty,
     getDirtySnapshot,
   };
 };
