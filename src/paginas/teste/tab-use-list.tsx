@@ -43,7 +43,6 @@ const UserRowBase: ListRowComponent<User> = ({ data, onChange, onRemove }) => {
 };
 
 // Dentro do mesmo arquivo ListTestPage.tsx
-
 const BIG_COUNT = 500_000;
 
 const makeBigInitialData = (): User[] => {
@@ -57,37 +56,66 @@ const makeBigInitialData = (): User[] => {
   return arr;
 };
 
+// Reaproveite o mesmo UserRowBase do teste anterior, se quiser
+const VirtualRowBase: ListRowComponent<User> = ({ data, onChange, onRemove }) => {
+  return (
+    <div className="flex items-center gap-2 mb-1">
+      <input className="border px-2 py-1 rounded w-40" value={data.name} onChange={(e) => onChange({ name: e.target.value })} />
+      <input className="border px-2 py-1 rounded w-60" value={data.email} onChange={(e) => onChange({ email: e.target.value })} />
+      <Button variant="outline" size="sm" onClick={onRemove}>
+        Remover
+      </Button>
+    </div>
+  );
+};
+
 const VirtualizedSection: React.FC = () => {
-  // useList com 500.000 itens
+  // useList com muitos itens
   const { items, update, removeById, getItems, createRowComponent } = useList<User>(React.useMemo(makeBigInitialData, []));
 
-  // virtualização
-  const { virtualItems, containerProps, wrapperProps, measureElement } = useVirtualizer({
-    count: items.length,
-    estimateSize: () => 40, // altura média da linha
-    overscan: 5,
-  });
+  // Handlers estáveis para rows
+  const handleRowChange = React.useCallback(
+    (id: string, patch: Partial<User>) => {
+      update(id, patch);
+    },
+    [update],
+  );
 
-  const UserRow = React.useMemo(
+  const handleRowRemove = React.useCallback(
+    (id: string) => {
+      removeById(id);
+    },
+    [removeById],
+  );
+
+  // Row memoizada
+  const VirtualRow = React.useMemo(
     () =>
-      createRowComponent(UserRowBase, {
+      createRowComponent(VirtualRowBase, {
         areEqual: (prev, next) => prev.data === next.data && prev.index === next.index,
       }),
     [createRowComponent],
   );
 
+  // Virtualização
+  const { virtualItems, containerProps, wrapperProps, measureElement } = useVirtualizer({
+    count: items.length,
+    estimateSize: () => 40,
+    overscan: 5,
+  });
+
   const handleLogStore = () => {
     const all = getItems();
-    console.log('Total itens na store (virtualized):', all.length, all);
+    console.log('Virtualized store: total itens =', all.length, ' primeiros =', all.slice(0, 3));
   };
 
   return (
     <section className="mt-8 space-y-2">
-      <h2 className="font-semibold text-sm">Virtualized (500.000 itens, renderizando só janela visível)</h2>
+      <h2 className="font-semibold text-sm">Virtualized (500.000 itens, janela visível)</h2>
       <p className="text-xs text-gray-500">
-        Edite alguns itens visíveis, depois clique em &quot;Logar getItems&quot; para ver que o modelo global (500.000 itens) foi
-        atualizado.
+        Edite alguns itens visíveis, depois clique em &quot;Logar getItems&quot; para verificar que o modelo global foi atualizado.
       </p>
+
       <Button size="sm" variant="outline" onClick={handleLogStore}>
         Logar getItems() (500.000)
       </Button>
@@ -96,19 +124,19 @@ const VirtualizedSection: React.FC = () => {
         {...containerProps}
         style={{
           ...containerProps.style,
-          height: 400, // altura fixa para o exemplo
+          height: 400,
         }}>
         <div {...wrapperProps}>
           {virtualItems.map(({ index, props }) => {
             const item = items[index];
             return (
               <div key={item._internalId} {...props} ref={measureElement as any}>
-                <UserRow
+                <VirtualRow
                   internalId={item._internalId}
                   index={index}
                   data={item.data}
-                  onChange={(patch) => update(item._internalId, patch)}
-                  onRemove={() => removeById(item._internalId)}
+                  onChange={(patch) => handleRowChange(item._internalId, patch)}
+                  onRemove={() => handleRowRemove(item._internalId)}
                 />
               </div>
             );
@@ -119,7 +147,7 @@ const VirtualizedSection: React.FC = () => {
   );
 };
 
-const TabListTestPage: React.FC = () => {
+const ListTestPage: React.FC = () => {
   const {
     items,
     add,
@@ -300,7 +328,14 @@ const TabListTestPage: React.FC = () => {
         ))}
         {items.length === 0 && <p className="text-sm text-gray-500 mt-2">Nenhum item na lista.</p>}
       </div>
+    </div>
+  );
+};
 
+const TabListTestPage: React.FC = () => {
+  return (
+    <div className="p-4 space-y-4">
+      <ListTestPage />
       {/* Seção 4: virtualização com 500k */}
       <VirtualizedSection />
     </div>

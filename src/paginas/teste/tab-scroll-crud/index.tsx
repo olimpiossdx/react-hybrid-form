@@ -22,7 +22,7 @@ const generateInitialData = () => [
 
 const TableScrollCRUD = () => {
   const initialData = React.useMemo(() => generateInitialData(), []);
-  const { items, remove, add, update } = useList<IProduct>(initialData);
+  const { items, removeAt, add, update } = useList<IProduct>(initialData);
   const [editingId, setEditingId] = React.useState<string | null>(null);
 
   const columns: TableColumn<IProduct>[] = [
@@ -33,14 +33,14 @@ const TableScrollCRUD = () => {
   ];
 
   const table = useTable({
-    data: items.map((i) => ({ ...i.data, id: i.id })),
+    data: items.map((i) => ({ ...i.data, id: i._internalId })),
     columns,
     responsiveMode: 'scroll',
   });
 
   const onSubmit = (formData: any) => {
     if (editingId) {
-      const index = items.findIndex((i) => i.id === editingId);
+      const index = items.findIndex((i) => i._internalId === editingId);
       const editedItemData = formData.items?.[index];
       if (editedItemData) {
         update(editingId, {
@@ -69,10 +69,10 @@ const TableScrollCRUD = () => {
     setEditingId(id);
   };
 
-  const handleDelete = (e: React.MouseEvent, id: string) => {
+  const handleDelete = (e: React.MouseEvent, index: number) => {
     e.preventDefault();
     e.stopPropagation();
-    remove(id);
+    removeAt(index);
     toast.error('Item removido.');
   };
 
@@ -113,10 +113,10 @@ const TableScrollCRUD = () => {
 
                 <DataTable.Body>
                   {items.map((item, index) => {
-                    const isEditing = editingId === item.id;
+                    const isEditing = editingId === item._internalId;
 
                     return (
-                      <DataTable.Row key={item.id}>
+                      <DataTable.Row key={item._internalId}>
                         {/* Produto */}
                         <DataTable.Cell>
                           {isEditing ? (
@@ -178,14 +178,14 @@ const TableScrollCRUD = () => {
                             <>
                               <button
                                 type="button"
-                                onClick={(e) => handleEdit(e, item.id)}
+                                onClick={(e) => handleEdit(e, item._internalId)}
                                 className="p-1.5 text-blue-500 hover:bg-blue-50 rounded"
                                 title="Editar">
                                 <Edit2 size={16} />
                               </button>
                               <button
                                 type="button"
-                                onClick={(e) => handleDelete(e, item.id)}
+                                onClick={(e) => handleDelete(e, index)}
                                 className="p-1.5 text-red-500 hover:bg-red-50 rounded"
                                 title="Excluir">
                                 <Trash2 size={16} />

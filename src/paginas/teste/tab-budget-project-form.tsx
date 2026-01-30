@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Calendar, DollarSign, Download, PieChart, Plus, RotateCcw, Trash2 } from 'lucide-react';
 
 import showModal from '../../componentes/modal/hook';
@@ -65,19 +65,16 @@ const BudgetProjectForm = () => {
     });
   };
 
-  const { formProps, setValidators, resetSection } = useForm<IProjetoForm>({
-    id: 'budget-form',
-    onSubmit,
-  });
+  const { formProps, setValidators, resetSection } = useForm<IProjetoForm>({ id: 'budget-form', onSubmit });
 
-  const [formData, setFormData] = useState<IProjetoForm>(EMPTY_PROJECT);
-  const [mode, setMode] = useState<'novo' | 'editando' | 'carregando'>('novo');
+  const [formData, setFormData] = React.useState<IProjetoForm>(EMPTY_PROJECT);
+  const [mode, setMode] = React.useState<'novo' | 'editando' | 'carregando'>('novo');
 
   // useList inicializado com os dados do state (Data-Driven)
-  const { items, add, remove, replace, clear } = useList<IDespesa>(formData.projeto.despesas);
+  const { items, add, removeAt, set, clear } = useList<IDespesa>(formData.projeto.despesas);
 
   // --- REGRAS DE VALIDAÇÃO ---
-  useEffect(() => {
+  React.useEffect(() => {
     setValidators({
       required: (val: any) => (!val ? { message: 'Obrigatório.', type: 'error' } : undefined),
 
@@ -145,7 +142,7 @@ const BudgetProjectForm = () => {
       setMode('editando');
 
       // Sincronia Estrutural
-      replace(apiData.projeto.despesas);
+      set(apiData.projeto.despesas);
 
       // Sincronia DOM
       setTimeout(() => resetSection('', apiData), 50);
@@ -267,7 +264,7 @@ const BudgetProjectForm = () => {
           <div className="grid grid-cols-1 gap-3">
             {items.map((item, index) => (
               <div
-                key={item.id}
+                key={item._internalId}
                 className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:border-gray-300 dark:hover:border-gray-600 transition-colors flex flex-col md:flex-row gap-4 items-start animate-in slide-in-from-bottom-2 fade-in">
                 <div className="text-gray-400 dark:text-gray-600 font-mono text-xs pt-3 w-6 select-none">#{index + 1}</div>
 
@@ -311,7 +308,7 @@ const BudgetProjectForm = () => {
                 <div className="pt-6">
                   <button
                     type="button"
-                    onClick={() => remove(index)}
+                    onClick={() => removeAt(index)}
                     className="text-gray-400 hover:text-red-500 p-2 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     title="Remover item">
                     <Trash2 size={16} />
