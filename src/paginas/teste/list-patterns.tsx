@@ -23,7 +23,7 @@ interface IProduct {
 // ============================================================================
 const QuickList = () => {
   // 1. Hook de Lista (Estrutura)
-  const { items, add, remove } = useList<ISimpleTask>([
+  const { items, add, removeAt } = useList<ISimpleTask>([
     { description: 'Revisar PRs', done: true },
     { description: 'Daily Meeting', done: false },
   ]);
@@ -97,7 +97,7 @@ const QuickList = () => {
       <div className="space-y-2 overflow-y-auto flex-1 pr-2 custom-scrollbar">
         {items.map((item, index) => (
           <div
-            key={item.id}
+            key={item._internalId}
             className="group flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all animate-in slide-in-from-left-2">
             <input
               type="checkbox"
@@ -113,7 +113,7 @@ const QuickList = () => {
             <button
               type="button"
               onClick={() => {
-                remove(index);
+                removeAt(index);
                 toast.info('Tarefa removida.');
               }}
               className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
@@ -186,7 +186,7 @@ const ProductFormModal = ({ onClose, onSave }: any) => {
 };
 
 const DetailedList = () => {
-  const { items, add, remove } = useList<IProduct>([{ name: 'Macbook Pro', category: 'Eletrônicos', quantity: 1 }]);
+  const { items, add, removeAt } = useList<IProduct>([{ name: 'Macbook Pro', category: 'Eletrônicos', quantity: 1 }]);
 
   const handleOpenModal = () => {
     showModal({
@@ -228,7 +228,7 @@ const DetailedList = () => {
       <div className="space-y-3 overflow-y-auto flex-1 pr-2 custom-scrollbar">
         {items.map((item, index) => (
           <div
-            key={item.id}
+            key={item._internalId}
             className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-900 rounded border-l-4 border-green-500 shadow-sm animate-in zoom-in-95">
             <div>
               <input
@@ -256,7 +256,7 @@ const DetailedList = () => {
               </div>
               <button
                 onClick={() => {
-                  remove(index);
+                  removeAt(index);
                   toast.info('Produto removido.');
                 }}
                 className="text-gray-400 hover:text-red-500 transition-colors"

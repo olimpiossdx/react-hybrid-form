@@ -24,7 +24,7 @@ interface CategoryItemProps {
 
 const CategoryItem: React.FC<CategoryItemProps> = ({ prefix, onDelete, level = 0 }) => {
   // Cada nó gerencia sua própria lista de filhos estruturalmente
-  const { items, add, remove } = useList<CategoryNode>(0);
+  const { items, add, removeAt } = useList<CategoryNode>(0);
 
   return (
     <div className={`relative pl-4 sm:pl-6 ${level > 0 ? 'border-l border-gray-200 dark:border-gray-700 ml-2' : ''} transition-colors`}>
@@ -60,10 +60,10 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ prefix, onDelete, level = 0
       <div className="space-y-2">
         {items.map((item, index) => (
           <CategoryItem
-            key={item.id}
+            key={item._internalId}
             // Constrói o caminho profundo dinamicamente
             prefix={`${prefix}.subcategories[${index}]`}
-            onDelete={() => remove(index)}
+            onDelete={() => removeAt(index)}
             level={level + 1}
           />
         ))}
@@ -101,7 +101,7 @@ const NestedLevelForm = () => {
   });
 
   // Lista Raiz (Começa com 1 item)
-  const { items, add, remove } = useList<CategoryNode>(1);
+  const { items, add, removeAt } = useList<CategoryNode>(1);
 
   return (
     <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-colors max-w-4xl mx-auto">
@@ -126,7 +126,7 @@ const NestedLevelForm = () => {
       <form {...formProps} className="space-y-6">
         <div className="space-y-4">
           {items.map((item, index) => (
-            <CategoryItem key={item.id} prefix={`taxonomy[${index}]`} onDelete={() => remove(index)} />
+            <CategoryItem key={item._internalId} prefix={`taxonomy[${index}]`} onDelete={() => removeAt(index)} />
           ))}
         </div>
 
