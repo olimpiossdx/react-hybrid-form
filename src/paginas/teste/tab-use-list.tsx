@@ -58,6 +58,7 @@ const makeBigInitialData = (): User[] => {
 
 // Reaproveite o mesmo UserRowBase do teste anterior, se quiser
 const VirtualRowBase: ListRowComponent<User> = ({ data, onChange, onRemove }) => {
+  console.log('render VirtualRow', data.name);
   return (
     <div className="flex items-center gap-2 mb-1">
       <input className="border px-2 py-1 rounded w-40" value={data.name} onChange={(e) => onChange({ name: e.target.value })} />

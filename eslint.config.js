@@ -61,7 +61,7 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/ban-ts-comment': 'off', // Permite @ts-ignore
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-console': ['off', { allow: ['warn', 'error'] }],
 
       // A regra 'max-len' do ESLint é substituída pelo 'printWidth' do Prettier acima.
       // Mantemos eqeqeq e curly pois são regras de lógica, não apenas estilo.

@@ -88,7 +88,7 @@ const QuickList = () => {
             required // Validação Nativa
           />
         </div>
-        <button type="submit" className="bg-cyan-600 hover:bg-cyan-500 text-white p-2 rounded transition-colors shadow-sm h-[42px]">
+        <button type="submit" className="bg-cyan-600 hover:bg-cyan-500 text-white p-2 rounded transition-colors shadow-sm h-10.5">
           <Plus size={20} />
         </button>
       </form>
@@ -289,7 +289,7 @@ const ListPatternsExample = () => {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[600px]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-150">
         <QuickList />
         <DetailedList />
       </div>
