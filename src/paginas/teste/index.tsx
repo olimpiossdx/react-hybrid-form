@@ -13,6 +13,7 @@ import TabCard from './tab-card';
 import CheckboxGroupForm from './tab-checkbox-group-form';
 import CurriculumForm from './tab-curriculum';
 import TabDataTableExample from './tab-data-table';
+import TabFormListTestSection from './tab-form-list-test-section';
 import HybridFormSimple from './tab-hibryd-form-simple';
 import TabInputTypes from './tab-input';
 import LoginForm from './tab-login';
@@ -38,6 +39,7 @@ import TabTableStackCRUD from './tab-table-stack-crud';
 import TabTextArea from './tab-textarea';
 import ToastContainerExample from './tab-toast-container';
 import TabTransferList from './tab-transferlist';
+import ListTestPage from './tab-use-list';
 import ValidationFeedbackExample from './tab-validacao';
 import TabValidationComplexExample from './tab-validation-complex';
 import TabVirtualList from './tab-virtualize';
@@ -47,7 +49,6 @@ import Flex from '../../componentes/flex';
 import NestedLevelForm from '../../componentes/nested-level-form';
 import TabButton from '../../componentes/tab-button';
 import ThemeToggle from '../../componentes/theme';
-import ListTestPage from '../tab-use-list';
 
 const Homologacao: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState('curriculum');
@@ -97,6 +98,7 @@ const Homologacao: React.FC = () => {
     tabTableComplexo: <TabTableComplexo />,
     tabTableResponsiveAll: <TabTableResponsiveAll />,
     listTestPage: <ListTestPage />,
+    tabFormListTestSection: <TabFormListTestSection />,
   };
 
   return (
@@ -142,6 +144,12 @@ const Homologacao: React.FC = () => {
           <TabButton tabId="tabVirtualList" label="Virtual List (500k)" isActive={activeTab === 'tabVirtualList'} onClick={setActiveTab} />
           <TabButton tabId="tabEventBusForm" label="List Patterns" isActive={activeTab === 'tabEventBusForm'} onClick={setActiveTab} />
           <TabButton tabId="listTestPage" label="use list-atualizado" isActive={activeTab === 'listTestPage'} onClick={setActiveTab} />
+          <TabButton
+            tabId="tabFormListTestSection"
+            label="use list form section"
+            isActive={activeTab === 'tabFormListTestSection'}
+            onClick={setActiveTab}
+          />
 
           <Box className="w-px bg-gray-300 dark:bg-gray-600 mx-1" />
 

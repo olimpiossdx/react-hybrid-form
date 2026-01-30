@@ -12,6 +12,7 @@ export interface ListDirtyEvent {
 export interface UseListReturn<T> {
   items: ListItem<T>[];
 
+  getItems: () => ListItem<T>[];
   add: (payload?: T | T[]) => void;
   insertAt: (index: number, payload?: T) => void;
   update: (id: string, payload: Partial<T>) => void;
@@ -21,17 +22,17 @@ export interface UseListReturn<T> {
   removeAt: (index: number) => void;
   set: (dataOrCount: T[] | number) => void;
   clear: () => void;
-  clearDirty: () => void;
+
   resetToInitial: () => void;
   setInitialSnapshot: (items: T[]) => void;
-  getDirtySnapshot: () => {
-    isDirty: boolean;
-    dirtyIds: Set<string>;
-  };
+
   createRowComponent: (
     Component: ListRowComponent<T>,
     options?: {
       areEqual?: (prev: ListRowProps<T>, next: ListRowProps<T>) => boolean;
     },
   ) => React.MemoExoticComponent<ListRowComponent<T>>;
+
+  getDirtySnapshot: () => { isDirty: boolean; dirtyIds: Set<string> };
+  subscribe: (listener: () => void) => () => void;
 }
