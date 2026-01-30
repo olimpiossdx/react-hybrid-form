@@ -1,8 +1,8 @@
-// list-advanced-examples.tsx
 import React from 'react';
 import { CheckSquare, CornerUpLeft, CornerUpRight, Filter, Package, Plus, ShieldCheck, ShoppingCart, Tag, Trash2 } from 'lucide-react';
 
-import { showModal } from '../../componentes/modal';
+import { type IModalOptions, showModal } from '../../componentes/modal';
+import type { InjectedModalProps } from '../../componentes/modal/types';
 import { toast } from '../../componentes/toast';
 import useList from '../../hooks/list';
 import useForm from '../../hooks/use-form';
@@ -44,7 +44,7 @@ const QuickList: React.FC = () => {
       }
       add({ description: value, done: false });
       toast.success('Tarefa adicionada!');
-      resetSection('newTask');
+      resetSection('newTask', { newTask: '' });
     },
   });
 
@@ -123,8 +123,12 @@ const QuickList: React.FC = () => {
   );
 };
 
+type ProductFormModalProps = InjectedModalProps & {
+  onSave: (data: IProduct) => void;
+};
+
 // --- EXEMPLO 2: DetailedList (já existente, resumido) ---
-const ProductFormModal: React.FC<{ onClose: () => void; onSave: (data: IProduct) => void }> = ({ onClose, onSave }) => {
+const ProductFormModal: React.FC<ProductFormModalProps> = ({ onClose, onSave }) => {
   const { formProps } = useForm<IProduct>({
     id: 'product-modal-form',
     onSubmit: (data) => {
@@ -184,7 +188,7 @@ const DetailedList: React.FC = () => {
   ]);
 
   const handleOpenModal = () => {
-    showModal({
+    const options: IModalOptions<unknown, { onSave: (data: IProduct) => void }> = {
       title: (
         <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
           <Package />
@@ -194,12 +198,16 @@ const DetailedList: React.FC = () => {
       size: 'sm',
       content: ProductFormModal,
       props: {
-        onSave: (data: IProduct) => {
-          add(data);
-          toast.success(`Produto ${data.name} adicionado!`);
+        content: {
+          onSave: (data: IProduct) => {
+            add(data);
+            toast.success(`Produto ${data.name} adicionado!`);
+          },
         },
       },
-    });
+    };
+
+    showModal(options);
   };
 
   return (
@@ -369,25 +377,20 @@ const UndoList: React.FC = () => {
         // @ts-ignore: apenas para ler snapshot logo após add
         items as any as typeof items,
       );
-      resetSection('todo');
+      resetSection('todo', { todo: '' });
       toast.success('Tarefa adicionada!');
     },
   });
 
   const handleToggle = (index: number) => {
-    update(index, (current) => ({ ...current, done: !current.done }));
-    syncFromListToHistory(
-      // @ts-ignore
-      items as any as typeof items,
-    );
+    const id = items[index]._internalId;
+    update(id, { done: !items[index].data.done });
+    syncFromListToHistory(items as any as typeof items);
   };
 
   const handleRemove = (index: number) => {
     removeAt(index);
-    syncFromListToHistory(
-      // @ts-ignore
-      items as any as typeof items,
-    );
+    syncFromListToHistory(items as any as typeof items);
     toast.info('Tarefa removida.');
   };
 
@@ -473,7 +476,7 @@ const UndoList: React.FC = () => {
 
 // --- EXEMPLO 4: Dirty + validação de coleção + seleção/bulk ---
 const AdvancedUsersList: React.FC = () => {
-  const { items, add, update, removeAt, getItems } = useList<IUserRow>([
+  const { items, update, removeAt, getItems } = useList<IUserRow>([
     {
       id: '1',
       name: 'Ana',
@@ -540,9 +543,9 @@ const AdvancedUsersList: React.FC = () => {
       toast.warning('Selecione pelo menos um usuário.');
       return;
     }
-    items.forEach((item, index) => {
+    items.forEach((item) => {
       if (selectedIds.has(item.data.id)) {
-        update(index, (current) => ({ ...current, active: false }));
+        update(item._internalId, { active: false });
         markDirty(item.data.id);
       }
     });
@@ -677,7 +680,8 @@ const AdvancedUsersList: React.FC = () => {
                     className="bg-transparent border-none font-medium outline-none w-full text-gray-900 dark:text-gray-100"
                     defaultValue={item.data.name}
                     onChange={(e) => {
-                      update(index, (current) => ({ ...current, name: e.target.value }));
+                      const id = item._internalId;
+                      update(id, { name: e.target.value });
                       markDirty(item.data.id);
                     }}
                   />
@@ -685,7 +689,8 @@ const AdvancedUsersList: React.FC = () => {
                     className="bg-transparent border-none text-[11px] outline-none w-full text-gray-500 dark:text-gray-400"
                     defaultValue={item.data.email}
                     onChange={(e) => {
-                      update(index, (current) => ({ ...current, email: e.target.value }));
+                      const id = item._internalId;
+                      update(id, { email: e.target.value });
                       markDirty(item.data.id);
                     }}
                   />
@@ -696,10 +701,8 @@ const AdvancedUsersList: React.FC = () => {
                   className="text-[11px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-gray-700 dark:text-gray-200"
                   defaultValue={item.data.role}
                   onChange={(e) => {
-                    update(index, (current) => ({
-                      ...current,
-                      role: e.target.value as IUserRow['role'],
-                    }));
+                    const id = item._internalId;
+                    update(id, { role: e.target.value as IUserRow['role'] });
                     markDirty(item.data.id);
                   }}>
                   <option value="admin">Admin</option>
@@ -711,10 +714,8 @@ const AdvancedUsersList: React.FC = () => {
                     type="checkbox"
                     defaultChecked={item.data.active}
                     onChange={(e) => {
-                      update(index, (current) => ({
-                        ...current,
-                        active: e.target.checked,
-                      }));
+                      const id = item._internalId;
+                      update(id, { active: e.target.checked });
                       markDirty(item.data.id);
                     }}
                     className="w-3.5 h-3.5 rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500"
@@ -756,7 +757,7 @@ const TabUseListExploreAdvanced: React.FC = () => {
   return (
     <div className="p-8 max-w-6xl mx-auto">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-green-600 dark:from-cyan-400 dark:to-green-500 mb-2">
+        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-cyan-600 to-green-600 dark:from-cyan-400 dark:to-green-500 mb-2">
           Padrões Avançados de Lista
         </h1>
         <p className="text-gray-600 dark:text-gray-400 text-sm">
