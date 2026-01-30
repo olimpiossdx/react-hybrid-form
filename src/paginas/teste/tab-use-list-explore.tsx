@@ -300,8 +300,9 @@ const UndoList: React.FC = () => {
     future: [],
   }));
 
-  const syncFromListToHistory = React.useCallback((nextItems: typeof items) => {
-    const nextPresent = nextItems.map((i) => i.data);
+  // Sempre chamado APÓS uma operação de lista
+  const syncFromListToHistory = React.useCallback(() => {
+    const nextPresent = items.map((i) => i.data);
     setHistory((prev) => {
       const sameLength = prev.present.length === nextPresent.length;
       const sameContent =
@@ -319,34 +320,46 @@ const UndoList: React.FC = () => {
         future: [],
       };
     });
-  }, []);
+  }, [items]);
 
+  // Inicializa histórico com base nos itens iniciais
   React.useEffect(() => {
     setHistory({
       past: [],
       present: items.map((i) => i.data),
       future: [],
     });
+    // só na montagem
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const canUndo = history.past.length > 0;
   const canRedo = history.future.length > 0;
 
   const applyToList = (data: Todo[]) => {
-    set(data.map((d) => ({ data: d }) as any));
+    // usamos set com array de dados crus; o hook cria novos _internalId
+    set(data);
   };
 
   const handleUndo = () => {
     if (!canUndo) {
       return;
     }
+
     setHistory((prev) => {
       const previous = prev.past[prev.past.length - 1];
       const newPast = prev.past.slice(0, -1);
       const newFuture = [prev.present, ...prev.future];
+
       applyToList(previous);
-      return { past: newPast, present: previous, future: newFuture };
+
+      return {
+        past: newPast,
+        present: previous,
+        future: newFuture,
+      };
     });
+
     toast.info('Última ação desfeita.');
   };
 
@@ -354,13 +367,21 @@ const UndoList: React.FC = () => {
     if (!canRedo) {
       return;
     }
+
     setHistory((prev) => {
       const next = prev.future[0];
       const newFuture = prev.future.slice(1);
       const newPast = [...prev.past, prev.present];
+
       applyToList(next);
-      return { past: newPast, present: next, future: newFuture };
+
+      return {
+        past: newPast,
+        present: next,
+        future: newFuture,
+      };
     });
+
     toast.info('Ação refeita.');
   };
 
@@ -372,11 +393,11 @@ const UndoList: React.FC = () => {
         toast.warning('Digite uma tarefa antes de adicionar.');
         return;
       }
+
       add({ title: value, done: false });
-      syncFromListToHistory(
-        // @ts-ignore: apenas para ler snapshot logo após add
-        items as any as typeof items,
-      );
+      // agora items já contém o novo elemento
+      syncFromListToHistory();
+
       resetSection('todo', { todo: '' });
       toast.success('Tarefa adicionada!');
     },
@@ -384,13 +405,15 @@ const UndoList: React.FC = () => {
 
   const handleToggle = (index: number) => {
     const id = items[index]._internalId;
-    update(id, { done: !items[index].data.done });
-    syncFromListToHistory(items as any as typeof items);
+    const currentDone = items[index].data.done;
+
+    update(id, { done: !currentDone });
+    syncFromListToHistory();
   };
 
   const handleRemove = (index: number) => {
     removeAt(index);
-    syncFromListToHistory(items as any as typeof items);
+    syncFromListToHistory();
     toast.info('Tarefa removida.');
   };
 
