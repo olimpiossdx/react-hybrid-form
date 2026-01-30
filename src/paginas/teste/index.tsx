@@ -40,6 +40,7 @@ import TabTextArea from './tab-textarea';
 import ToastContainerExample from './tab-toast-container';
 import TabTransferList from './tab-transferlist';
 import ListTestPage from './tab-use-list';
+import TabUseListExploreAdvanced from './tab-use-list-explore';
 import ValidationFeedbackExample from './tab-validacao';
 import TabValidationComplexExample from './tab-validation-complex';
 import TabVirtualList from './tab-virtualize';
@@ -99,6 +100,7 @@ const Homologacao: React.FC = () => {
     tabTableResponsiveAll: <TabTableResponsiveAll />,
     listTestPage: <ListTestPage />,
     tabFormListTestSection: <TabFormListTestSection />,
+    tabUseListExploreAdvanced: <TabUseListExploreAdvanced />,
   };
 
   return (
@@ -148,6 +150,12 @@ const Homologacao: React.FC = () => {
             tabId="tabFormListTestSection"
             label="use list form section"
             isActive={activeTab === 'tabFormListTestSection'}
+            onClick={setActiveTab}
+          />
+          <TabButton
+            tabId="tabUseListExploreAdvanced"
+            label="use list explore advanced"
+            isActive={activeTab === 'tabUseListExploreAdvanced'}
             onClick={setActiveTab}
           />
 
