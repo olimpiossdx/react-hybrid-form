@@ -21,6 +21,7 @@ import TabMaskExample from './tab-mask';
 import TabModal from './tab-modal';
 import NestedListForm from './tab-nested-list-form';
 import TabPagination from './tab-pagination';
+import TabPopover from './tab-popover';
 import TabRadioGroup from './tab-radio-group';
 import DateRangeExample from './tab-range-date';
 import TabStarRatingExample from './tab-rating';
@@ -101,6 +102,7 @@ const Homologacao: React.FC = () => {
     listTestPage: <ListTestPage />,
     tabFormListTestSection: <TabFormListTestSection />,
     tabUseListExploreAdvanced: <TabUseListExploreAdvanced />,
+    tabPopover: <TabPopover />,
   };
 
   return (
@@ -213,6 +215,7 @@ const Homologacao: React.FC = () => {
             isActive={activeTab === 'tabTableResponsiveAll'}
             onClick={setActiveTab}
           />
+          <TabButton tabId="tabPopover" label="Popover" isActive={activeTab === 'tabPopover'} onClick={setActiveTab} />
 
           <Box className="w-px bg-gray-300 dark:bg-gray-600 mx-1" />
 
