@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreditCard, Github, LayoutList, LogOut, MoreVertical, Plus, Settings, User } from 'lucide-react';
+import { CreditCard, Github, LayoutList, LogOut, MoreVertical, Plus, User } from 'lucide-react';
 
 import Badge from '../../componentes/badge';
 import Button from '../../componentes/button';
@@ -18,11 +18,29 @@ import Input from '../../componentes/input';
 
 const TabDropdownShowcase: React.FC = () => {
   // CONFIGURAÇÃO PARA MODO PADRÃO (DATA DRIVEN)
-  const menuItems: DropdownMenuItemDef[] = [
-    { label: 'Meu Perfil', icon: User, onClick: () => alert('Perfil') },
-    { label: 'Configurações', icon: Settings, shortcut: '⌘S' },
-    { separator: true, label: '' }, // Separador
-    { label: 'Sair', icon: LogOut, variant: 'destructive' },
+  const items: DropdownMenuItemDef[] = [
+    {
+      as: 'a',
+      props: {
+        draggable: true,
+        href: '#perfil',
+        onClick: (e) => {
+          console.log(' e', e);
+        },
+        onMouseEnter: () => {},
+      },
+      label: 'Meu Perfil',
+      icon: User,
+    },
+    {
+      as: 'button',
+      props: {
+        type: 'button',
+        onClick: () => alert('Sair'),
+      },
+      label: 'Sair',
+      variant: 'destructive',
+    },
   ];
 
   return (
@@ -42,7 +60,7 @@ const TabDropdownShowcase: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="h-40 flex items-center justify-center bg-gray-50 dark:bg-gray-900/50 rounded-md">
-            <DropdownMenu trigger={<Button variant="outline">Opções Rápidas</Button>} items={menuItems} />
+            <DropdownMenu trigger={<Button variant="outline">Opções Rápidas</Button>} items={items} />
           </CardContent>
         </Card>
 

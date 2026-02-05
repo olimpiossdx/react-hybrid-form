@@ -1,17 +1,17 @@
 import React, { createContext, type ElementType, type ReactNode, useContext, useRef, useState } from 'react';
 
-import { cn } from '../../utils/cn'; // Utilitário de classes
-import Popover from '../popover'; // Importando o Popover que já existe/validamos
+import { cn } from '../../utils/cn';
+import Popover from '../popover';
 
 // ============================================================================
-// 1. CONTEXTO E TIPOS
+// 1. CONTEXTO
 // ============================================================================
 
 interface DropdownContextType {
   isOpen: boolean;
   toggle: () => void;
   close: () => void;
-  triggerRef: React.RefObject<any>;
+  triggerRef: React.RefObject<HTMLElement | null>;
 }
 
 const DropdownContext = createContext<DropdownContextType | undefined>(undefined);
@@ -24,75 +24,87 @@ const useDropdown = () => {
   return context;
 };
 
-// Tipo para o Modo Padrão (Data-Driven)
-export interface DropdownMenuItemDef {
-  label: string;
+// ============================================================================
+// 2. TIPOS PARA MODO DATA-DRIVEN ({ as, props })
+// ============================================================================
+
+type IntrinsicTag = keyof React.JSX.IntrinsicElements;
+
+interface DropdownMenuItemBase {
+  /** Renderiza um separador antes do item. */
+  separator?: boolean;
+  /** Opcionalmente, label a ser exibido (se não quiser usar children direto). */
+  label?: ReactNode;
   icon?: React.ElementType;
-  onClick?: () => void;
-  disabled?: boolean;
   variant?: 'default' | 'destructive';
-  shortcut?: string; // Ex: ⌘+S
-  separator?: boolean; // Se true, renderiza um separador ANTES deste item
+  shortcut?: string;
+  disabled?: boolean;
 }
+
+/**
+ * Item intrínseco parametrizado por tag (button, a, etc).
+ * props é tipado a partir de JSX.IntrinsicElements[T].
+ */
+type DropdownIntrinsicItem<T extends IntrinsicTag> = DropdownMenuItemBase & {
+  as: T;
+  props?: React.JSX.IntrinsicElements[T];
+};
+
+/**
+ * União de itens suportados no modo data-driven.
+ * Aqui você pode ir adicionando tags conforme necessidade.
+ */
+export type DropdownMenuItemDef = DropdownIntrinsicItem<'button'> | DropdownIntrinsicItem<'a'>;
 
 interface DropdownMenuProps {
   children?: ReactNode;
-  /**
-   * Modo Padrão: Passe um array de itens para renderizar automaticamente.
-   */
   items?: DropdownMenuItemDef[];
-  /**
-   * Gatilho personalizado para o Modo Padrão (se não passar children).
-   * Ex: <Button>Opções</Button>
-   */
   trigger?: ReactNode;
-
-  // Configurações visuais
   width?: string;
-  align?: 'start' | 'end'; // Alinhamento futuro (o popover atual é fixo, mas preparamos a API)
+  className?: string;
 }
 
 // ============================================================================
-// 2. SUB-COMPONENTES (MODO CUSTOMIZADO / COMPOUND)
+// 3. SUB-COMPONENTES (COMPOUND)
 // ============================================================================
 
+/**
+ * Gatilho do Dropdown.
+ * Clona o elemento filho para injetar a ref e o onClick automaticamente.
+ */
 type TriggerChildProps = {
   onClick?: (event: React.MouseEvent<any>) => void;
-  // Em geral, Button/Link aceitam ref; o tipo concreto vem do próprio elemento.
+  ref?: React.Ref<any>;
 };
 
 interface DropdownTriggerProps {
   children: React.ReactElement<TriggerChildProps>;
 }
-/**
- * Gatilho do Dropdown.
- * Clona o elemento filho para injetar a ref e o onClick automaticamente.
- * Funciona com Button, div, span, Avatar, etc.
- */
-export const DropdownTrigger: React.FC<DropdownTriggerProps> = ({ children }) => {
-  const { toggle, triggerRef, isOpen } = useDropdown();
 
-  if (!React.isValidElement<TriggerChildProps>(children)) {
-    // Se quiser ser mais estrito: lançar erro em vez de retornar null
-    return null;
-  }
+export const DropdownTrigger = ({ children }: DropdownTriggerProps) => {
+  const { toggle, triggerRef, isOpen } = useDropdown();
 
   return React.cloneElement(children as React.ReactElement<any>, {
     ref: triggerRef,
-    onClick: (e: React.MouseEvent<any>) => {
+    onClick: (e: React.MouseEvent) => {
       children.props.onClick?.(e);
       toggle();
     },
     'aria-haspopup': true,
-    'aria-expanded': isOpen, // agora reflete o estado real
+    'aria-expanded': isOpen,
   });
 };
 
 /**
- * Container do conteúdo do Dropdown.
- * Wrapper estilizado para o Popover.
+ * Container do conteúdo (usa Popover).
  */
-export const DropdownContent = ({ children, width = 'w-56', className }: { children: ReactNode; width?: string; className?: string }) => {
+interface DropdownContentProps {
+  children: ReactNode;
+  width?: string;
+  className?: string;
+}
+
+export const DropdownContent = ({ children, width = 'w-56', className }: DropdownContentProps) => {
   const { isOpen, close, triggerRef } = useDropdown();
 
   return (
@@ -106,45 +118,39 @@ export const DropdownContent = ({ children, width = 'w-56', className }: { child
   );
 };
 
-/**
- * Item interativo do Dropdown.
- * Suporta polimorfismo via prop 'as' (padrão: 'button').
- */
-export interface DropdownItemProps {
+// --- DropdownItem Polimórfico com Typescript Generics ---
+
+type DropdownItemOwnProps<E extends ElementType = 'button'> = {
   children: ReactNode;
-  onClick?: () => void;
   icon?: React.ElementType;
-  disabled?: boolean;
   variant?: 'default' | 'destructive';
   shortcut?: string;
+  disabled?: boolean;
   className?: string;
-  /**
-   * Componente ou tag HTML a ser renderizado.
-   * Ex: as="a" para links, as={Link} para router.
-   */
-  as?: ElementType;
-  [key: string]: any; // Permite outras props (href, to, etc)
-}
+  as?: E;
+};
 
-export const DropdownItem = ({
-  children,
-  onClick,
-  icon: Icon,
-  disabled,
-  variant = 'default',
-  shortcut,
-  className,
-  as: Component = 'button',
-  ...props
-}: DropdownItemProps) => {
+type PolymorphicComponentProps<E extends ElementType, P> = DropdownItemOwnProps<E> &
+  Omit<React.ComponentPropsWithoutRef<E>, keyof DropdownItemOwnProps | keyof P> &
+  P;
+
+export type DropdownItemProps<E extends ElementType = 'button'> = PolymorphicComponentProps<
+  E,
+  { onClick?: (event: React.MouseEvent<any>) => void }
+>;
+
+export const DropdownItem = <E extends ElementType = 'button'>(props: DropdownItemProps<E>) => {
+  const { children, onClick, icon: Icon, disabled, variant = 'default', shortcut, className, as, ...rest } = props;
   const { close } = useDropdown();
 
-  const handleClick = (e: React.MouseEvent) => {
+  const Component = (as || 'button') as ElementType;
+
+  const handleClick = (e: React.MouseEvent<any>) => {
     if (disabled) {
       e.preventDefault();
       return;
     }
-    onClick?.();
+    onClick?.(e);
     close();
   };
 
@@ -153,17 +159,20 @@ export const DropdownItem = ({
       ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20'
       : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700';
 
+  const isButton = Component === 'button';
+
   return (
     <Component
       onClick={handleClick}
-      disabled={disabled}
+      {...(isButton ? { disabled } : { 'aria-disabled': disabled || undefined })}
       className={cn(
-        'relative flex items-center w-full px-2 py-2 text-sm rounded-md transition-colors select-none outline-none data-disabled:pointer-events-none data-disabled:opacity-50 text-left',
+        'relative flex items-center w-full px-2 py-2 text-sm rounded-md transition-colors select-none outline-none text-left',
+        'data-disabled:pointer-events-none data-disabled:opacity-50',
         variantStyles,
         disabled && 'opacity-50 cursor-not-allowed',
         className,
       )}
-      {...props}>
+      {...(rest as any)}>
       {Icon && <Icon className="mr-2 h-4 w-4" />}
       <span className="flex-1 truncate">{children}</span>
       {shortcut && <span className="ml-auto text-xs tracking-widest text-gray-400">{shortcut}</span>}
@@ -186,50 +195,50 @@ export const DropdownHeader = ({ children, className }: { children: ReactNode; c
 );
 
 // ============================================================================
-// 3. COMPONENTE RAIZ (CONTROLADOR HÍBRIDO)
+// 4. COMPONENTE RAIZ HÍBRIDO
 // ============================================================================
 
-export const DropdownMenu = ({ children, items, trigger, width }: DropdownMenuProps) => {
+export const DropdownMenu = ({ children, items, trigger, width, className }: DropdownMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLElement>(null);
 
   const toggle = () => setIsOpen((prev) => !prev);
   const close = () => setIsOpen(false);
 
-  const contextValue = { isOpen, toggle, close, triggerRef };
+  const contextValue: DropdownContextType = { isOpen, toggle, close, triggerRef };
 
-  // --- RENDERIZAÇÃO ---
+  const hasItems = !!items && items.length > 0;
 
-  // MODO 1: PADRÃO (Data Driven)
-  // Se 'items' for fornecido, montamos a estrutura automaticamente
-  if (items && trigger) {
+  // MODO 1: DATA-DRIVEN ({ as, props })
+  if (hasItems && trigger) {
     return (
       <DropdownContext.Provider value={contextValue}>
-        <DropdownTrigger>
-          {/* Se o trigger for texto string, envolvemos num span, senão clonamos o elemento */}
-          {React.isValidElement(trigger) ? trigger : <span>{trigger}</span>}
-        </DropdownTrigger>
+        <DropdownTrigger>{React.isValidElement(trigger) ? trigger : <span>{trigger}</span>}</DropdownTrigger>
 
-        <DropdownContent width={width}>
-          {items.map((item, index) => (
-            <React.Fragment key={index}>
-              {item.separator && <DropdownSeparator />}
-              <DropdownItem
-                onClick={item.onClick}
-                icon={item.icon}
-                disabled={item.disabled}
-                variant={item.variant}
-                shortcut={item.shortcut}>
-                {item.label}
-              </DropdownItem>
-            </React.Fragment>
-          ))}
+        <DropdownContent width={width} className={className}>
+          {items!.map((item, index) => {
+            const { separator, as, props: itemProps, label, icon, variant, shortcut, disabled } = item;
+
+            const Tag = as ?? 'button';
+
+            // Aqui você pode mesclar label/icon/etc com props, se quiser.
+            const finalChildren = label ?? (itemProps as any)?.children ?? null;
+
+            return (
+              <React.Fragment key={index}>
+                {separator && <DropdownSeparator />}
+
+                <DropdownItem as={Tag as any} icon={icon} variant={variant} shortcut={shortcut} disabled={disabled} {...(itemProps as any)}>
+                  {finalChildren}
+                </DropdownItem>
+              </React.Fragment>
+            );
+          })}
         </DropdownContent>
       </DropdownContext.Provider>
     );
   }
 
-  // MODO 2: CUSTOMIZADO (Compound)
-  // Renderiza os filhos livremente (espera-se Trigger e Content)
+  // MODO 2: COMPOUND (Customizado)
   return <DropdownContext.Provider value={contextValue}>{children}</DropdownContext.Provider>;
 };
