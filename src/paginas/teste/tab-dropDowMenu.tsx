@@ -1,5 +1,21 @@
 import React from 'react';
-import { CreditCard, Github, LayoutList, LogOut, MoreVertical, Plus, User } from 'lucide-react';
+import {
+  Bell,
+  CreditCard,
+  FilePlus,
+  FolderOpen,
+  Github,
+  LayoutList,
+  LogOut,
+  MoreVertical,
+  Plus,
+  Save,
+  Search,
+  Settings,
+  SunMedium,
+  Trash2,
+  User,
+} from 'lucide-react';
 
 import Badge from '../../componentes/badge';
 import Button from '../../componentes/button';
@@ -15,6 +31,264 @@ import {
   DropdownTrigger,
 } from '../../componentes/dropdown-menu';
 import Input from '../../componentes/input';
+
+// ============================================================================
+// 1. Menu "Arquivo" (data-driven com button)
+// ============================================================================
+
+const fileItems: DropdownMenuItemDef[] = [
+  {
+    as: 'button',
+    label: 'Novo arquivo',
+    icon: FilePlus,
+    shortcut: '⌘+N',
+    props: {
+      type: 'button',
+      onClick: () => console.log('Novo arquivo'),
+    },
+  },
+  {
+    as: 'button',
+    label: 'Abrir...',
+    icon: FolderOpen,
+    shortcut: '⌘+O',
+    props: {
+      type: 'button',
+      onClick: () => console.log('Abrir arquivo'),
+    },
+  },
+  {
+    as: 'button',
+    label: 'Salvar',
+    icon: Save,
+    shortcut: '⌘+S',
+    props: {
+      type: 'button',
+      onClick: () => console.log('Salvar'),
+    },
+  },
+  {
+    as: 'button',
+    label: 'Salvar como...',
+    shortcut: '⇧+⌘+S',
+    props: {
+      type: 'button',
+      onClick: () => console.log('Salvar como'),
+    },
+  },
+  {
+    as: 'button',
+    separator: true,
+    label: 'Mover para lixeira',
+    icon: Trash2,
+    variant: 'destructive',
+    props: {
+      type: 'button',
+      onClick: () => console.log('Mover para lixeira'),
+    },
+  },
+];
+
+export function FileMenuExample() {
+  return (
+    <DropdownMenu
+      trigger={<button className="px-3 py-2 rounded-md bg-slate-900 text-white">Arquivo</button>}
+      items={fileItems}
+      width="w-64"
+    />
+  );
+}
+
+// ============================================================================
+// 2. Menu de Usuário (data-driven com a, input, button)
+// ============================================================================
+
+const userItems: DropdownMenuItemDef[] = [
+  {
+    as: 'input',
+    label: 'Buscar',
+    props: {
+      type: 'text',
+      placeholder: 'Buscar opções...',
+      className: 'w-full px-2 py-1 mb-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500',
+      onChange: (e) => console.log('Filtro:', e.target.value),
+    },
+  },
+  {
+    as: 'a',
+    label: 'Meu perfil',
+    icon: User,
+    props: {
+      href: '#perfil',
+      onClick: (e) => {
+        e.preventDefault();
+        console.log('Ir para perfil');
+      },
+    },
+  },
+  {
+    as: 'a',
+    label: 'Notificações',
+    icon: Bell,
+    props: {
+      href: '#notificacoes',
+    },
+  },
+  {
+    as: 'a',
+    label: 'Configurações',
+    icon: Settings,
+    props: {
+      href: '#config',
+    },
+  },
+  {
+    as: 'button',
+    separator: true,
+    label: 'Sair',
+    icon: LogOut,
+    variant: 'destructive',
+    props: {
+      type: 'button',
+      onClick: () => console.log('Logout'),
+    },
+  },
+];
+
+export function UserMenuDataDrivenExample() {
+  return (
+    <DropdownMenu
+      trigger={
+        <button className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-900 text-slate-100">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-700">U</span>
+          <span className="text-sm font-medium">Usuário</span>
+        </button>
+      }
+      items={userItems}
+      width="w-72"
+    />
+  );
+}
+
+// ============================================================================
+// 3. Menu de Usuário (compound API mais rica)
+// ============================================================================
+
+export function UserMenuCompoundExample() {
+  const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
+  const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
+
+  return (
+    <DropdownMenu>
+      <DropdownTrigger>
+        <button className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-900 text-slate-100">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-700">U</span>
+          <span className="text-sm font-medium">Usuário</span>
+        </button>
+      </DropdownTrigger>
+
+      <DropdownContent width="w-72">
+        <DropdownHeader>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-slate-600 flex items-center justify-center text-white text-sm">U</div>
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">Usuário Demo</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">usuario@dominio.com</span>
+            </div>
+          </div>
+        </DropdownHeader>
+
+        <DropdownLabel>Conta</DropdownLabel>
+
+        <DropdownItem as="a" href="#perfil" icon={User}>
+          Meu perfil
+        </DropdownItem>
+
+        <DropdownItem as="a" href="#notificacoes" icon={Bell}>
+          Notificações
+        </DropdownItem>
+
+        <DropdownSeparator />
+
+        <DropdownLabel>Preferências</DropdownLabel>
+
+        <DropdownItem
+          as="button"
+          onClick={(e) => {
+            e.preventDefault();
+            setNotificationsEnabled((prev) => !prev);
+          }}>
+          {notificationsEnabled ? 'Desativar notificações' : 'Ativar notificações'}
+        </DropdownItem>
+
+        <DropdownItem
+          as="button"
+          icon={theme === 'light' ? SunIcon : MoonIcon}
+          onClick={(e) => {
+            e.preventDefault();
+            setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+          }}>
+          Tema: {theme === 'light' ? 'Claro' : 'Escuro'}
+        </DropdownItem>
+
+        <DropdownSeparator />
+
+        <DropdownItem as="button" variant="destructive" icon={LogOut} onClick={() => console.log('Logout')}>
+          Sair
+        </DropdownItem>
+      </DropdownContent>
+    </DropdownMenu>
+  );
+}
+
+function SunIcon(props: React.SVGProps<SVGSVGElement>) {
+  return <SunMedium {...props} />;
+}
+function MoonIcon(props: React.SVGProps<SVGSVGElement>) {
+  return <Search {...props} />;
+}
+
+// ============================================================================
+// 4. Menu contextual usando div, span, li
+// ============================================================================
+
+const contextualItems: DropdownMenuItemDef[] = [
+  {
+    as: 'li',
+    label: 'Item de lista 1',
+    props: {
+      className: 'list-none px-2 py-1',
+      onClick: () => console.log('Item 1'),
+    },
+  },
+  {
+    as: 'li',
+    label: 'Item de lista 2',
+    props: {
+      className: 'list-none px-2 py-1',
+      onClick: () => console.log('Item 2'),
+    },
+  },
+  {
+    as: 'div',
+    separator: true,
+    label: 'Bloco informativo',
+    props: {
+      className: 'px-2 py-2 text-xs text-slate-500',
+    },
+  },
+  {
+    as: 'span',
+    label: 'Texto simples',
+    props: {
+      className: 'px-2 py-1 text-xs text-slate-400',
+    },
+  },
+];
+
+export function ContextMenuExample() {
+  return <DropdownMenu trigger={<button className="px-2 py-1 border rounded">Mais opções</button>} items={contextualItems} width="w-60" />;
+}
 
 const TabDropdownShowcase: React.FC = () => {
   // CONFIGURAÇÃO PARA MODO PADRÃO (DATA DRIVEN)
@@ -159,6 +433,45 @@ const TabDropdownShowcase: React.FC = () => {
                 <DropdownItem icon={LayoutList}>Ver todas as tarefas</DropdownItem>
               </DropdownContent>
             </DropdownMenu>
+          </CardContent>
+        </Card>
+
+        {/* CENÁRIO 3: INTERATIVIDADE INTERNA */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Menu de Usuário (compound API mais rica)</CardTitle>
+            <CardDescription>Inserindo Inputs e Botões dentro do Dropdown sem fechar automaticamente.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-40 flex items-center justify-center bg-gray-50 dark:bg-gray-900/50 rounded-md">
+            <ContextMenuExample />
+          </CardContent>
+        </Card>
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Menu de Usuário (data-driven com a, input, button)</CardTitle>
+            <CardDescription>Inserindo Inputs e Botões dentro do Dropdown sem fechar automaticamente.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-40 flex items-center justify-center bg-gray-50 dark:bg-gray-900/50 rounded-md">
+            <UserMenuCompoundExample />
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Menu de Usuário (compound API mais rica)</CardTitle>
+            <CardDescription>Inserindo Inputs e Botões dentro do Dropdown sem fechar automaticamente.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-40 flex items-center justify-center bg-gray-50 dark:bg-gray-900/50 rounded-md">
+            <UserMenuDataDrivenExample />
+          </CardContent>
+        </Card>
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Menu "Arquivo" (data-driven com button)</CardTitle>
+            <CardDescription>Inserindo Inputs e Botões dentro do Dropdown sem fechar automaticamente.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-40 flex items-center justify-center bg-gray-50 dark:bg-gray-900/50 rounded-md">
+            <FileMenuExample />
           </CardContent>
         </Card>
       </div>

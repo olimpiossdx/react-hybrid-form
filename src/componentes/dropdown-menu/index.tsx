@@ -33,7 +33,7 @@ type IntrinsicTag = keyof React.JSX.IntrinsicElements;
 interface DropdownMenuItemBase {
   /** Renderiza um separador antes do item. */
   separator?: boolean;
-  /** Opcionalmente, label a ser exibido (se não quiser usar children direto). */
+  /** Label a ser exibido; se omitido, usa children de props.children. */
   label?: ReactNode;
   icon?: React.ElementType;
   variant?: 'default' | 'destructive';
@@ -42,8 +42,9 @@ interface DropdownMenuItemBase {
 }
 
 /**
- * Item intrínseco parametrizado por tag (button, a, etc).
- * props é tipado a partir de JSX.IntrinsicElements[T].
+ * Item intrínseco parametrizado por tag.
+ * as: 'button' | 'a' | 'div' | 'span' | ...
+ * props: JSX.IntrinsicElements[as]
  */
 type DropdownIntrinsicItem<T extends IntrinsicTag> = DropdownMenuItemBase & {
   as: T;
@@ -51,10 +52,15 @@ type DropdownIntrinsicItem<T extends IntrinsicTag> = DropdownMenuItemBase & {
 };
 
 /**
- * União de itens suportados no modo data-driven.
- * Aqui você pode ir adicionando tags conforme necessidade.
+ * Conjunto de tags mais comuns para menus na web.
  */
-export type DropdownMenuItemDef = DropdownIntrinsicItem<'button'> | DropdownIntrinsicItem<'a'>;
+export type DropdownMenuItemDef =
+  | DropdownIntrinsicItem<'button'>
+  | DropdownIntrinsicItem<'a'>
+  | DropdownIntrinsicItem<'div'>
+  | DropdownIntrinsicItem<'span'>
+  | DropdownIntrinsicItem<'li'>
+  | DropdownIntrinsicItem<'input'>;
 
 interface DropdownMenuProps {
   children?: ReactNode;
@@ -127,6 +133,10 @@ type DropdownItemOwnProps<E extends ElementType = 'button'> = {
   shortcut?: string;
   disabled?: boolean;
   className?: string;
+  /**
+   * Elemento ou componente a ser renderizado.
+   * Padrão: 'button'
+   */
   as?: E;
 };
 
@@ -141,6 +151,7 @@ export type DropdownItemProps<E extends ElementType = 'button'> = PolymorphicCom
 
 export const DropdownItem = <E extends ElementType = 'button'>(props: DropdownItemProps<E>) => {
   const { children, onClick, icon: Icon, disabled, variant = 'default', shortcut, className, as, ...rest } = props;
+
   const { close } = useDropdown();
 
   const Component = (as || 'button') as ElementType;
@@ -200,7 +211,7 @@ export const DropdownHeader = ({ children, className }: { children: ReactNode; c
 
 export const DropdownMenu = ({ children, items, trigger, width, className }: DropdownMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const triggerRef = useRef<HTMLElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
 
   const toggle = () => setIsOpen((prev) => !prev);
   const close = () => setIsOpen(false);
@@ -219,9 +230,7 @@ export const DropdownMenu = ({ children, items, trigger, width, className }: Dro
           {items!.map((item, index) => {
             const { separator, as, props: itemProps, label, icon, variant, shortcut, disabled } = item;
 
-            const Tag = as ?? 'button';
-
-            // Aqui você pode mesclar label/icon/etc com props, se quiser.
+            const Tag = as;
             const finalChildren = label ?? (itemProps as any)?.children ?? null;
 
             return (
