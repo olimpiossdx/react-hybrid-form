@@ -208,7 +208,7 @@ export const DropdownHeader = ({ children, className }: { children: ReactNode; c
 // ============================================================================
 // 4. COMPONENTE RAIZ HÍBRIDO
 // ============================================================================
-
+const VOID_TAGS = new Set<IntrinsicTag>(['input', 'img', 'br', 'hr', 'meta', 'link']);
 export const DropdownMenu = ({ children, items, trigger, width, className }: DropdownMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -231,15 +231,27 @@ export const DropdownMenu = ({ children, items, trigger, width, className }: Dro
             const { separator, as, props: itemProps, label, icon, variant, shortcut, disabled } = item;
 
             const Tag = as;
+            const isVoid = VOID_TAGS.has(Tag);
             const finalChildren = label ?? (itemProps as any)?.children ?? null;
 
             return (
               <React.Fragment key={index}>
                 {separator && <DropdownSeparator />}
 
-                <DropdownItem as={Tag as any} icon={icon} variant={variant} shortcut={shortcut} disabled={disabled} {...(itemProps as any)}>
-                  {finalChildren}
-                </DropdownItem>
+                {isVoid ? (
+                  // Para tags void, não use DropdownItem (que sempre espera children).
+                  <Tag {...(itemProps as any)} />
+                ) : (
+                  <DropdownItem
+                    as={Tag as any}
+                    icon={icon}
+                    variant={variant}
+                    shortcut={shortcut}
+                    disabled={disabled}
+                    {...(itemProps as any)}>
+                    {finalChildren}
+                  </DropdownItem>
+                )}
               </React.Fragment>
             );
           })}
