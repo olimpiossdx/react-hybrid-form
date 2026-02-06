@@ -31,6 +31,7 @@ import RegistrationForm from './tab-registration-form';
 import TabTableScrollCRUD from './tab-scroll-crud';
 import TabSelect from './tab-select';
 import TabServiceExample from './tab-service';
+import TabSidebar from './tab-sidebar';
 import TabSpinner from './tab-spinner';
 import TabSwitchExample from './tab-switch';
 import TabTable from './tab-table';
@@ -105,6 +106,7 @@ const Homologacao: React.FC = () => {
     tabUseListExploreAdvanced: <TabUseListExploreAdvanced />,
     tabPopover: <TabPopover />,
     tabDropdownShowcase: <TabDropdownShowcase />,
+    tabSidebar: <TabSidebar />,
   };
 
   return (
@@ -166,6 +168,7 @@ const Homologacao: React.FC = () => {
           <Box className="w-px bg-gray-300 dark:bg-gray-600 mx-1" />
 
           {/* Grupo 3: Componentes */}
+          <TabButton tabId="tabSidebar" label="Sidebar" isActive={activeTab === 'tabSidebar'} onClick={setActiveTab} />
           <TabButton tabId="checkboxGroup" label="Checkboxes" isActive={activeTab === 'checkboxGroup'} onClick={setActiveTab} />
           <TabButton tabId="starRatingExample" label="Rating" isActive={activeTab === 'starRatingExample'} onClick={setActiveTab} />
           <TabButton
