@@ -64,6 +64,7 @@ const FileInput: React.FC<FileInputProps> = ({
             input.removeAttribute('required');
           }
         } catch (e) {
+          console.error('Erro ao parsear arquivos iniciais:', e);
           /* empty */
         }
       } else if (!input.value) {
