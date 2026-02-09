@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   AlertCircle,
   AlertTriangle,
@@ -9,7 +8,6 @@ import {
   Info,
   Layout,
   MapPin,
-  Shield,
   Trash2,
   Trophy,
   WifiOff,

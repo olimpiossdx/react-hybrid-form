@@ -2,8 +2,8 @@ import React from 'react';
 
 import FormAlert from './alert';
 import { FormRegistryContext } from './context';
-import type { AlertService, FormServices, SnackService } from './services';
-import FormSnack from './snack';
+import type { AlertService, FormServices } from './services';
+import { toast } from '../../componentes/toast';
 import useForm from '../../hooks/use-form'; // seu hook [file:2]
 import type { ValidatorMap } from '../../hooks/use-form/props'; // adequar imports [file:1]
 import type { IInputProps } from '../input/index'; // onde você declarar a interface
@@ -50,19 +50,21 @@ function Form<TValues extends Record<any, string>>(props: FormProps<TValues>) {
   }, [initialValues, resetSection]);
 
   // Handler de submit com hook
-  const submitHandler = onSubmit
-    ? handleSubmit(async (values: TValues, event: React.FormEvent<HTMLFormElement>) => {
-        try {
-          await onSubmit(values, event);
-          servicesRef.current.snack?.show('Salvo com sucesso.', 'success');
-        } catch (error) {
-          console.error('Erro no submit do formulário:', error);
-          servicesRef.current.snack?.show('Erro ao salvar formulário.', 'error');
-          servicesRef.current.alert?.show('Erro ao salvar. Tente novamente.');
-          // você pode também logar o erro ou emitir no Graph Bus aqui
-        }
-      })
-    : formProps.onSubmit;
+  let submitHandler = formProps.onSubmit;
+
+  if (onSubmit) {
+    submitHandler = handleSubmit(async (values: TValues, event: React.FormEvent<HTMLFormElement>) => {
+      try {
+        await onSubmit(values, event);
+        toast.success('Salvo com sucesso.');
+      } catch (error) {
+        servicesRef.current.alert?.show('Erro ao salvar. Tente novamente.');
+        toast.error('Erro no submit do formulário.');
+        console.error('Erro no submit do formulário:', error);
+        // você pode também logar o erro ou emitir no Graph Bus aqui
+      }
+    });
+  }
 
   return (
     <FormRegistryContext.Provider value={{ registerFieldRef }}>
@@ -71,11 +73,6 @@ function Form<TValues extends Record<any, string>>(props: FormProps<TValues>) {
         <FormAlert
           register={(svc: AlertService) => {
             servicesRef.current.alert = svc;
-          }}
-        />
-        <FormSnack
-          register={(svc: SnackService) => {
-            servicesRef.current.snack = svc;
           }}
         />
 

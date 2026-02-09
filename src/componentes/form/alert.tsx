@@ -25,7 +25,7 @@ const FormAlert: React.FC<FormAlertProps> = ({ register }) => {
 
   return (
     <div className="mb-3">
-      <Alert variant="error" title="Problemas encontrados">
+      <Alert variant="error" title="Problemas encontrados:" onClose={() => setMessage(null)}>
         {message}
       </Alert>
     </div>

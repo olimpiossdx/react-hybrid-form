@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 
+import Button from '../../componentes/button';
 import { Card, CardContent } from '../../componentes/card';
 import Form from '../../componentes/form';
 import Input, { type IInputProps } from '../../componentes/input'; // ajuste o caminho
@@ -25,7 +26,7 @@ const FormBasicPlayground: React.FC = () => {
       }}>
       <Input name="name" placeholder="Nome" data-validation="name" required />
       <Input name="email" placeholder="E-mail" data-validation="email" type="email" required />
-      <button type="submit">Salvar</button>
+      <Button type="submit">Salvar</Button>
     </Form>
   );
 };
@@ -38,15 +39,15 @@ const InputHelperPlayground: React.FC = () => {
       <Input name="email" placeholder="Digite seu e-mail" ref={emailRef} />
 
       <div className="flex gap-2">
-        <button type="button" onClick={() => emailRef.current?.helperText?.set('Usaremos apenas para contato.')}>
+        <Button type="button" onClick={() => emailRef.current?.helperText?.set('Usaremos apenas para contato.')}>
           Set helper
-        </button>
-        <button type="button" onClick={() => emailRef.current?.helperText?.set(null)}>
+        </Button>
+        <Button type="button" variant="outline" onClick={() => emailRef.current?.helperText?.set(null)}>
           Clear helper
-        </button>
-        <button type="button" onClick={() => console.log(emailRef.current?.helperText?.message)}>
+        </Button>
+        <Button type="button" variant="secondary" onClick={() => console.log(emailRef.current?.helperText?.message)}>
           Log helper
-        </button>
+        </Button>
       </div>
     </div>
   );
