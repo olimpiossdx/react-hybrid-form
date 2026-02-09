@@ -36,18 +36,20 @@ function Form<TValues extends Record<any, string>>(props: FormProps<TValues>) {
   const servicesRef = React.useRef<FormServices>({});
 
   // Aplicar mapa de validação
-  React.useEffect(() => {
+  function initValidationRules() {
     if (validationRules) {
       setValidators(validationRules as any);
     }
-  }, [validationRules, setValidators]);
+  }
+  React.useEffect(initValidationRules, [validationRules, setValidators]);
 
   // Aplicar valores iniciais
-  React.useEffect(() => {
+  function initModelValues() {
     if (initialValues) {
       resetSection('', initialValues);
     }
-  }, [initialValues, resetSection]);
+  }
+  React.useEffect(initModelValues, [initialValues, resetSection]);
 
   // Handler de submit com hook
   let submitHandler = formProps.onSubmit;
