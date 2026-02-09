@@ -14,6 +14,7 @@ import CheckboxGroupForm from './tab-checkbox-group-form';
 import CurriculumForm from './tab-curriculum';
 import TabDataTableExample from './tab-data-table';
 import TabDropdownShowcase from './tab-dropDowMenu';
+import TabForm from './tab-form';
 import TabFormListTestSection from './tab-form-list-test-section';
 import HybridFormSimple from './tab-hibryd-form-simple';
 import TabInputTypes from './tab-input';
@@ -107,6 +108,7 @@ const Homologacao: React.FC = () => {
     tabPopover: <TabPopover />,
     tabDropdownShowcase: <TabDropdownShowcase />,
     tabSidebar: <TabSidebar />,
+    tabForm: <TabForm />,
   };
 
   return (
@@ -168,6 +170,7 @@ const Homologacao: React.FC = () => {
           <Box className="w-px bg-gray-300 dark:bg-gray-600 mx-1" />
 
           {/* Grupo 3: Componentes */}
+          <TabButton tabId="tabForm" label="Form" isActive={activeTab === 'tabForm'} onClick={setActiveTab} />
           <TabButton tabId="tabSidebar" label="Sidebar" isActive={activeTab === 'tabSidebar'} onClick={setActiveTab} />
           <TabButton tabId="checkboxGroup" label="Checkboxes" isActive={activeTab === 'checkboxGroup'} onClick={setActiveTab} />
           <TabButton tabId="starRatingExample" label="Rating" isActive={activeTab === 'starRatingExample'} onClick={setActiveTab} />

@@ -1,11 +1,16 @@
-import { forwardRef, type InputHTMLAttributes, type ReactNode, useCallback, useRef, useState } from 'react';
+import React, { forwardRef, type InputHTMLAttributes, type ReactNode, useCallback, useRef } from 'react';
 
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+import HelperText from '../helper-text';
+import type { IHelperProps } from '../helper-text/propTypes';
+
+export interface IInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   name: string;
   rightIcon?: ReactNode;
   leftIcon?: ReactNode;
   containerClassName?: string;
+  // Propriedade para receber o helper text do Form
+  helperText?: IHelperProps;
   /**
    * - 'outlined': Borda completa (Padrão). Label corta a borda superior.
    * - 'filled': Fundo cinza, borda inferior apenas. Label fica interno no topo.
@@ -16,7 +21,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   floatingLabel?: boolean;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
+const Input = forwardRef<IInputProps, IInputProps>(
   (
     {
       label,
@@ -36,19 +41,27 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     ref,
   ) => {
     const internalInputRef = useRef<HTMLInputElement>(null);
-    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+    const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
 
-    const setRef = useCallback(
+    //TODO: ajusta conflito de ref entre forwardRef e uso interno
+    const useSetRef = useCallback(
       (element: HTMLInputElement | null) => {
         internalInputRef.current = element;
         if (typeof ref === 'function') {
-          ref(element);
+          ref(internalInputRef.current as unknown as IInputProps);
         } else if (ref) {
-          (ref as React.MutableRefObject<HTMLInputElement | null>).current = element;
+          (ref.current as any) = element;
         }
       },
       [ref],
     );
+
+    const useHandleAttachHelper = useCallback((helper: IHelperProps) => {
+      const el = internalInputRef.current as IInputProps | null;
+      if (el) {
+        el.helperText = helper;
+      }
+    }, []);
 
     const isPasswordType = type === 'password';
     const isCheckOrRadio = type === 'checkbox' || type === 'radio';
@@ -210,7 +223,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
 
           <input
-            ref={setRef}
+            ref={useSetRef}
             type={type}
             onInvalid={handleInvalid}
             onInput={handleInput}
@@ -291,6 +304,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             </div>
           )}
         </div>
+        <HelperText attach={useHandleAttachHelper} />
       </div>
     );
   },

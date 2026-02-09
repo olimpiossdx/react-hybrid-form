@@ -1,9 +1,9 @@
 // componentes/input/styles.ts
-import type { InputProps } from './index';
+import type { IInputProps } from './index';
 import { cn } from '../../utils/cn';
 
-type Variant = NonNullable<InputProps['variant']>;
-type Size = NonNullable<InputProps['size']>;
+type Variant = NonNullable<IInputProps['variant']>;
+type Size = NonNullable<IInputProps['size']>;
 
 export const baseInputClasses =
   'w-full transition-all duration-200 px-1 ' +
