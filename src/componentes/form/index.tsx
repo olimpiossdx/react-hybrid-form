@@ -58,10 +58,10 @@ function Form<TValues extends Record<any, string>>(props: FormProps<TValues>) {
     submitHandler = handleSubmit(async (values: TValues, event: React.FormEvent<HTMLFormElement>) => {
       try {
         await onSubmit(values, event);
-        toast.success('Salvo com sucesso.');
+        toast.success('Salvo com sucesso.', { position: 'top-right' });
       } catch (error) {
         servicesRef.current.alert?.show('Erro ao salvar. Tente novamente.');
-        toast.error('Erro no submit do formulário.');
+        toast.error('Erro no submit do formulário.', { position: 'top-right' });
         console.error('Erro no submit do formulário:', error);
         // você pode também logar o erro ou emitir no Graph Bus aqui
       }
@@ -83,5 +83,5 @@ function Form<TValues extends Record<any, string>>(props: FormProps<TValues>) {
     </FormRegistryContext.Provider>
   );
 }
-
+Form.displayName = 'Form';
 export default Form;

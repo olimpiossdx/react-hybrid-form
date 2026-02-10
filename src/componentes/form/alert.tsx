@@ -31,5 +31,5 @@ const FormAlert: React.FC<FormAlertProps> = ({ register }) => {
     </div>
   );
 };
-
+FormAlert.displayName = 'FormAlert';
 export default FormAlert;
