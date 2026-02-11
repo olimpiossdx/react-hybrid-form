@@ -1,6 +1,9 @@
+export type HelperVariant = 'info' | 'warning' | 'error' | 'success' | 'neutral';
+
 export interface IHelperProps {
   message: string | null | undefined;
-  set: (message: string | null | undefined) => void;
+  variant: HelperVariant;
+  set: (message: string | null | undefined, variant?: HelperVariant) => void;
 }
 
 export type HelperControllerProps = {

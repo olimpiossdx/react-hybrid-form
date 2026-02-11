@@ -47,18 +47,13 @@ const STYLES = `
   }
 `;
 
-interface IModalOptions {
-  title: string;
-  content: () => React.ReactNode;
-}
-
 const CARGOS = [
   { value: 'dev', label: 'Desenvolvedor' },
   { value: 'design', label: 'Designer' },
   { value: 'pm', label: 'Product Manager' },
 ];
 
-const RegistrationComplexExample = () => {
+const RegistrationComplexExample: React.FC = () => {
   const onSubmit = (data: any) => {
     showModal({
       title: 'Cadastro Realizado!',

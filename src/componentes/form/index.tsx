@@ -4,9 +4,9 @@ import FormAlert from './alert';
 import { FormRegistryContext } from './context';
 import type { AlertService, FormServices } from './services';
 import { toast } from '../../componentes/toast';
-import useForm from '../../hooks/use-form'; // seu hook [file:2]
-import type { ValidatorMap } from '../../hooks/use-form/props'; // adequar imports [file:1]
-import type { IInputProps } from '../input/index'; // onde você declarar a interface
+import useForm from '../../hooks/use-form';
+import type { ValidatorMap } from '../../hooks/use-form/props';
+import type { IInputProps } from '../input';
 
 export type FormProps<TValues> = {
   id?: string;
@@ -16,10 +16,10 @@ export type FormProps<TValues> = {
   children: React.ReactNode;
 };
 
-function Form<TValues extends Record<any, string>>(props: FormProps<TValues>) {
+function Form<TValues extends Record<any, string> = Record<any, string>>(props: FormProps<TValues>) {
   const { id, initialValues, validationRules, onSubmit, children } = props;
 
-  const { formProps, resetSection, setValidators, handleSubmit } = useForm<TValues>({ id, onSubmit }); // [file:2]
+  const { formProps, resetSection, setValidators, handleSubmit } = useForm<TValues>({ id, onSubmit });
 
   // Registry name -> ref
   const fieldRefs = React.useRef<Map<string, IInputProps>>(new Map());
@@ -41,6 +41,7 @@ function Form<TValues extends Record<any, string>>(props: FormProps<TValues>) {
       setValidators(validationRules as any);
     }
   }
+
   React.useEffect(initValidationRules, [validationRules, setValidators]);
 
   // Aplicar valores iniciais
@@ -49,10 +50,11 @@ function Form<TValues extends Record<any, string>>(props: FormProps<TValues>) {
       resetSection('', initialValues);
     }
   }
+
   React.useEffect(initModelValues, [initialValues, resetSection]);
 
   // Handler de submit com hook
-  let submitHandler = formProps.onSubmit;
+  let submitHandler: React.FormEventHandler<HTMLFormElement> | undefined = formProps.onSubmit;
 
   if (onSubmit) {
     submitHandler = handleSubmit(async (values: TValues, event: React.FormEvent<HTMLFormElement>) => {
@@ -63,7 +65,6 @@ function Form<TValues extends Record<any, string>>(props: FormProps<TValues>) {
         servicesRef.current.alert?.show('Erro ao salvar. Tente novamente.');
         toast.error('Erro no submit do formulário.', { position: 'top-right' });
         console.error('Erro no submit do formulário:', error);
-        // você pode também logar o erro ou emitir no Graph Bus aqui
       }
     });
   }
@@ -77,11 +78,12 @@ function Form<TValues extends Record<any, string>>(props: FormProps<TValues>) {
             servicesRef.current.alert = svc;
           }}
         />
-
         {children}
       </form>
     </FormRegistryContext.Provider>
   );
 }
+
 Form.displayName = 'Form';
+
 export default Form;
