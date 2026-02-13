@@ -1,7 +1,8 @@
-import React, { useCallback, useRef } from 'react';
+import React from 'react';
 
 import type { FieldListenerMap, FormField, Path, PathValue, UseFormConfig, ValidationMode, ValidatorMap } from './props';
 import { getFormFields, getNestedValue, getRelativePath, parseFieldValue, setNestedValue } from './utilities';
+import type { IInputProps } from '../../componentes/input';
 import { initializeCheckboxMasters, setNativeChecked, setNativeValue, syncCheckboxGroup } from '../../utils/utilities';
 import type { ValidationResult, ValidationSeverity } from '../../utils/validate';
 
@@ -21,14 +22,14 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
   const validationMode: ValidationMode = config.validationMode ?? 'native';
 
   // --- REFS DE ESTADO (Persistem entre renders) ---
-  const fieldListeners = useRef<FieldListenerMap>(new Map());
-  const validators = useRef<ValidatorMap<FV>>({});
-  const debounceMap = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  const isResetting = useRef(false);
-  const observerRef = useRef<MutationObserver | null>(null);
+  const fieldListeners = React.useRef<FieldListenerMap>(new Map());
+  const validators = React.useRef<ValidatorMap<FV>>({});
+  const debounceMap = React.useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const isResetting = React.useRef(false);
+  const observerRef = React.useRef<MutationObserver | null>(null);
 
   // Referência ativa do elemento <form> no DOM
-  const formRef = useRef<HTMLFormElement | null>(null);
+  const formRef = React.useRef<HTMLFormElement | null>(null);
 
   // --- GERENCIAMENTO DE LISTENERS ---
 
@@ -50,7 +51,7 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
    * O React chama esta função sempre que o nó DOM do form é montado ou desmontado.
    * Isso garante que os listeners sejam reconectados mesmo se o form for recriado (key change).
    */
-  const registerForm = useCallback((node: HTMLFormElement | null) => {
+  const registerForm = React.useCallback((node: HTMLFormElement | null) => {
     if (formRef.current) {
       cleanupLogic(); // Limpa o anterior
     }
@@ -66,13 +67,13 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
     return form.querySelectorAll(`[name="${name}"]`).length;
   };
 
-  const setValidators = useCallback((newValidators: ValidatorMap<FV>) => {
+  const setValidators = React.useCallback((newValidators: ValidatorMap<FV>) => {
     validators.current = newValidators;
   }, []);
 
   // ============ LEITURA DE DADOS (DOM -> JSON) ============
 
-  const getValueImpl = useCallback((namePrefix?: string): any => {
+  const getValueImpl = React.useCallback((namePrefix?: string): any => {
     const form = formRef.current;
     if (!form) {
       return namePrefix ? undefined : ({} as FV);
@@ -215,6 +216,48 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
   };
 
   /**
+   * Sincroniza o helper-text via ponteiro na ref do campo.
+   * Executado independentemente da existência de errorSlot no DOM.
+   *
+   * @param field - Campo DOM
+   * @param result - Resultado da validação
+   * @param mode - Modo de validação ('native' | 'helper' | 'both')
+   */
+  const syncHelperForField = (field: FormField, result: InternalValidationResult, mode: ValidationMode) => {
+    // Cast para acessar extensão customizada
+    const inputElement = field as any; // ou use IInputElementProps se importado
+
+    if (!inputElement.helperText) {
+      // Campo não tem helper configurado, ignora silenciosamente
+      return;
+    }
+
+    // ========== DECISÃO BASEADA NO MODO ==========
+
+    if (mode === 'native') {
+      // Modo native: helper NÃO recebe erros de validação
+      // (mas pode ter mensagens informativas manuais)
+      return;
+    }
+
+    if (mode === 'helper' || mode === 'both') {
+      // Modo helper ou both: propaga erro pro helper
+      const message = result.message;
+
+      if (message) {
+        // Mapeia o tipo interno para o tipo do helper
+        const helperType = result.type === '__none__' ? undefined : result.type;
+
+        // Chama o setter do helper via ponteiro
+        inputElement.helperText.set(message, helperType);
+      } else {
+        // Sem erro: limpa o helper
+        inputElement.helperText.set(null);
+      }
+    }
+  };
+
+  /**
    * Atualiza a UI de erro nativa (slot/balão etc.) respeitando o validationMode.
    * - message: string vazia = sem erro (mesma semântica antiga)
    * - mode = 'helper' → NÃO mostra texto no slot nativo, apenas aria/flags.
@@ -227,7 +270,7 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
     const errorId = `error-${field.name}`;
     const errorSlot = document.getElementById(errorId);
 
-    // Aria e flags comuns
+    // ========== PARTE 1: ARIA/ACESSIBILIDADE (sempre executar) ==========
     if (hasError) {
       field.setAttribute('aria-invalid', 'true');
       if (errorSlot) {
@@ -238,29 +281,29 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
       field.removeAttribute('aria-describedby');
     }
 
-    if (!errorSlot) {
-      return;
+    // ========== PARTE 2: ATUALIZAR SLOT NATIVO (se existir) ==========
+    // ⚠️ Esta seção só executa SE o errorSlot existir
+    if (errorSlot) {
+      if (mode === 'helper') {
+        // Modo helper: LIMPA o slot nativo (não mostra texto)
+        errorSlot.textContent = '';
+        errorSlot.setAttribute('data-visible', 'false');
+        errorSlot.style.display = 'none';
+      } else {
+        // Modo native ou both: ATUALIZA slot normalmente
+        errorSlot.textContent = message;
+        errorSlot.setAttribute('data-visible', hasError ? 'true' : 'false');
+        errorSlot.style.display = hasError ? 'block' : 'none';
+      }
     }
 
-    if (mode === 'helper') {
-      // Não mostra texto no slot/balão nativo
-      errorSlot.textContent = '';
-      errorSlot.setAttribute('data-visible', 'false');
-      errorSlot.style.display = 'none';
-      return;
-    }
-
-    // mode 'native' ou 'both' → mantém comportamento atual de texto nativo
-    errorSlot.textContent = message;
-    errorSlot.setAttribute('data-visible', hasError ? 'true' : 'false');
-    errorSlot.style.display = hasError ? 'block' : 'none';
-
-    // FUTURO: aqui você pode variar aparência conforme result.type
-    // ex.: errorSlot.dataset.severity = result.type;
+    // ========== PARTE 3: SINCRONIZAR HELPER VIA PONTEIRO ==========
+    // ✅ Esta parte SEMPRE executa, independente da existência do errorSlot
+    syncHelperForField(field, result, mode);
   };
 
   // ============ VALIDAÇÃO GLOBAL (revalidateAllCustomRules) ============
-  const revalidateAllCustomRules = useCallback(() => {
+  const revalidateAllCustomRules = React.useCallback(() => {
     const form = formRef.current;
     if (!form) {
       return;
@@ -275,9 +318,9 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
       }
 
       const result = validateFieldInternal(field, formValues);
-      updateErrorUI(field, result, validationMode ?? 'native');
+      updateErrorUI(field, result, validationMode);
       // quando o helper estiver integrado ao hook:
-      // syncHelperForField(field, result, config.validationMode ?? 'native');
+      syncHelperForField(field, result, validationMode);
     });
   }, [getValue]); // validationMode está em config, não precisa no deps se ler direto de config
 
@@ -285,7 +328,7 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
    * Valida apenas um subconjunto de campos dentro de um container específico.
    * Essencial para Wizards e Abas onde apenas o passo atual deve ser validado.
    */
-  const validateScope = useCallback(
+  const validateScope = React.useCallback(
     (container: HTMLElement) => {
       const form = formRef.current;
       if (!form || !container) {
@@ -305,8 +348,8 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
         }
 
         const result = validateFieldInternal(field, formValues);
-        updateErrorUI(field, result, validationMode ?? 'native');
-        // syncHelperForField(field, result, config.validationMode ?? 'native');
+        updateErrorUI(field, result, validationMode);
+        syncHelperForField(field, result, validationMode);
 
         if (result.message || !field.checkValidity()) {
           isValid = false;
@@ -318,7 +361,7 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
 
       if (!isValid && firstInvalid) {
         // @ts-ignore
-        if (firstInvalid.reportValidity) {
+        if (firstInvalid.reportValidity && validationMode !== 'helper') {
           (firstInvalid as FormField).reportValidity();
         }
         // @ts-ignore
@@ -332,7 +375,7 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
 
   // ============ INTERAÇÃO (LISTENERS) ============
 
-  const handleFieldInteraction = useCallback(
+  const handleFieldInteraction = React.useCallback(
     (event: Event) => {
       if (isResetting.current) {
         return;
@@ -366,8 +409,8 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
       // Blur: Valida imediatamente
       if (event.type === 'blur') {
         const result = validateFieldInternal(field, formValues);
-        updateErrorUI(field, result, validationMode ?? 'native');
-        // syncHelperForField(field, result, config.validationMode ?? 'native');
+        updateErrorUI(field, result, validationMode);
+        syncHelperForField(field, result, validationMode);
         return;
       }
 
@@ -383,21 +426,23 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
 
         if (!msg) {
           // Limpa erro na hora se corrigiu
-          updateErrorUI(field, { message: '', type: '__none__' }, validationMode ?? 'native');
-          // syncHelperForField(field, { message: '', type: '__none__' }, config.validationMode ?? 'native');
+          updateErrorUI(field, { message: '', type: '__none__' }, validationMode);
+          syncHelperForField(field, { message: '', type: '__none__' }, validationMode);
         } else {
+          //Quando for helper não usar intervalo para aparecer o erro;
+          const interval = validationMode !== 'helper' ? 600 : 0;
           const timer = setTimeout(() => {
-            updateErrorUI(field, result, validationMode ?? 'native');
-            // syncHelperForField(field, result, config.validationMode ?? 'native');
+            updateErrorUI(field, result, validationMode);
+            syncHelperForField(field, result, validationMode);
 
             if (document.activeElement === field) {
               // @ts-ignore
-              if (field.reportValidity) {
+              if (field.reportValidity && validationMode !== 'helper') {
                 // @ts-ignore
                 field.reportValidity();
               }
             }
-          }, 600);
+          }, interval);
           debounceMap.current.set(field.name, timer);
         }
       }
@@ -407,7 +452,7 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
 
   // ============ RESET / LOAD DATA ============
 
-  const resetSection = useCallback((namePrefix: string, originalValues: any) => {
+  const resetSection = React.useCallback((namePrefix: string, originalValues: any) => {
     const form = formRef.current;
     if (!form) {
       return;
@@ -483,12 +528,9 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
       };
       field.addEventListener('blur', listeners.blur);
 
+      const types = ['text', 'email', 'password', 'search'];
       // Input para texto, Change para outros
-      const inputEvent =
-        field instanceof HTMLInputElement &&
-        (field.type === 'text' || field.type === 'email' || field.type === 'password' || field.type === 'search')
-          ? 'input'
-          : 'change';
+      const inputEvent = field instanceof HTMLInputElement && types.includes(field.type) ? 'input' : 'change';
 
       if (inputEvent === 'input') {
         field.addEventListener('input', listeners.change);
@@ -572,7 +614,7 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
 
   // ============ SUBMIT ============
 
-  const handleSubmit = useCallback(
+  const handleSubmit = React.useCallback(
     (onValid: (data: FV, event: React.FormEvent<HTMLFormElement>) => void) => (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       const form = formRef.current;
@@ -593,7 +635,9 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
 
         if (!isValid) {
           focusFirstInvalidField(form);
-          form.reportValidity();
+          if (validationMode !== 'helper') {
+            form.reportValidity();
+          }
         } else {
           // Sucesso! Passa dados e evento
           onValid(getValue() as FV, event);
