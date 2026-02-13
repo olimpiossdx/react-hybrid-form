@@ -1,34 +1,26 @@
 // --- DEFINIÇÕES DE TIPO GERAIS ---
 
+import type { ValidateFn } from '../../utils/validate';
+
 // Configuração do Hook
 export interface UseFormConfig<FV> {
   id?: string;
   // Callback de submit que recebe os dados tipados e o evento original
   onSubmit?: (data: FV, event: React.FormEvent<HTMLFormElement>) => void;
+  validationRules?: ValidatorMap<FV>;
+  validationMode?: ValidationMode;
 }
 
 export interface IAnyObject {
   [key: string]: any;
 }
 
-export interface IValidationResult {
-  message: string;
-  type: 'error' | 'warning' | 'info' | 'success';
-}
-
-export type ValidationResult = string | IValidationResult | undefined;
-
 export type FormField = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
 // --- TIPAGEM DE VALIDAÇÃO ---
 
-export type ValidateFn<FormValues, ValueType = any> = (
-  value: ValueType,
-  field: FormField | null,
-  formValues: FormValues,
-) => ValidationResult;
-
 export type ValidatorMap<FV> = Record<string, ValidateFn<FV, any>>;
+export type ValidationMode = 'native' | 'helper' | 'both';
 
 // --- INFRAESTRUTURA INTERNA ---
 

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 
 import type { AutocompleteProps } from './autocomplete';
 import useForm from '../hooks/use-form';
+import type { ValidationSeverity } from '../utils/validate';
 // Importa o novo componente - REMOVIDO: import Autocomplete from './Autocomplete';
 
 // --- DEFINIÇÕES DE TIPO ---
@@ -12,7 +13,7 @@ type HTMLFieldElements = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElem
 // Interface para o resultado da validação
 interface IValidationResult {
   message: string;
-  type: 'error' | 'warning' | 'info' | 'success';
+  type: ValidationSeverity;
 }
 
 // O tipo de retorno da função de validação

@@ -1,8 +1,9 @@
 import React, { useCallback, useRef } from 'react';
 
-import type { FieldListenerMap, FormField, Path, PathValue, UseFormConfig, ValidatorMap } from './props';
+import type { FieldListenerMap, FormField, Path, PathValue, UseFormConfig, ValidationMode, ValidatorMap } from './props';
 import { getFormFields, getNestedValue, getRelativePath, parseFieldValue, setNestedValue } from './utilities';
 import { initializeCheckboxMasters, setNativeChecked, setNativeValue, syncCheckboxGroup } from '../../utils/utilities';
+import type { ValidationResult, ValidationSeverity } from '../../utils/validate';
 
 /**
  * Hook principal para gerenciamento de formulários com arquitetura Híbrida.
@@ -14,9 +15,10 @@ import { initializeCheckboxMasters, setNativeChecked, setNativeValue, syncCheckb
  */
 const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormConfig<FV>) => {
   // Normalização da Configuração
-  const config = typeof configOrId === 'string' ? { id: configOrId } : configOrId || {};
+  const config = typeof configOrId === 'string' ? ({ id: configOrId } as UseFormConfig<FV>) : configOrId || {};
   const formId = config.id || crypto.randomUUID();
   const onSubmitCallback = config.onSubmit;
+  const validationMode: ValidationMode = config.validationMode ?? 'native';
 
   // --- REFS DE ESTADO (Persistem entre renders) ---
   const fieldListeners = useRef<FieldListenerMap>(new Map());
@@ -130,45 +132,103 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
   }, []);
 
   // Tipagem forte para o getValue
-  const getValue = getValueImpl as {
-    (): FV;
-    <P extends Path<FV>>(namePrefix: P): PathValue<FV, P>;
-    (namePrefix: string): any;
-  };
+  const getValue = getValueImpl as { (): FV; <P extends Path<FV>>(namePrefix: P): PathValue<FV, P>; (namePrefix: string): any };
 
   // ============ VALIDAÇÃO ============
 
-  const validateFieldInternal = (field: FormField, formValues: FV): string => {
+  /**
+   * Resultado interno de validação.
+   * type pode ter um marcador interno '__none__' para "sem erro".
+   * Esse marcador é usado apenas dentro do hook. Para fora, usamos apenas ValidationSeverity.
+   */
+  type InternalValidationType = ValidationSeverity | '__none__';
+
+  interface InternalValidationResult {
+    message: string;
+    type: InternalValidationType;
+  }
+  /**
+   * Normaliza o ValidationResult (string | IValidationResult | undefined)
+   * em um InternalValidationResult com message + type.
+   * - string → { message, type: 'error' }
+   * - IValidationResult → mantém message + type
+   * - undefined → { message: '', type: '__none__' }
+   */
+  const normalizeValidationResult = (result: ValidationResult): InternalValidationResult => {
+    if (!result) {
+      return { message: '', type: '__none__' };
+    }
+
+    if (typeof result === 'string') {
+      return { message: result, type: 'error' };
+    }
+
+    return {
+      message: result.message,
+      type: result.type!,
+    };
+  };
+
+  /**
+   * Executa a validação de um campo:
+   * - Limpa estado anterior
+   * - Validação nativa (HTML5)
+   * - Validação custom (ValidateFn)
+   * Sem erro:
+   *   { message: '', type: '__none__' }
+   * Com erro:
+   *   { message: '...', type: 'error' | 'warning' | 'info' | 'success' }
+   */
+  const validateFieldInternal = (field: FormField, formValues: FV): InternalValidationResult => {
     const validateFn = validators.current[field.dataset.validation || ''];
 
-    // 1. Limpeza
+    // 1. Limpeza de erro anterior
     field.setCustomValidity('');
 
     // 2. Validação Nativa (HTML5)
     // Se falhar aqui, paramos e usamos a mensagem do browser
     if (!field.checkValidity()) {
-      return field.validationMessage;
+      const nativeMessage = field.validationMessage || '';
+
+      return {
+        message: nativeMessage,
+        type: 'error', // nativo é sempre erro
+      };
     }
 
     // 3. Validação Customizada (JS)
     if (validateFn) {
       const fieldValue = getNestedValue(formValues, field.name);
-      const result = validateFn(fieldValue, field, formValues);
-      if (result) {
-        const message = typeof result === 'string' ? result : result.message;
-        // Injeta o erro no browser
-        field.setCustomValidity(message);
-        return message;
+      const rawResult = validateFn(fieldValue, field, formValues); // ValidationResult
+
+      const normalized = normalizeValidationResult(rawResult);
+
+      if (normalized.message) {
+        // Injeta o erro no browser (constraint API)
+        field.setCustomValidity(normalized.message);
+        return normalized;
       }
     }
-    return '';
+
+    // Sem erro: mantém semântica antiga (string vazia = ok)
+    return { message: '', type: '__none__' };
   };
 
-  const updateErrorUI = (field: FormField, message: string) => {
+  /**
+   * Atualiza a UI de erro nativa (slot/balão etc.) respeitando o validationMode.
+   * - message: string vazia = sem erro (mesma semântica antiga)
+   * - mode = 'helper' → NÃO mostra texto no slot nativo, apenas aria/flags.
+   * - mode = 'native' | 'both' → mostra texto normalmente.
+   */
+  const updateErrorUI = (field: FormField, result: InternalValidationResult, mode: ValidationMode) => {
+    const message = result.message;
+    const hasError = !!message;
+
     const errorId = `error-${field.name}`;
     const errorSlot = document.getElementById(errorId);
 
-    if (message) {
+    // Aria e flags comuns
+    if (hasError) {
       field.setAttribute('aria-invalid', 'true');
       if (errorSlot) {
         field.setAttribute('aria-describedby', errorId);
@@ -178,28 +238,48 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
       field.removeAttribute('aria-describedby');
     }
 
-    if (errorSlot) {
-      errorSlot.textContent = message;
-      errorSlot.setAttribute('data-visible', message ? 'true' : 'false');
-      errorSlot.style.display = message ? 'block' : 'none';
+    if (!errorSlot) {
+      return;
     }
+
+    if (mode === 'helper') {
+      // Não mostra texto no slot/balão nativo
+      errorSlot.textContent = '';
+      errorSlot.setAttribute('data-visible', 'false');
+      errorSlot.style.display = 'none';
+      return;
+    }
+
+    // mode 'native' ou 'both' → mantém comportamento atual de texto nativo
+    errorSlot.textContent = message;
+    errorSlot.setAttribute('data-visible', hasError ? 'true' : 'false');
+    errorSlot.style.display = hasError ? 'block' : 'none';
+
+    // FUTURO: aqui você pode variar aparência conforme result.type
+    // ex.: errorSlot.dataset.severity = result.type;
   };
 
+  // ============ VALIDAÇÃO GLOBAL (revalidateAllCustomRules) ============
   const revalidateAllCustomRules = useCallback(() => {
     const form = formRef.current;
     if (!form) {
       return;
     }
+
     const formValues = getValue() as FV;
     const allFields = getFormFields(form);
+
     allFields.forEach((field) => {
       if (field.disabled) {
         return;
       }
-      const msg = validateFieldInternal(field, formValues);
-      updateErrorUI(field, msg);
+
+      const result = validateFieldInternal(field, formValues);
+      updateErrorUI(field, result, validationMode ?? 'native');
+      // quando o helper estiver integrado ao hook:
+      // syncHelperForField(field, result, config.validationMode ?? 'native');
     });
-  }, [getValue]);
+  }, [getValue]); // validationMode está em config, não precisa no deps se ler direto de config
 
   /**
    * Valida apenas um subconjunto de campos dentro de um container específico.
@@ -214,6 +294,7 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
 
       const formValues = getValue() as FV;
       const fieldsInScope = getFormFields(container);
+
       let isValid = true;
       let firstInvalid: HTMLElement | null = null;
 
@@ -223,10 +304,11 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
           return;
         }
 
-        const msg = validateFieldInternal(field, formValues);
-        updateErrorUI(field, msg);
+        const result = validateFieldInternal(field, formValues);
+        updateErrorUI(field, result, validationMode ?? 'native');
+        // syncHelperForField(field, result, config.validationMode ?? 'native');
 
-        if (msg || !field.checkValidity()) {
+        if (result.message || !field.checkValidity()) {
           isValid = false;
           if (!firstInvalid) {
             firstInvalid = field;
@@ -237,7 +319,7 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
       if (!isValid && firstInvalid) {
         // @ts-ignore
         if (firstInvalid.reportValidity) {
-          firstInvalid.reportValidity();
+          (firstInvalid as FormField).reportValidity();
         }
         // @ts-ignore
         firstInvalid.focus();
@@ -255,6 +337,7 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
       if (isResetting.current) {
         return;
       }
+
       const target = event.currentTarget;
       if (!(target instanceof HTMLElement)) {
         return;
@@ -282,8 +365,9 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
 
       // Blur: Valida imediatamente
       if (event.type === 'blur') {
-        const msg = validateFieldInternal(field, formValues);
-        updateErrorUI(field, msg);
+        const result = validateFieldInternal(field, formValues);
+        updateErrorUI(field, result, validationMode ?? 'native');
+        // syncHelperForField(field, result, config.validationMode ?? 'native');
         return;
       }
 
@@ -294,14 +378,24 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
           return;
         }
 
-        const msg = validateFieldInternal(field, formValues);
+        const result = validateFieldInternal(field, formValues);
+        const msg = result.message;
+
         if (!msg) {
-          updateErrorUI(field, ''); // Limpa erro na hora se corrigiu
+          // Limpa erro na hora se corrigiu
+          updateErrorUI(field, { message: '', type: '__none__' }, validationMode ?? 'native');
+          // syncHelperForField(field, { message: '', type: '__none__' }, config.validationMode ?? 'native');
         } else {
           const timer = setTimeout(() => {
-            updateErrorUI(field, msg);
+            updateErrorUI(field, result, validationMode ?? 'native');
+            // syncHelperForField(field, result, config.validationMode ?? 'native');
+
             if (document.activeElement === field) {
-              field.reportValidity();
+              // @ts-ignore
+              if (field.reportValidity) {
+                // @ts-ignore
+                field.reportValidity();
+              }
             }
           }, 600);
           debounceMap.current.set(field.name, timer);
@@ -329,7 +423,7 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
           clearTimeout(debounceMap.current.get(field.name));
           debounceMap.current.delete(field.name);
         }
-        updateErrorUI(field, '');
+        updateErrorUI(field, { message: '', type: '__none__' }, validationMode ?? 'native');
 
         // Descobre o valor no objeto de dados
         const relativePath = getRelativePath(field.name, namePrefix);
@@ -461,13 +555,19 @@ const useForm = <FV extends Record<string, any>>(configOrId?: string | UseFormCo
 
   const focusFirstInvalidField = (form: HTMLFormElement): void => {
     const invalid = form.querySelector<HTMLElement>(':invalid');
-    if (!invalid) {
+    if (!invalid || invalid === null) {
       return;
     }
 
     // Tenta focar elementos visuais se o input for hidden (Shadow Inputs)
     const focusable = invalid.parentElement?.querySelector<HTMLElement>('input:not([type="hidden"]), select, textarea, [tabindex="0"]');
-    focusable ? focusable.focus() : invalid.focus();
+    if (focusable && focusable instanceof HTMLElement) {
+      focusable.focus();
+      return;
+    } else {
+      invalid.focus();
+    }
+    //focusable !== null || focusable !== undefined ? focusable.focus() : invalid.focus();
   };
 
   // ============ SUBMIT ============

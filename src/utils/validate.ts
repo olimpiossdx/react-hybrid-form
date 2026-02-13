@@ -1,10 +1,22 @@
-import type { FormField, IValidationResult, ValidateFn } from '../hooks/use-form/props';
+import type { FormField } from '../hooks/use-form/props';
+
+export type ValidationSeverity = 'error' | 'warning' | 'info' | 'success';
+
+export interface IValidationResult {
+  message: string;
+  type?: ValidationSeverity; // default 'error' se não vier
+}
+
+export type ValidationResult = string | IValidationResult | null | undefined;
+
+export type ValidateFn<FormValues, ValueType = any> = (
+  value: ValueType,
+  field: FormField | null,
+  formValues: FormValues,
+) => ValidationResult;
 
 // Helper para criar retorno de erro padrão
-const error = (message: string): IValidationResult => ({
-  message,
-  type: 'error',
-});
+const error = (message: string): IValidationResult => ({ message, type: 'error' });
 
 /**
  * O Compositor: Executa validadores em sequência.

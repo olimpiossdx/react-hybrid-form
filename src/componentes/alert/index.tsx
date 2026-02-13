@@ -1,7 +1,9 @@
 import React, { memo } from 'react';
 import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from 'lucide-react';
 
-export type AlertVariant = 'info' | 'success' | 'warning' | 'error' | 'neutral';
+import type { ValidationSeverity } from '../../utils/validate';
+
+export type AlertVariant = ValidationSeverity | 'neutral';
 
 export interface IAlertProps {
   variant?: AlertVariant;

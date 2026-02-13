@@ -1,4 +1,6 @@
-export type alerVariant = 'info' | 'success' | 'warning' | 'error';
+import type { ValidationSeverity } from '../../utils/validate';
+
+export type alerVariant = ValidationSeverity;
 
 export type AlertService = {
   show: (message: string, variant?: alerVariant) => void;

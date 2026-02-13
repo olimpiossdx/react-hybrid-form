@@ -1,3 +1,5 @@
+import type { ValidationSeverity } from '../../utils/validate';
+
 // Definições de Tipos e Interfaces para o Serviço HTTP
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
@@ -8,7 +10,7 @@ export interface IApiError {
 }
 
 export interface IApiNotification {
-  type: 'success' | 'error' | 'info' | 'warning';
+  type: ValidationSeverity;
   message: string;
   code?: string;
 }
