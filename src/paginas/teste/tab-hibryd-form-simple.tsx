@@ -53,10 +53,37 @@ const HybridFormSimple = () => {
     setIsEditing(false);
   };
 
-  // DX Aprimorada: Configuração no hook
+  // DX Aprimorada: Configuração no hook com validadores customizados
   const { formProps, resetSection } = useForm<IHybridFormValues>({
     id: 'hybrid-simple',
     onSubmit,
+    setValidators: {
+      comentario: (value, field, formModel) => {
+        const rating = formModel.rating || 0;
+        
+        // Se rating <= 3, comentário é obrigatório e precisa ter pelo menos 10 caracteres
+        if (rating <= 3) {
+          if (!value || value.trim() === '') {
+            return 'Comentário é obrigatório para avaliações de 3 estrelas ou menos';
+          }
+          if (value.trim().length < 10) {
+            return 'Comentário deve ter pelo menos 10 caracteres para avaliações baixas';
+          }
+        }
+        
+        return true;
+      },
+      corFavorita: (value, field, formModel) => {
+        const rating = formModel.rating || 0;
+        
+        // Se rating < 3, só pode escolher verde
+        if (rating < 3 && value !== 'verde') {
+          return 'Para avaliações abaixo de 3 estrelas, apenas a cor Verde pode ser selecionada';
+        }
+        
+        return true;
+      },
+    },
   });
 
   const handleEdit = () => {
@@ -81,7 +108,6 @@ const HybridFormSimple = () => {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-cyan-400">Ciclo de Vida</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">Teste de Edição, Cancelamento e Reset.</p>
         </div>
-
         <div className="flex gap-2">
           {!isEditing ? (
             <button
