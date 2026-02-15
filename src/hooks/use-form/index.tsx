@@ -2,7 +2,6 @@ import React from 'react';
 
 import type { FieldListenerMap, FormField, Path, PathValue, UseFormConfig, ValidationMode, ValidatorMap } from './props';
 import { getFormFields, getNestedValue, getRelativePath, parseFieldValue, setNestedValue } from './utilities';
-import type { IInputProps } from '../../componentes/input';
 import { initializeCheckboxMasters, setNativeChecked, setNativeValue, syncCheckboxGroup } from '../../utils/utilities';
 import type { ValidationResult, ValidationSeverity } from '../../utils/validate';
 

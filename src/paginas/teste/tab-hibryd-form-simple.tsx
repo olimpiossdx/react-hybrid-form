@@ -54,38 +54,31 @@ const HybridFormSimple = () => {
   };
 
   // DX Aprimorada: Configuração no hook com validadores customizados
-  const { formProps, resetSection, setValidators } = useForm<IHybridFormValues>({
-    id: 'hybrid-simple',
-    onSubmit,
-  });
+  const { formProps, resetSection, setValidators } = useForm<IHybridFormValues>({ id: 'hybrid-simple', onSubmit });
 
   // Configura validadores customizados após inicialização
   React.useEffect(() => {
     setValidators({
       comentarioValidator: (value, field, formModel) => {
         const rating = formModel.rating || 0;
-        
+
         // Se rating <= 3, comentário é obrigatório e precisa ter pelo menos 10 caracteres
         if (rating <= 3) {
           if (!value || String(value).trim() === '') {
-            return 'Comentário é obrigatório para avaliações de 3 estrelas ou menos';
+            return { message: 'Comentário é obrigatório para avaliações de 3 estrelas ou menos', type: 'error' };
           }
           if (String(value).trim().length < 10) {
-            return 'Comentário deve ter pelo menos 10 caracteres para avaliações baixas';
+            return { message: 'Comentário deve ter pelo menos 10 caracteres para avaliações baixas', type: 'error' };
           }
         }
-        
-        return true;
       },
       corFavoritaValidator: (value, field, formModel) => {
         const rating = formModel.rating || 0;
-        
+
         // Se rating < 3, só pode escolher verde
         if (rating < 3 && value !== 'verde') {
           return 'Para avaliações abaixo de 3 estrelas, apenas a cor Verde pode ser selecionada';
         }
-        
-        return true;
       },
     });
   }, [setValidators]);
