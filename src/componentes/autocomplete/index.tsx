@@ -26,6 +26,7 @@ export interface AutocompleteProps {
   readOnly?: boolean;
   disabled?: boolean;
   required?: boolean;
+  'data-validation'?: string;
   validationKey?: string;
   className?: string;
   renderOption?: (option: IOption) => React.ReactNode;
@@ -55,6 +56,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
   className = '',
   placeholder,
   renderOption,
+  ...props
 }) => {
   // Resolve valor inicial (prioriza defaultValue novo, fallback para initialValue antigo)
   const realDefaultValue = defaultValue || initialValue || '';
@@ -420,7 +422,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
         onInvalid={handleInvalidSelect}
         required={required}
         disabled={disabled}
-        data-validation={validationKey}
+        data-validation={props['data-validation'] || validationKey}
         className="absolute w-px h-px overflow-hidden clip-[rect(0,0,0,0)] bottom-0 left-0"
         tabIndex={-1}
         aria-hidden="true">
