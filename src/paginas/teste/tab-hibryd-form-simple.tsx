@@ -54,26 +54,30 @@ const HybridFormSimple = () => {
   };
 
   // DX Aprimorada: Configuração no hook com validadores customizados
-  const { formProps, resetSection } = useForm<IHybridFormValues>({
+  const { formProps, resetSection, setValidators } = useForm<IHybridFormValues>({
     id: 'hybrid-simple',
     onSubmit,
-    setValidators: {
-      comentario: (value, field, formModel) => {
+  });
+
+  // Configura validadores customizados após inicialização
+  React.useEffect(() => {
+    setValidators({
+      comentarioValidator: (value, field, formModel) => {
         const rating = formModel.rating || 0;
         
         // Se rating <= 3, comentário é obrigatório e precisa ter pelo menos 10 caracteres
         if (rating <= 3) {
-          if (!value || value.trim() === '') {
+          if (!value || String(value).trim() === '') {
             return 'Comentário é obrigatório para avaliações de 3 estrelas ou menos';
           }
-          if (value.trim().length < 10) {
+          if (String(value).trim().length < 10) {
             return 'Comentário deve ter pelo menos 10 caracteres para avaliações baixas';
           }
         }
         
         return true;
       },
-      corFavorita: (value, field, formModel) => {
+      corFavoritaValidator: (value, field, formModel) => {
         const rating = formModel.rating || 0;
         
         // Se rating < 3, só pode escolher verde
@@ -83,8 +87,8 @@ const HybridFormSimple = () => {
         
         return true;
       },
-    },
-  });
+    });
+  }, [setValidators]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -129,11 +133,18 @@ const HybridFormSimple = () => {
         <fieldset disabled={!isEditing} className="space-y-6 transition-opacity duration-300 disabled:opacity-60">
           <StarRating name="rating" label="Avaliação (Ao cancelar, volta p/ 5)" required className="mb-6" />
 
-          <Autocomplete name="corFavorita" label="Cor Favorita" options={CORES_OPTIONS} required placeholder="Selecione uma cor..." />
+          <Autocomplete
+            name="corFavorita"
+            label="Cor Favorita"
+            options={CORES_OPTIONS}
+            required
+            placeholder="Selecione uma cor..."
+            data-validation="corFavoritaValidator"
+          />
 
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Comentário</label>
-            <input name="comentario" className="form-input" placeholder="Digite algo..." />
+            <input name="comentario" className="form-input" placeholder="Digite algo..." data-validation="comentarioValidator" />
           </div>
 
           {isEditing && (
