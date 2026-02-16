@@ -73,57 +73,27 @@ const HybridFormSimple = () => {
         }
       },
       corFavoritaValidator: (value, field, formModel) => {
-        const rating = formModel.rating || 0;
+        const rating = Number(formModel.rating || 0);
         
-        // Se rating < 3, só pode escolher verde
+        // Se rating < 3, apenas a cor Verde pode ser selecionada (OPÇÃO 2: Validável mas clicável)
         if (rating < 3 && value !== 'verde') {
-          return 'Para avaliações abaixo de 3 estrelas, apenas a cor Verde pode ser selecionada';
+          return {
+            message: 'Para avaliações abaixo de 3 estrelas, apenas a cor Verde pode ser selecionada',
+            type: 'error'
+          };
         }
       },
     });
   }, [setValidators]);
 
-  // Lógica simples usando recursos do useForm: manipula DOM diretamente quando rating muda
-  React.useEffect(() => {
-    const rating = getValue('rating') || 5;
-    const shouldRestrictToGreen = Number(rating) < 3;
-    
-    // Busca o select da corFavorita no DOM e manipula as options
-    const form = document.getElementById('hybrid-simple');
-    if (!form) return;
-    
-    const selectElement = form.querySelector('[name="corFavorita"]') as HTMLSelectElement;
-    if (!selectElement) return;
-    
-    const options = selectElement.querySelectorAll('option');
-    options.forEach((option) => {
-      if (option.value === 'verde') {
-        option.disabled = false;
-      } else {
-        option.disabled = shouldRestrictToGreen;
-      }
-    });
-    
-    // Se deve restringir e o valor atual não é verde, auto-seleciona verde
-    if (shouldRestrictToGreen && selectElement.value !== 'verde') {
-      selectElement.value = 'verde';
-      // Dispara evento para o useForm detectar mudança
-      selectElement.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-  }, [getValue('rating')]);
-
   const handleEdit = () => {
     setIsEditing(true);
     // Simula carga de dados
-    // setTimeout garante que o DOM esteja pronto se houver remontagem
     setTimeout(() => resetSection('', DADOS_INICIAIS), 50);
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    // VOLTA TUDO (Teste Crítico de Sincronia)
-    // O StarRating deve voltar para 5 estrelas visualmente
-    // O Autocomplete deve voltar para "Azul Marinho" visualmente
     setTimeout(() => resetSection('', DADOS_INICIAIS), 50);
   };
 
@@ -151,10 +121,10 @@ const HybridFormSimple = () => {
         </div>
       </div>
 
-      <form {...formProps} className="space-y-6">
+      <form {...formProps} className="space-y-6" id="hybrid-simple">
         <fieldset disabled={!isEditing} className="space-y-6 transition-opacity duration-300 disabled:opacity-60">
           <StarRating name="rating" label="Avaliação (Ao cancelar, volta p/ 5)" required className="mb-6" />
-
+          
           <Autocomplete
             name="corFavorita"
             label="Cor Favorita"
