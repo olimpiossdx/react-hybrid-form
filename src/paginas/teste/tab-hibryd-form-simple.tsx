@@ -1,8 +1,7 @@
 import React from 'react';
 import { Edit3, RefreshCw, Save } from 'lucide-react';
-
 import type { IOption } from '../../componentes/autocomplete';
-import AutocompleteWithDependency from '../../componentes/autocomplete-with-dependency';
+import Autocomplete from '../../componentes/autocomplete';
 import showModal from '../../componentes/modal/hook';
 import StarRating from '../../componentes/start-rating';
 import useForm from '../../hooks/use-form';
@@ -62,7 +61,7 @@ const HybridFormSimple = () => {
     setValidators({
       comentarioValidator: (value, field, formModel) => {
         const rating = formModel.rating || 0;
-
+        
         // Se rating <= 3, comentário é obrigatório e precisa ter pelo menos 10 caracteres
         if (rating <= 3) {
           if (!value || String(value).trim() === '') {
@@ -75,7 +74,7 @@ const HybridFormSimple = () => {
       },
       corFavoritaValidator: (value, field, formModel) => {
         const rating = formModel.rating || 0;
-
+        
         // Se rating < 3, só pode escolher verde
         if (rating < 3 && value !== 'verde') {
           return 'Para avaliações abaixo de 3 estrelas, apenas a cor Verde pode ser selecionada';
@@ -83,6 +82,35 @@ const HybridFormSimple = () => {
       },
     });
   }, [setValidators]);
+
+  // Lógica simples usando recursos do useForm: manipula DOM diretamente quando rating muda
+  React.useEffect(() => {
+    const rating = getValue('rating') || 5;
+    const shouldRestrictToGreen = Number(rating) < 3;
+    
+    // Busca o select da corFavorita no DOM e manipula as options
+    const form = document.getElementById('hybrid-simple');
+    if (!form) return;
+    
+    const selectElement = form.querySelector('[name="corFavorita"]') as HTMLSelectElement;
+    if (!selectElement) return;
+    
+    const options = selectElement.querySelectorAll('option');
+    options.forEach((option) => {
+      if (option.value === 'verde') {
+        option.disabled = false;
+      } else {
+        option.disabled = shouldRestrictToGreen;
+      }
+    });
+    
+    // Se deve restringir e o valor atual não é verde, auto-seleciona verde
+    if (shouldRestrictToGreen && selectElement.value !== 'verde') {
+      selectElement.value = 'verde';
+      // Dispara evento para o useForm detectar mudança
+      selectElement.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }, [getValue('rating')]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -127,42 +155,13 @@ const HybridFormSimple = () => {
         <fieldset disabled={!isEditing} className="space-y-6 transition-opacity duration-300 disabled:opacity-60">
           <StarRating name="rating" label="Avaliação (Ao cancelar, volta p/ 5)" required className="mb-6" />
 
-          <AutocompleteWithDependency
+          <Autocomplete
             name="corFavorita"
             label="Cor Favorita"
-            baseOptions={CORES_OPTIONS}
+            options={CORES_OPTIONS}
             required
             placeholder="Selecione uma cor..."
-            validationKey="corFavoritaValidator"
-            dependsOn={{
-              fieldName: 'rating',
-              formId: 'hybrid-simple',
-              getFormValue: getValue,
-
-              // Lógica de filtro isolada
-              filterOptions: (ratingValue, baseOptions) => {
-                const rating = Number(ratingValue) || 0;
-                const shouldRestrictToGreen = rating < 3;
-
-                return baseOptions.map((option) => ({
-                  ...option,
-                  disabled: shouldRestrictToGreen && option.value !== 'verde',
-                }));
-              },
-
-              // Lógica de auto-seleção isolada
-              autoSelectWhen: (ratingValue, currentValue) => {
-                const rating = Number(ratingValue) || 0;
-                const shouldRestrictToGreen = rating < 3;
-
-                // Se deve restringir e o valor atual não é verde, auto-seleciona verde
-                if (shouldRestrictToGreen && currentValue !== 'verde') {
-                  return 'verde';
-                }
-
-                return null; // Mantém valor atual
-              },
-            }}
+            data-validation="corFavoritaValidator"
           />
 
           <div>
