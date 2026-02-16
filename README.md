@@ -169,7 +169,7 @@ const VirtualList = ({ data }: { data: any[] }) => {
   });
 
   return (
-    <div {...containerProps} className="h-[600px] overflow-auto">
+    <div {...containerProps} className="h-150 overflow-auto">
       <div {...wrapperProps}>
         {virtualItems.map((virtualRow) => {
           const item = data[virtualRow.index];
@@ -777,7 +777,7 @@ const BigDataTable = () => {
         onChange={(e) => setFilter('name', e.target.value)}
       />
       
-      <div {...containerProps} className="h-[600px]">
+      <div {...containerProps} className="h-150">
         <div {...wrapperProps}>
           {virtualItems.map((vRow) => {
             const row = data[vRow.index];

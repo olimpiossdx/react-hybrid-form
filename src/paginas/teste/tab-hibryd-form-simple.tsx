@@ -1,5 +1,6 @@
 import React from 'react';
 import { Edit3, RefreshCw, Save } from 'lucide-react';
+
 import type { IOption } from '../../componentes/autocomplete';
 import Autocomplete from '../../componentes/autocomplete';
 import showModal from '../../componentes/modal/hook';
@@ -54,14 +55,14 @@ const HybridFormSimple = () => {
   };
 
   // DX Aprimorada: Configuração no hook com validadores customizados
-  const { formProps, resetSection, setValidators, getValue } = useForm<IHybridFormValues>({ id: 'hybrid-simple', onSubmit });
+  const { formProps, resetSection, setValidators } = useForm<IHybridFormValues>({ id: 'hybrid-simple', onSubmit });
 
   // Configura validadores customizados após inicialização
   React.useEffect(() => {
     setValidators({
-      comentarioValidator: (value, field, formModel) => {
+      comentarioValidator: (value, _, formModel) => {
         const rating = formModel.rating || 0;
-        
+
         // Se rating <= 3, comentário é obrigatório e precisa ter pelo menos 10 caracteres
         if (rating <= 3) {
           if (!value || String(value).trim() === '') {
@@ -72,14 +73,14 @@ const HybridFormSimple = () => {
           }
         }
       },
-      corFavoritaValidator: (value, field, formModel) => {
+      corFavoritaValidator: (value, _, formModel) => {
         const rating = Number(formModel.rating || 0);
-        
+
         // Se rating < 3, apenas a cor Verde pode ser selecionada (OPÇÃO 2: Validável mas clicável)
         if (rating < 3 && value !== 'verde') {
           return {
             message: 'Para avaliações abaixo de 3 estrelas, apenas a cor Verde pode ser selecionada',
-            type: 'error'
+            type: 'error',
           };
         }
       },
@@ -124,7 +125,7 @@ const HybridFormSimple = () => {
       <form {...formProps} className="space-y-6" id="hybrid-simple">
         <fieldset disabled={!isEditing} className="space-y-6 transition-opacity duration-300 disabled:opacity-60">
           <StarRating name="rating" label="Avaliação (Ao cancelar, volta p/ 5)" required className="mb-6" />
-          
+
           <Autocomplete
             name="corFavorita"
             label="Cor Favorita"
