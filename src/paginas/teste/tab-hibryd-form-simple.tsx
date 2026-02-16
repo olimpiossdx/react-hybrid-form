@@ -1,7 +1,7 @@
 import React from 'react';
 import { Edit3, RefreshCw, Save } from 'lucide-react';
 
-import Autocomplete, { type IOption } from '../../componentes/autocomplete';
+import AutocompleteWithDependency from '../../componentes/autocomplete-with-dependency';
 import showModal from '../../componentes/modal/hook';
 import StarRating from '../../componentes/start-rating';
 import useForm from '../../hooks/use-form';
@@ -54,7 +54,7 @@ const HybridFormSimple = () => {
   };
 
   // DX Aprimorada: Configuração no hook com validadores customizados
-  const { formProps, resetSection, setValidators } = useForm<IHybridFormValues>({ id: 'hybrid-simple', onSubmit });
+  const { formProps, resetSection, setValidators, getValue } = useForm<IHybridFormValues>({ id: 'hybrid-simple', onSubmit });
 
   // Configura validadores customizados após inicialização
   React.useEffect(() => {
@@ -126,33 +126,40 @@ const HybridFormSimple = () => {
         <fieldset disabled={!isEditing} className="space-y-6 transition-opacity duration-300 disabled:opacity-60">
           <StarRating name="rating" label="Avaliação (Ao cancelar, volta p/ 5)" required className="mb-6" />
 
-          <Autocomplete
-            name="corFavorita"
-            label="Cor Favorita"
-            options={CORES_OPTIONS}
-            required
-            placeholder="Selecione uma cor..."
-            data-validation="corFavoritaValidator"
-          />
-
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Comentário</label>
-            <input name="comentario" className="form-input" placeholder="Digite algo..." data-validation="comentarioValidator" />
-          </div>
-
-          {isEditing && (
-            <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
-              <button
-                type="submit"
-                className="flex items-center gap-2 px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg transition-transform active:scale-95">
-                <Save size={18} /> Salvar Alterações
-              </button>
-            </div>
-          )}
-        </fieldset>
-      </form>
-    </div>
-  );
-};
-
-export default HybridFormSimple;
+          <<AutocompleteWithDependency
+              name="corFavorita"
+              label="Cor Favorita"
+              baseOptions={CORES_OPTIONS}
+              required
+              placeholder="Selecione uma cor..."
+              validationKey="corFavoritaValidator"
+              dependsOn={{
+                fieldName: 'rating',
+                formId: 'hybrid-simple',
+                getFormValue: getValue,
+                
+                // Lógica de filtro isolada
+                filterOptions: (ratingValue, baseOptions) => {
+                  const rating = Number(ratingValue) || 0;
+                  const shouldRestrictToGreen = rating < 3;
+                  
+                  return baseOptions.map(option => ({
+                    ...option,
+                    disabled: shouldRestrictToGreen && option.value !== 'verde',
+                  }));
+                },
+                
+                // Lógica de auto-seleção isolada
+                autoSelectWhen: (ratingValue, currentValue) => {
+                  const rating = Number(ratingValue) || 0;
+                  const shouldRestrictToGreen = rating < 3;
+                  
+                  // Se deve restringir e o valor atual não é verde, auto-seleciona verde
+                  if (shouldRestrictToGreen && currentValue !== 'verde') {
+                    return 'verde';
+                  }
+                  
+                  return null; // Mantém valor atual
+                },
+              }}
+            />
