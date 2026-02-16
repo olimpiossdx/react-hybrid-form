@@ -214,8 +214,8 @@ function DataTableSmart<T extends { id: string | number }>({
     return col.mobileLabel ?? col.header;
   }
 
-function getColumnVisibilityClasses(col: DataTableColumn<T>): string {
-  if (responsiveMode === 'shorten') {
+  function getColumnVisibilityClasses(col: DataTableColumn<T>): string {
+    if (responsiveMode === 'shorten') {
       if (col.hideOnMobile || col.priority === 'low') {
         return 'hidden md:table-cell';
       }
@@ -228,11 +228,6 @@ function getColumnVisibilityClasses(col: DataTableColumn<T>): string {
     if (isStackLike) {
       return 'block md:table-cell';
     }
-    return '';
-  }
-
-    }
-
     return '';
   }
 
@@ -352,8 +347,9 @@ function getColumnVisibilityClasses(col: DataTableColumn<T>): string {
 
                       return (
                         <TableCell
-                          key={`${row.id}-${String(col.accessorKey)}`
-                className={cn(visibility, alignClass)}                          data-label={isStackLike ? getCellLabel(col) : undefined}>
+                          key={`${row.id}-${String(col.accessorKey)}`}
+                          className={cn(visibility, alignClass)}
+                          data-label={isStackLike ? getCellLabel(col) : undefined}>
                           {col.cell ? col.cell(row) : (row as any)[col.accessorKey]}
                         </TableCell>
                       );
