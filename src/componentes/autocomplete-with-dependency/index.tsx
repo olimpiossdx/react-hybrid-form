@@ -1,4 +1,5 @@
 import React from 'react';
+
 import Autocomplete, { type IOption } from '../autocomplete';
 
 interface AutocompleteWithDependencyProps {
@@ -9,7 +10,7 @@ interface AutocompleteWithDependencyProps {
   placeholder?: string;
   validationKey?: string;
   className?: string;
-  
+
   // Configuração da dependência
   dependsOn: {
     fieldName: string;
@@ -35,11 +36,11 @@ const AutocompleteWithDependency: React.FC<AutocompleteWithDependencyProps> = ({
   dependsOn,
 }) => {
   const [filteredOptions, setFilteredOptions] = React.useState<IOption[]>(baseOptions);
-  
+
   // Ref para evitar re-criação de callback
   const filterOptionsRef = React.useRef(dependsOn.filterOptions);
   const autoSelectWhenRef = React.useRef(dependsOn.autoSelectWhen);
-  
+
   React.useEffect(() => {
     filterOptionsRef.current = dependsOn.filterOptions;
     autoSelectWhenRef.current = dependsOn.autoSelectWhen;
@@ -47,15 +48,19 @@ const AutocompleteWithDependency: React.FC<AutocompleteWithDependencyProps> = ({
 
   React.useEffect(() => {
     const form = document.getElementById(dependsOn.formId) as HTMLFormElement;
-    if (!form) return;
+    if (!form) {
+      return;
+    }
 
     const sourceField = form.querySelector(`[name="${dependsOn.fieldName}"]`) as HTMLInputElement;
-    if (!sourceField) return;
+    if (!sourceField) {
+      return;
+    }
 
     const handleSourceChange = () => {
       const sourceValue = sourceField.value;
       const formData = dependsOn.getFormValue();
-      
+
       // Filtra opções baseado no valor do campo fonte
       const newOptions = filterOptionsRef.current(sourceValue, baseOptions);
       setFilteredOptions(newOptions);
@@ -63,13 +68,13 @@ const AutocompleteWithDependency: React.FC<AutocompleteWithDependencyProps> = ({
       // Auto-seleção condicional
       if (autoSelectWhenRef.current) {
         const autoSelectValue = autoSelectWhenRef.current(sourceValue, formData[name]);
-        
+
         if (autoSelectValue !== null) {
           const targetField = form.querySelector(`[name="${name}"]`) as HTMLSelectElement;
-          
+
           if (targetField) {
             targetField.value = autoSelectValue;
-            const selectedOption = newOptions.find(opt => opt.value === autoSelectValue);
+            const selectedOption = newOptions.find((opt) => opt.value === autoSelectValue);
             if (selectedOption) {
               targetField.dataset.label = selectedOption.label;
             }
