@@ -163,3 +163,25 @@ const HybridFormSimple = () => {
                 },
               }}
             />
+            
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Comentário</label>
+              <input name="comentario" className="form-input" placeholder="Digite algo..." data-validation="comentarioValidator" />
+            </div>
+
+            {isEditing && (
+              <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  type="submit"
+                  className="flex items-center gap-2 px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg transition-transform active:scale-95">
+                  <Save size={18} /> Salvar Alterações
+                </button>
+              </div>
+            )}
+          </fieldset>
+        </form>
+      </div>
+    );
+  };
+
+export default HybridFormSimple;
