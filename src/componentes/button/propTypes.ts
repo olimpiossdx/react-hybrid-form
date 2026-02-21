@@ -9,8 +9,10 @@ export interface IButtonElement extends HTMLButtonElement {
 export interface IButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /**
    * Estilo visual do botão.
+   * - 'primary': O clássico de alto contraste (Azul sólido).
+   * - 'primary-soft': Tom sobre tom (Fundo translúcido com texto azul).
    */
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'link';
+  variant?: 'primary' | 'primary-soft' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'link';
 
   /**
    * Tamanho do botão (Alinhado com Inputs).

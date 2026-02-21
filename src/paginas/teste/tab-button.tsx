@@ -1,18 +1,82 @@
-import React, { useRef, useState } from 'react';
-import { ArrowRight, CheckCircle2, Download, Mail, Play, Save, Share2, Trash2 } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { ArrowRight, Ban, CheckCircle2, Download, Mail, Play, Plus, Save, Send, Share2, Trash2 } from 'lucide-react';
 
-import Button, { type ButtonElement } from '../../componentes/button';
+import Button from '../../componentes/button';
+import type { IButtonElement } from '../../componentes/button/propTypes';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../componentes/card';
 import { showModal } from '../../componentes/modal';
 
-const TabButtonExample: React.FC = () => {
-  // --- Estado para Modo Declarativo ---
+const ButtonShowcase = () => {
+  return (
+    <div className="max-w-4xl mx-auto p-8 space-y-12 bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Opção 1: Primary Clássico</h2>
+        <p className="text-gray-500 mb-6">Azul sólido com texto branco forçado (!text-white). Alto contraste e peso visual.</p>
+
+        <div className="flex flex-wrap items-center gap-4 p-6 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+          {/* Padrão */}
+          <button className="inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-lg transition-all duration-300 ease-in-out bg-blue-600 !text-white hover:bg-blue-700 active:bg-blue-800 shadow-sm focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none focus-visible:ring-offset-2">
+            Salvar Dados
+          </button>
+
+          {/* Com Ícone (Esquerda) */}
+          <button className="inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-lg transition-all duration-300 ease-in-out bg-blue-600 !text-white hover:bg-blue-700 active:bg-blue-800 shadow-sm focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none focus-visible:ring-offset-2">
+            <Plus size={18} /> Novo Grupo
+          </button>
+
+          {/* Com Ícone (Direita) */}
+          <button className="inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-lg transition-all duration-300 ease-in-out bg-blue-600 !text-white hover:bg-blue-700 active:bg-blue-800 shadow-sm focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none focus-visible:ring-offset-2">
+            Enviar Formulário <Send size={18} />
+          </button>
+
+          {/* Estado Disabled */}
+          <button
+            disabled
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-lg transition-all duration-300 ease-in-out bg-blue-600 !text-white opacity-50 cursor-not-allowed shadow-sm">
+            <Ban size={18} /> Processando...
+          </button>
+        </div>
+      </div>
+
+      <div className="h-px bg-gray-200 dark:bg-gray-800 w-full" />
+
+      <div>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Opção 2: Primary Soft</h2>
+        <p className="text-gray-500 mb-6">Tom sobre tom. Fundo claro com texto escuro. Extremamente confortável para os olhos e moderno.</p>
+
+        <div className="flex flex-wrap items-center gap-4 p-6 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+          {/* Padrão */}
+          <button className="inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-lg transition-all duration-300 ease-in-out bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 active:bg-blue-200 shadow-sm border border-blue-100 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none focus-visible:ring-offset-2">
+            Salvar Dados
+          </button>
+
+          {/* Com Ícone (Esquerda) */}
+          <button className="inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-lg transition-all duration-300 ease-in-out bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 active:bg-blue-200 shadow-sm border border-blue-100 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none focus-visible:ring-offset-2">
+            <Plus size={18} /> Novo Grupo
+          </button>
+
+          {/* Com Ícone (Direita) */}
+          <button className="inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-lg transition-all duration-300 ease-in-out bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 active:bg-blue-200 shadow-sm border border-blue-100 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none focus-visible:ring-offset-2">
+            Enviar Formulário <Send size={18} />
+          </button>
+
+          {/* Estado Disabled */}
+          <button
+            disabled
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-lg transition-all duration-300 ease-in-out bg-blue-50 text-blue-700 opacity-50 cursor-not-allowed shadow-sm border border-blue-100">
+            <Ban size={18} /> Processando...
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Subcomponente para renderizar o seu layout exato e podermos injetar a variante Primary que queremos testar
+const ButtonLayoutTemplate = ({ primaryVariantTitle, primaryVariantName }: { primaryVariantTitle: string; primaryVariantName: any }) => {
   const [declarativeLoading, setDeclarativeLoading] = useState(false);
+  const btnRef = useRef<IButtonElement>(null);
 
-  // --- Ref para Modo Imperativo ---
-  const btnRef = useRef<ButtonElement>(null);
-
-  // Helper para mostrar feedback visual
   const showSuccessToast = (message: string) => {
     showModal({
       title: 'Ação Concluída',
@@ -28,7 +92,6 @@ const TabButtonExample: React.FC = () => {
     });
   };
 
-  // Handler Declarativo
   const handleDeclarativeClick = () => {
     setDeclarativeLoading(true);
     setTimeout(() => {
@@ -37,17 +100,11 @@ const TabButtonExample: React.FC = () => {
     }, 2000);
   };
 
-  // Handler Imperativo (Zero Re-render do Pai)
   const handleImperativeClick = () => {
     if (btnRef.current) {
-      // 1. Acessa método customizado
       btnRef.current.setLoading(true);
-
-      // 2. Mantém foco (método nativo)
       btnRef.current.focus();
-
       setTimeout(() => {
-        // 3. Finaliza
         btnRef.current?.setLoading(false);
         showSuccessToast('Enviado com sucesso (Modo Imperativo)!');
       }, 2000);
@@ -55,17 +112,15 @@ const TabButtonExample: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-10 p-6 pb-20">
+    <div className="space-y-10 p-8 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-2xl bg-white/50 dark:bg-gray-900/20">
       <div className="text-center border-b pb-6 dark:border-gray-700">
-        <h2 className="text-3xl font-bold text-gray-800 dark:text-white">Componente Button</h2>
-        <p className="text-gray-500 mt-2">Botões com suporte a variantes, tamanhos e controle híbrido de carregamento.</p>
+        <h2 className="text-3xl font-bold text-gray-800 dark:text-white">{primaryVariantTitle}</h2>
       </div>
 
-      {/* --- SEÇÃO 1: VARIANTES E CORES --- */}
       <section className="space-y-6">
         <h3 className="text-xl font-bold text-gray-800 dark:text-white">Variantes</h3>
         <div className="flex flex-wrap gap-4 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <Button variant="primary">Primary</Button>
+          <Button variant={primaryVariantName}>Primary</Button>
           <Button variant="secondary">Secondary</Button>
           <Button variant="outline">Outline</Button>
           <Button variant="ghost">Ghost</Button>
@@ -74,26 +129,29 @@ const TabButtonExample: React.FC = () => {
         </div>
       </section>
 
-      {/* --- SEÇÃO 2: TAMANHOS --- */}
       <section className="space-y-6">
         <h3 className="text-xl font-bold text-gray-800 dark:text-white">Tamanhos</h3>
         <div className="flex flex-wrap items-center gap-4 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <Button size="sm">Small (sm)</Button>
-          <Button size="md">Medium (md)</Button>
-          <Button size="lg">Large (lg)</Button>
+          <Button size="sm" variant={primaryVariantName}>
+            Small (sm)
+          </Button>
+          <Button size="md" variant={primaryVariantName}>
+            Medium (md)
+          </Button>
+          <Button size="lg" variant={primaryVariantName}>
+            Large (lg)
+          </Button>
           <div className="h-8 w-px bg-gray-300 mx-2"></div>
           <Button size="icon" variant="outline">
             <Share2 size={18} />
           </Button>
-          <Button size="icon" variant="primary" className="rounded-full">
-            <Play size={18} className="ml-1" />
+          <Button size="icon" variant={primaryVariantName} className="rounded-full">
+            <Play size={18} />
           </Button>
         </div>
       </section>
 
-      {/* --- SEÇÃO 3: CONTROLE DE LOADING (HÍBRIDO) --- */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Caso A: Declarativo */}
         <Card>
           <CardHeader>
             <CardTitle>Modo Declarativo</CardTitle>
@@ -102,7 +160,11 @@ const TabButtonExample: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="h-24 flex items-center justify-center bg-gray-50 dark:bg-gray-900/50 rounded-md">
-            <Button isLoading={declarativeLoading} onClick={handleDeclarativeClick} leftIcon={<Save size={18} />}>
+            <Button
+              variant={primaryVariantName}
+              isLoading={declarativeLoading}
+              onClick={handleDeclarativeClick}
+              leftIcon={<Save size={18} />}>
               Salvar (Props)
             </Button>
           </CardContent>
@@ -111,7 +173,6 @@ const TabButtonExample: React.FC = () => {
           </CardFooter>
         </Card>
 
-        {/* Caso B: Imperativo */}
         <Card className="border-blue-200 dark:border-blue-900">
           <CardHeader>
             <CardTitle className="text-blue-600 dark:text-blue-400">Modo Imperativo (Ref)</CardTitle>
@@ -135,7 +196,6 @@ const TabButtonExample: React.FC = () => {
         </Card>
       </section>
 
-      {/* --- SEÇÃO 4: ÍCONES E COMPOSIÇÃO --- */}
       <section className="space-y-6">
         <h3 className="text-xl font-bold text-gray-800 dark:text-white">Ícones e Composição</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -152,6 +212,27 @@ const TabButtonExample: React.FC = () => {
           </Button>
         </div>
       </section>
+    </div>
+  );
+};
+
+// Componente Pai que renderiza as duas opções
+const TabButtonExample: React.FC = () => {
+  return (
+    <div className="max-w-5xl mx-auto space-y-16 p-6 pb-20">
+      <div className="text-center">
+        <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white">Laboratório: Qual Primary escolher?</h1>
+        <p className="text-gray-500 mt-3">Teste as duas filosofias lado a lado nos botões principais e de carregamento.</p>
+      </div>
+
+      {/* Renderiza o layout com o Primary Clássico */}
+      <ButtonLayoutTemplate primaryVariantTitle="Filosofia 1: Primary Clássico (Alto Contraste)" primaryVariantName="primary-classic" />
+
+      {/* Renderiza o layout com o Primary Soft */}
+      <ButtonLayoutTemplate primaryVariantTitle="Filosofia 2: Primary Soft (Tom sobre Tom)" primaryVariantName="primary-soft" />
+      <div>
+        <ButtonShowcase />
+      </div>
     </div>
   );
 };
