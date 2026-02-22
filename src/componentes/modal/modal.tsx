@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { X } from 'lucide-react';
 
 import type { IModalProps } from './types';
@@ -31,14 +31,14 @@ export const ModalFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDi
 );
 
 const Modal: React.FC<IModalProps> = ({ options, onClose }) => {
-  // ... (Hooks e useEffects permanecem iguais até o return)
-  const [isOpen, setIsOpen] = useState(false);
-  const modalRef = useRef<HTMLDivElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
-  const titleId = useRef(`modal-title-${Math.random().toString(36).substr(2, 9)}`).current;
+  // ... (Hooks e React.useEffects permanecem iguais até o return)
+  const [isOpen, setIsOpen] = React.useState(false);
+  const modalRef = React.useRef<HTMLDivElement>(null);
+  const overlayRef = React.useRef<HTMLDivElement>(null);
+  const previousFocusRef = React.useRef<HTMLElement | null>(null);
+  const titleId = React.useRef(`modal-title-${Math.random().toString(36).substr(2, 9)}`).current;
 
-  useEffect(() => {
+  React.useEffect(() => {
     previousFocusRef.current = document.activeElement as HTMLElement;
     requestAnimationFrame(() => {
       setIsOpen(true);
@@ -61,38 +61,38 @@ const Modal: React.FC<IModalProps> = ({ options, onClose }) => {
     }, 300);
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       const allModals = document.querySelectorAll('[data-hybrid-modal="true"]');
       const isTopModal = allModals.length > 0 && allModals[allModals.length - 1] === overlayRef.current;
       if (!isTopModal) {
         return;
       }
 
-      if (e.key === 'Escape') {
-        e.stopPropagation();
+      if (event.key === 'Escape') {
+        event.stopPropagation();
         handleClose();
       }
 
-      if (e.key === 'Tab' && modalRef.current) {
+      if (event.key === 'Tab' && modalRef.current) {
         const focusableElements = modalRef.current.querySelectorAll(
           'a[href], button, textarea, input, select, [tabindex]:not([tabindex="-1"])',
         );
         if (focusableElements.length === 0) {
-          e.preventDefault();
+          event.preventDefault();
           return;
         }
         const firstElement = focusableElements[0] as HTMLElement;
         const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
 
-        if (e.shiftKey) {
+        if (event.shiftKey) {
           if (document.activeElement === firstElement) {
-            e.preventDefault();
+            event.preventDefault();
             lastElement.focus();
           }
         } else {
           if (document.activeElement === lastElement) {
-            e.preventDefault();
+            event.preventDefault();
             firstElement.focus();
           }
         }
