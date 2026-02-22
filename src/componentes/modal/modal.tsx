@@ -3,18 +3,21 @@ import { X } from 'lucide-react';
 
 import type { IModalProps } from './types';
 import Button from '../button';
+
 // ============================================================================
 // 1. SUB-COMPONENTES (COMPOUND API) - DESIGN SYSTEM (CARD STYLE)
 // ============================================================================
 
 export const ModalHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={`flex flex-col space-y-1.5 p-2 ${className || ''}`} {...props} />
+  // Adicionado 'pr-8' para garantir que textos longos não fiquem por baixo do botão de fechar
+  <div className={`flex flex-col space-y-1.5 p-2 pr-8 ${className || ''}`} {...props} />
 );
 
 export const ModalTitle = ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
   <h3 className={`font-semibold leading-none tracking-tight text-lg text-gray-900 dark:text-gray-100 ${className || ''}`} {...props} />
 );
 
+// ... (resto dos sub-componentes ModalDescription, ModalContent, ModalFooter permanecem iguais)
 export const ModalDescription = ({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
   <p className={`text-sm text-gray-500 dark:text-gray-400 ${className || ''}`} {...props} />
 );
@@ -28,85 +31,66 @@ export const ModalFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDi
 );
 
 const Modal: React.FC<IModalProps> = ({ options, onClose }) => {
+  // ... (Hooks e useEffects permanecem iguais até o return)
   const [isOpen, setIsOpen] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-
-  // Guarda o elemento que tinha foco antes do modal abrir
   const previousFocusRef = useRef<HTMLElement | null>(null);
-
-  // ID único para o título (Acessibilidade)
   const titleId = useRef(`modal-title-${Math.random().toString(36).substr(2, 9)}`).current;
 
-  // 1. Ciclo de Vida e Animação
   useEffect(() => {
     previousFocusRef.current = document.activeElement as HTMLElement;
-
-    // Pequeno delay para permitir a renderização antes da animação
     requestAnimationFrame(() => {
       setIsOpen(true);
-      // Foca no container do modal para iniciar a navegação por teclado
       if (modalRef.current) {
         modalRef.current.focus();
       }
     });
   }, []);
 
-  // 2. Fechamento Suave
   const handleClose = () => {
-    setIsOpen(false); // Dispara animação de saída
+    setIsOpen(false);
     setTimeout(() => {
       if (options.onClose) {
         options.onClose();
       }
-      onClose(); // Destrói o componente
-
-      // Restaura o foco para o botão que abriu o modal
+      onClose();
       if (previousFocusRef.current) {
         previousFocusRef.current.focus();
       }
-    }, 300); // Tempo da transição CSS
+    }, 300);
   };
 
-  // 3. Gestão de Foco e Teclado (A11y + Stack)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Verifica se este é o modal do topo (último renderizado no DOM com este atributo)
-      // Isso impede que um ESC feche todos os modais da pilha de uma vez
       const allModals = document.querySelectorAll('[data-hybrid-modal="true"]');
       const isTopModal = allModals.length > 0 && allModals[allModals.length - 1] === overlayRef.current;
-
       if (!isTopModal) {
         return;
       }
 
       if (e.key === 'Escape') {
-        e.stopPropagation(); // Impede que o evento suba
+        e.stopPropagation();
         handleClose();
       }
 
       if (e.key === 'Tab' && modalRef.current) {
-        // Focus Trap Lógica
         const focusableElements = modalRef.current.querySelectorAll(
           'a[href], button, textarea, input, select, [tabindex]:not([tabindex="-1"])',
         );
-
         if (focusableElements.length === 0) {
           e.preventDefault();
           return;
         }
-
         const firstElement = focusableElements[0] as HTMLElement;
         const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
 
         if (e.shiftKey) {
-          // Shift + Tab (Trás)
           if (document.activeElement === firstElement) {
             e.preventDefault();
             lastElement.focus();
           }
         } else {
-          // Tab (Frente)
           if (document.activeElement === lastElement) {
             e.preventDefault();
             firstElement.focus();
@@ -114,15 +98,11 @@ const Modal: React.FC<IModalProps> = ({ options, onClose }) => {
         }
       }
     };
-
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', handleKeyDown);
-
     return () => {
-      // Só liberta o scroll se não houver outros modais
       const otherModals = document.querySelectorAll('[data-hybrid-modal="true"]');
       if (otherModals.length <= 1) {
-        // <= 1 porque este ainda está no DOM neste momento
         document.body.style.overflow = '';
       }
       window.removeEventListener('keydown', handleKeyDown);
@@ -135,17 +115,13 @@ const Modal: React.FC<IModalProps> = ({ options, onClose }) => {
     }
   };
 
-  // Utilitário para renderizar slots (Componentes ou Nós)
   const renderSlot = (Slot: any, props?: any) => {
     if (!Slot) {
       return null;
     }
-    // Se for um componente React válido (função/classe), renderiza com props injetadas
     if (typeof Slot === 'function') {
-      // Injeta onClose automaticamente para não precisar de 'any' ou tipagem manual no uso
       return <Slot {...props} onClose={handleClose} />;
     }
-    // Se for elemento estático (JSX), clona e injeta props se possível, ou retorna direto
     if (React.isValidElement(Slot)) {
       return React.cloneElement(Slot as React.ReactElement, { onClose: handleClose, ...props });
     }
@@ -166,18 +142,17 @@ const Modal: React.FC<IModalProps> = ({ options, onClose }) => {
   return (
     <div
       ref={overlayRef}
-      data-hybrid-modal="true" // Marcador para gestão de pilha
+      data-hybrid-modal="true"
       className={`fixed inset-0 z-9999 flex items-center justify-center p-4 sm:p-6 transition-all duration-300 ${
         isOpen ? 'bg-black/60 backdrop-blur-sm' : 'bg-black/0 backdrop-blur-none'
       }`}
       onClick={handleBackdropClick}
-      // Atributos A11y Essenciais
       aria-modal="true"
       role="dialog"
       aria-labelledby={options.title ? titleId : undefined}>
       <div
         ref={modalRef}
-        tabIndex={-1} // Permite focar na div programaticamente (Focus Trap inicial)
+        tabIndex={-1}
         className={`
             relative w-full flex flex-col max-h-full outline-none transition-all duration-300 transform 
             ${isOpen ? 'scale-100 translate-y-0 opacity-100' : 'scale-95 translate-y-4 opacity-0'} 
@@ -188,35 +163,28 @@ const Modal: React.FC<IModalProps> = ({ options, onClose }) => {
         `}
         style={options.styleConfig}
         onClick={(e) => e.stopPropagation()}>
-        {/* Botão Fechar (X) */}
+        {/* Botão Fechar (X) - Posicionamento ajustado para right-1 top-1 */}
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           onClick={handleClose}
-          className="absolute right-1 top-1 rounded-full opacity-70 hover:opacity-100 hover:bg-gray-100 dark:hover:bg-gray-700 z-50 h-2 w-2"
+          className="absolute right-1 top-1 h-5 px-0 rounded-full opacity-70 hover:opacity-100 z-50"
           title="Fechar">
-          <X className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+          <X size={20} className="text-gray-500 dark:text-gray-400" />
         </Button>
 
-        {/* --- RENDERIZAÇÃO COMPATÍVEL COM SEU TYPES.TS --- */}
-
-        {/* 1. Header (Title) */}
         {options.title && (
           <ModalHeader>
-            {/* Se title for string (novo suporte), renderiza texto. Se for componente/node, renderiza slot */}
             {typeof options.title === 'string' ? <ModalTitle>{options.title}</ModalTitle> : renderSlot(options.title, options.props?.title)}
           </ModalHeader>
         )}
 
-        {/* 2. Content */}
-        {/* Se tiver título ou footer, encapsula. Se não, renderiza cru (full control) */}
         {options.title || options.footer || options.actions ? (
           <ModalContent>{renderSlot(options.content, options.props?.content)}</ModalContent>
         ) : (
           renderSlot(options.content, options.props?.content)
         )}
 
-        {/* 3. Footer / Actions */}
         {(options.footer || options.actions) && (
           <ModalFooter>{renderSlot(options.footer || options.actions, options.props?.footer || options.props?.actions)}</ModalFooter>
         )}
